@@ -166,14 +166,28 @@ async function loadPublicSchools(): Promise<{
       const parsed = DirectoryRow.safeParse(raw);
       if (!parsed.success) continue;
       cde.set(parsed.data.CDSCode, parsed.data);
-      if (parsed.data.NCESDist && parsed.data.NCESSchool) {
-        cdeByNces.set(parsed.data.NCESDist + parsed.data.NCESSchool, parsed.data);
-      }
+      if (parsed.data.NCESSchool) cdeByNces.set(parsed.data.NCESSchool, parsed.data);
     }
     log(`CDE directory rows parsed: ${cde.size}`);
   }
 
   const candidates: PublicCandidate[] = [];
+  const fromCde = new Set<string>();
+  for (const dir of cde.values()) {
+    if (dir.StatusType !== "Active" || dir.CDSCode.endsWith("0000000")) continue;
+    if (dir.Latitude === undefined || dir.Longitude === undefined || !dir.School) continue;
+    const coordinates = { latitude: dir.Latitude, longitude: dir.Longitude };
+    const distance = haversineMeters(center, coordinates);
+    if (distance > radiusMeters) continue;
+    const frpm = frpmByCds.get(dir.CDSCode);
+    if (!frpm) continue;
+    const school = schoolFromDirectory(dir, frpm[frpmOptionKey]);
+    if (!school) continue;
+    candidates.push({ school, distance });
+    fromCde.add(dir.CDSCode);
+  }
+  log(`Public schools from the CDE directory: ${candidates.length}`);
+
   for (const row of readDelimited(need("ccd"), ",")) {
     if (row.ST !== "CA") continue;
     if (!["1", "3", "8"].includes(row.SY_STATUS)) continue; // open, new, reopened
@@ -181,7 +195,8 @@ async function loadPublicSchools(): Promise<{
     if (!m) continue;
     // NCES gives independent charters their own LEA id, so the state id is not a CDS code there.
     // The CDE directory row (matched by NCES id) is authoritative; without it, skip untrusted ids.
-    const dirByNces = cdeByNces.get(row.NCESSCH);
+    const dirByNces = cdeByNces.get(row.NCESSCH.slice(-5));
+    if (dirByNces && fromCde.has(dirByNces.CDSCode)) continue; // already taken from the CDE file
     const cds = dirByNces?.CDSCode ?? (m[1] === m[2] ? undefined : m[1] + m[2]);
     if (!cds) continue;
     const geo = edge.get(row.NCESSCH);
@@ -257,6 +272,53 @@ async function loadPublicSchools(): Promise<{
   }
   candidates.sort((a, b) => a.distance - b.distance);
   return { candidates, frpmByCds };
+}
+
+function schoolFromDirectory(
+  dir: DirectoryRow,
+  frpmOption: string | undefined,
+): School | undefined {
+  if (!dir.Street || !dir.City || !dir.Zip) return undefined;
+  const website = (dir.WebSite ?? "").trim();
+  const normalizedSite = website
+    ? website.startsWith("http")
+      ? website
+      : `https://${website}`
+    : undefined;
+  return School.parse({
+    cds: dir.CDSCode,
+    ncesId: dir.NCESDist && dir.NCESSchool ? dir.NCESDist + dir.NCESSchool : undefined,
+    name: dir.School,
+    type: dir.Charter === "Y" ? "charter" : "district",
+    district: dir.District,
+    districtCds: dir.CDSCode.slice(0, 7) + "0000000",
+    county: dir.County,
+    address: { street: dir.Street, city: dir.City, zip: dir.Zip.slice(0, 5), state: "CA" },
+    phone: dir.Phone,
+    website:
+      normalizedSite && /^https?:\/\/[^\s]+\.[^\s]+$/.test(normalizedSite)
+        ? normalizedSite
+        : undefined,
+    coordinates: { latitude: dir.Latitude, longitude: dir.Longitude },
+    gradesOffered: parseGradeSpan(dir.GSoffered),
+    gradesServed: parseGradeSpan(dir.GSserved),
+    instructionLevel: dir.EILCode,
+    educationalOption: dir.EdOpsCode ?? (frpmOption ? FRPM_OPTION[frpmOption] : undefined),
+    charterNumber: dir.CharterNum,
+    charterFunding:
+      dir.FundingType === "Directly funded"
+        ? "directly"
+        : dir.FundingType === "Locally funded"
+          ? "locally"
+          : dir.FundingType
+            ? "notInModel"
+            : undefined,
+    magnet: dir.Magnet ? dir.Magnet === "Y" : undefined,
+    virtual: dir.Virtual ? VirtualStatus.parse(dir.Virtual) : undefined,
+    multilingual: dir.Multilingual ? dir.Multilingual === "Y" : undefined,
+    openDate: dir.OpenDate ? usDateToIso(dir.OpenDate) : undefined,
+    directoryUpdatedAt: dir.LastUpDate ? usDateToIso(dir.LastUpDate) : undefined,
+  });
 }
 
 function usDateToIso(us: string): string {
