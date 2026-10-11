@@ -49,7 +49,9 @@
     "addressShort": "{street}, {city}",
     "studentTeacher": "{count, number}:1 student–teacher",
     "indicatorLevel": "{indicator} {level}",
-    "loading": "Loading"
+    "loading": "Loading",
+    "filterValue": "{label}: {value}",
+    "ratio": "{count, number}:1"
   },
   "search": {
     "title": "Find schools near an address",

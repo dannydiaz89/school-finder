@@ -49,7 +49,9 @@
     "addressShort": "{street}, {city}",
     "studentTeacher": "{count, number}:1 estudiantes por maestro",
     "indicatorLevel": "{indicator} {level}",
-    "loading": "Cargando"
+    "loading": "Cargando",
+    "filterValue": "{label}: {value}",
+    "ratio": "{count, number}:1"
   },
   "search": {
     "title": "Buscar escuelas cerca de una dirección",
