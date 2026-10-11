@@ -30,11 +30,13 @@ export async function AddressForm({ locale, params }: { locale: Locale; params: 
     page: undefined,
   });
 
+  // On phones the field and the radius row stack with the components' own borders;
+  // from `sm` they sit together inside one rounded pill.
   return (
     <form
       method="get"
       action={getPathname({ locale, href: "/" })}
-      className="flex max-w-[690px] items-center gap-2 rounded-full border border-border bg-bg py-[2px] pl-4 pr-[6px] hover:border-border-strong"
+      className="flex max-w-[690px] flex-wrap items-center gap-2 sm:flex-nowrap sm:rounded-full sm:border sm:border-border sm:bg-bg sm:py-[2px] sm:pl-4 sm:pr-[6px] sm:hover:border-border-strong"
     >
       <TextField
         label={t("addressLabel")}
@@ -46,10 +48,10 @@ export async function AddressForm({ locale, params }: { locale: Locale; params: 
         required
         minLength={3}
         maxLength={200}
-        wrapperClassName="min-w-0 flex-1"
-        className="h-10 rounded-sm border-0 bg-transparent px-0 text-lg hover:border-0"
+        wrapperClassName="min-w-0 basis-full sm:flex-1 sm:basis-auto"
+        className="text-lg sm:h-10 sm:rounded-sm sm:border-0 sm:bg-transparent sm:px-0 sm:hover:border-0"
       />
-      <span aria-hidden="true" className="h-6 w-px shrink-0 bg-border" />
+      <span aria-hidden="true" className="hidden h-6 w-px shrink-0 bg-border sm:block" />
       <Select
         label={t("radiusLabel")}
         hideLabel
@@ -60,9 +62,9 @@ export async function AddressForm({ locale, params }: { locale: Locale; params: 
           label: t("radius", { miles }),
         }))}
         wrapperClassName="shrink-0"
-        className="h-10 rounded-sm border-0 bg-transparent pl-2 hover:border-0"
+        className="sm:h-10 sm:rounded-sm sm:border-0 sm:bg-transparent sm:pl-2 sm:hover:border-0"
       />
-      <Button type="submit" variant="primary" size="sm" className="shrink-0">
+      <Button type="submit" variant="primary" size="sm" className="h-11 shrink-0 sm:h-8">
         {t("submit")}
       </Button>
       {Array.from(hidden.entries(), ([name, value]) => (

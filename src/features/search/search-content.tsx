@@ -114,8 +114,9 @@ export async function SearchContent({
     null,
   );
 
+  // Keyed: elements handed to a client component as props are reconciled like array children.
   const header = (
-    <>
+    <div key="header" className="flex flex-col gap-2">
       <h2 className="m-0 text-base font-normal text-fg-secondary">{summary}</h2>
       {result.hiddenSpecialized > 0 && !p.specialized ? (
         <p className="m-0 text-sm text-fg-muted">
@@ -128,12 +129,12 @@ export async function SearchContent({
       {result.total === 0 ? (
         <EmptyState titleAs="h3" title={t("empty.title")} body={t("empty.body")} />
       ) : null}
-    </>
+    </div>
   );
 
   const footer =
     year !== null ? (
-      <section className="flex flex-col gap-2 pt-6">
+      <section key="footer" className="flex flex-col gap-2 pt-6">
         <h2 className="m-0 text-xl font-medium">{t("about.title")}</h2>
         <p className="m-0 text-base text-fg-secondary">{t("about.body", { year })}</p>
         <TextLink href="/about/data" className="w-fit">

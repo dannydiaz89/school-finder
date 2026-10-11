@@ -126,16 +126,16 @@ Rules:
 
 ### C. Search
 
-- [ ] Geocode route handler (Census) with Convex cache; request and response validated with the external schema
-- [ ] Search page against stub queries: address field with radius, filter row (Type, Grades, Rating, Programs, Size, Reset, Sort)
-- [ ] Type filter: District (public), Charter (public), Private, multi-select
-- [ ] Programs filter: Magnet, Dual language, Virtual; private affiliation
-- [ ] Specialized placements hidden by default with a toggle to show
-- [ ] Results list: numbered rows, type dot, Dashboard level dots, compare and details actions
-- [ ] Map with numbered pins, radius ring, home marker, hover sync with list
-- [ ] Phone layout: stacked map and list
-- [ ] URL holds address, radius, and filters
-- [ ] Empty, loading, and error states
+- [~] Geocode route handler (Census) with Convex cache; request and response validated with the external schema (`src/app/api/geocode/route.ts` over `src/features/search/geocode.ts`; cache is an in-process Map until B lands the `geocodeCache` table)
+- [x] Search page against stub queries: address field with radius, filter row (Type, Grades, Rating, Programs, Size, Reset, Sort)
+- [x] Type filter: District (public), Charter (public), Private, multi-select
+- [x] Programs filter: Magnet, Dual language, Virtual; private affiliation
+- [x] Specialized placements hidden by default with a toggle to show (in the Type menu, plus a link under the summary)
+- [x] Results list: numbered rows, type dot, Dashboard level dots, compare and details actions
+- [x] Map with numbered pins, radius ring, home marker, hover sync with list
+- [x] Phone layout: stacked map and list
+- [x] URL holds address, radius, and filters (and the page; `compare` is carried along by filter changes)
+- [x] Empty, loading, and error states
 
 ### D. Detail
 

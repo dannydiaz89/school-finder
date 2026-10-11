@@ -109,7 +109,8 @@ export default function SearchMap({
       style: dark ? STYLE_DARK : STYLE_LIGHT,
       bounds: ringBounds(center, radiusMiles),
       fitBoundsOptions: { padding: FIT_PADDING },
-      attributionControl: { compact: false },
+      // Default: full text on wide maps, a toggle on narrow ones so it does not cover the pins.
+      attributionControl: {},
     });
     map.keyboard.disable();
     const canvas = map.getCanvas();

@@ -19,7 +19,7 @@ import {
   type SearchResult,
 } from "@/lib/schemas";
 
-const MAP_BOX = "h-[220px] w-full rounded-lg lg:h-[460px]";
+const MAP_BOX = "h-[220px] w-full rounded-lg sm:h-[320px] xl:h-[460px]";
 
 const SearchMap = dynamic(() => import("./map"), {
   ssr: false,
@@ -86,10 +86,10 @@ export function SearchResults({ result, params, center, header, footer }: Search
   }
 
   return (
-    <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:gap-10">
+    <div className="flex flex-col gap-6 xl:flex-row xl:items-start xl:gap-10">
       <section
         aria-label={t("resultsLabel")}
-        className="flex min-w-0 flex-col gap-3 lg:w-[var(--content-width)] lg:shrink-0"
+        className="flex min-w-0 flex-col gap-3 xl:w-[var(--content-width)] xl:shrink-0"
       >
         {header}
         <ol
@@ -111,7 +111,6 @@ export function SearchResults({ result, params, center, header, footer }: Search
               inCompare={compare.has(summary.school.cds)}
               onToggleCompare={compare.toggle}
               compareDisabled={compare.isFull}
-              note={summary.school.type === "private" ? t("notRatedPrivate") : undefined}
               className={[
                 "-mx-3 rounded-sm px-3",
                 hoveredCds === summary.school.cds ? "bg-bg-subtle" : "",
@@ -137,7 +136,7 @@ export function SearchResults({ result, params, center, header, footer }: Search
       <section
         role="region"
         aria-label={t("map.label")}
-        className="order-first flex w-full flex-col gap-3 lg:order-none lg:sticky lg:top-5 lg:w-[var(--panel-width)] lg:shrink-0"
+        className="order-first flex w-full min-w-0 flex-col gap-3 xl:order-none xl:sticky xl:top-5 xl:max-w-[var(--panel-width)] xl:flex-1"
       >
         <div className={`overflow-hidden border border-border bg-bg-map ${MAP_BOX}`}>
           <SearchMap
