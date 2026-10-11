@@ -9,6 +9,8 @@
  */
 
 import type * as geospatial from "../geospatial.js";
+import type * as imports from "../imports.js";
+import type * as lib_records from "../lib/records.js";
 import type * as schools from "../schools.js";
 
 import type {
@@ -19,6 +21,8 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   geospatial: typeof geospatial;
+  imports: typeof imports;
+  "lib/records": typeof lib_records;
   schools: typeof schools;
 }>;
 

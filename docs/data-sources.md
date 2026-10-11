@@ -17,6 +17,67 @@ Plan: fetch CDE files in a rare batch job (nightly or weekly), cache the results
 - In the NCES Private School Survey, the physical-address columns (`PL_*`) are blank when they equal the mailing address (`PADDRS`, `PCITY`, `PSTABB`, `PZIP`). Only 212 of 2,334 California rows have `PL_STABB` set.
 - The CDE affidavit's `CDS Code` loses its leading zero; pad to 14 digits.
 
+## Running the imports
+
+Everything is in `scripts/import.ts` and runs on a developer machine, never in a request:
+
+```bash
+pnpm run import all                        # every source, statewide, default years
+pnpm run import all --county Sacramento    # one county (by name or two-digit code)
+pnpm run import dashboard --year 2025      # one source, one year (2024-25 or 2025 both work)
+pnpm run import caaspp --dry-run           # parse, validate and transform without writing
+pnpm run import geo-index                  # rebuild the spatial index from the schools table
+```
+
+`pnpm import` (without `run`) is pnpm's own lockfile command, so always say `pnpm run import`.
+
+What a run does, per source: download into `.cache/<source>/` (skipped when the file is there), parse with `scripts/lib/parse.ts`, validate every row with the Zod row schema in `src/lib/schemas/imports/<source>.ts` (rejected rows are counted, the first few are logged, nothing is dropped silently), transform with the pure functions in `src/lib/domain/imports/<source>.ts`, and upsert in batches through the internal mutations in `convex/imports.ts`. Each run writes an `importRuns` row with the source, URL, year, rows read/rejected/written, timestamps and any error. Upserts are keyed (`cds`, plus year and indicator, or year, subject and grade), so re-running a source rewrites the same documents. Nothing is deleted: a school that leaves the directory stays until pruned by hand.
+
+Credentials: `CONVEX_DEPLOY_KEY` (a deploy key from the dashboard) or, when unset, the login that `npx convex login` stored in `~/.convex/config.json`; the script then asks the Convex API for the dev deployment's admin key the same way `npx convex dev` does. The deployment comes from `.env.local`.
+
+Sources, default years and cache paths:
+
+| Source              | File                                                  | Default year | Writes                                  |
+| ------------------- | ----------------------------------------------------- | ------------ | --------------------------------------- |
+| `directory`         | `.cache/directory/pubschls.txt` (saved by hand)       | —            | `schools` + spatial index               |
+| `dashboard`         | `.cache/dashboard/2025/*download2025.txt` (8 files)   | 2024-25      | `dashboard`                             |
+| `caaspp`            | `.cache/caaspp/2025/sb_ca2025_1_csv_v1.txt`           | 2024-25      | `caaspp` (school, district, state rows) |
+| `enrollment`        | `.cache/enrollment/cdenroll2425.txt`                  | 2024-25      | `enrollment`                            |
+| `frpm`              | `.cache/frpm/frpm2425.xlsx`                           | 2024-25      | `frpm`                                  |
+| `staff`             | `.cache/staff/strat2324.txt`                          | 2023-24      | `staffRatios`                           |
+| `private-affidavit` | `.cache/private-affidavit/privateschooldata2425.xlsx` | 2024-25      | `privateDetails`                        |
+| `private-pss`       | `.cache/private-pss/pss2324_pu.csv`                   | 2023-24      | `schools` (private, matched)            |
+
+Notes learned while running them:
+
+- The directory import reads the FRPM workbook from the cache, when present, to fill the educational option for the few rows whose `EdOpsCode` is `No Data`; run `frpm` first or accept a missing option for those.
+- The ELPI file has no `ALL` student group; its all-students row is the `EL` group, which is what the import stores.
+- The chronic absenteeism file spells `changeLevel` with a capital L; the row schema lowercases keys.
+- Dashboard `statuslevel`/`changelevel` of 0 and `color` 0 or blank mean "no level" and are stored as null.
+- Private schools: the affidavit has no address, so a private school gets a `schools` row only when it matches a PSS row (same county, normalized-name Dice score at least 0.8, ties within 0.05 left unmatched, each PSS row used once). The run writes `.cache/private-pss/match-report-<year>.tsv` with every affidavit school, its status (`matched`, `fuzzy`, `noAddress`, or `unmatched:<reason>`) and the best candidate. Fix wrong or missing matches by inserting into `privateSchoolOverrides` (`cds`, `pssId` or null to force no match, `note`) and re-running `private-pss`. For Sacramento County, 45 of 93 affidavit schools matched; PSS lists only 70 schools in the county and the rest are mostly home schools and very small schools PSS does not cover.
+
+## Running the contract test
+
+`src/lib/data/convex.contract.test.ts` loads the fixture records into the deployment in `.env.local`, then asserts that `convexDataSource` returns the same rows as `fixturesDataSource` for 17 search argument sets (3 and 4 miles, each type, each grade band, rating, programs, size, each sort key, paging) plus `getSchool` for every fixture school, `getNearby` and `getSchoolsByCds`. It **empties the data tables first**, so it is skipped unless `CONVEX_CONTRACT_TESTS=1`, and `pnpm check` stays offline:
+
+```bash
+npx convex dev --once                                            # push the functions
+CONVEX_CONTRACT_TESTS=1 pnpm test src/lib/data/convex.contract.test.ts
+pnpm run import all --county Sacramento                          # put real data back
+```
+
+`convex-test` was not used: the radius query runs inside the geospatial component, and the dev deployment is the implementation the app ships against.
+
+## Verification
+
+Dev deployment `the-dev-deployment`, 2026-10-11, after `pnpm run import all --county Sacramento` and `--county Yolo`.
+
+Rows written (Sacramento + Yolo): 468 public schools, 2,799 Dashboard rows (eight indicators), 4,366 CAASPP rows (school, district and state), 467 enrollment, 467 FRPM, 465 staff ratios, 103 private affidavit details, 52 private schools placed via PSS. Zero rows rejected by any row schema across 1.3 million rows read.
+
+`pnpm tsx scripts/spot-check.ts` compared the 32 public fixture schools with `api.caschooldashboard.org` (2025 Dashboard): all 198 indicator values the site shows for them (status, change and performance level, every indicator) agree with the import. One difference needed explaining: when the English Learner Progress Indicator has fewer than 30 students the research file leaves `change` blank and the site prints `0` with no change level; the import keeps null and the script treats the two as the same. Examples, as shown on the site: Paso Verde ELA -22.7 orange, Math -66.6 orange, chronic absenteeism 16.6 yellow, suspension 10.1 red; William Land Elementary ELA and Math blue. Run the script for the full table; it exits non-zero on any disagreement.
+
+The adapter contract test (`CONVEX_CONTRACT_TESTS=1`) passed 21 of 21 cases against the same deployment before the real import.
+
 ## 1. Public school directory (CDE "pubschls")
 
 |               |                                                                                                               |

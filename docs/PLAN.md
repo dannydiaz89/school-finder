@@ -108,21 +108,23 @@ Rules:
 
 ### B. Data
 
-- [ ] Shared parsing utilities: tab and caret delimited, XLSX header offsets, download cache in `.cache/`; every row passes through its Zod row schema, and rejected rows are counted and logged, never silently dropped
-- [ ] Row schemas in `src/lib/schemas/imports/` with coercions for `No Data`, CDS zero-padding, percent-as-fraction, thousands separators
-- [ ] `importRuns` table and a helper that records source URL, row count, and timestamp
-- [ ] Import: CDE public school directory (active only, drop district rows)
-- [ ] Import: Dashboard 2025 indicators (ELA, Math, Chronic Absenteeism, Suspension, Graduation, College/Career, ELPI)
-- [ ] Import: CAASPP 2024-25 statewide file (all students, all grades, ELA and Math)
-- [ ] Import: Census Day enrollment 2024-25 (totals and race/ethnicity)
-- [ ] Import: FRPM 2024-25
-- [ ] Import: student/staff ratios 2023-24
-- [ ] Import: CDE Private School Affidavit 2024-25
-- [ ] Import: NCES Private School Survey 2023-24, joined to affidavit by name + zip with a confidence score and `privateSchoolOverrides` table
-- [ ] Geospatial index populated for all schools with coordinates
-- [ ] Implement `src/lib/data/convex.ts` and the thin Convex functions behind it; pure rules in `src/lib/domain/` with unit tests
-- [ ] Radius query contract test passes against the Convex adapter
-- [ ] Spot-check script: 20 known schools asserted against the Dashboard site
+- [x] Shared parsing utilities: tab and caret delimited, XLSX header offsets, download cache in `.cache/`; every row passes through its Zod row schema, and rejected rows are counted and logged, never silently dropped
+- [x] Row schemas in `src/lib/schemas/imports/` with coercions for `No Data`, CDS zero-padding, percent-as-fraction, thousands separators
+- [x] `importRuns` table and a helper that records source URL, row count, and timestamp
+- [x] Import: CDE public school directory (active only, drop district rows)
+- [x] Import: Dashboard 2025 indicators (ELA, Math, Chronic Absenteeism, Suspension, Graduation, College/Career, ELPI, Science)
+- [x] Import: CAASPP 2024-25 statewide file (all students, all grades, ELA and Math, with district and state rows)
+- [x] Import: Census Day enrollment 2024-25 (totals and race/ethnicity)
+- [x] Import: FRPM 2024-25
+- [x] Import: student/staff ratios 2023-24
+- [x] Import: CDE Private School Affidavit 2024-25
+- [x] Import: NCES Private School Survey 2023-24, joined to affidavit by normalized name + county with a confidence score and `privateSchoolOverrides` table (the affidavit has no zip, so county replaces it)
+- [x] Geospatial index populated for all schools with coordinates (kept in step by `upsertSchools`; `pnpm run import geo-index` rebuilds it)
+- [x] Implement `src/lib/data/convex.ts` and the thin Convex functions behind it; pure rules in `src/lib/domain/` with unit tests
+- [x] Radius query contract test passes against the Convex adapter (`CONVEX_CONTRACT_TESTS=1 pnpm test src/lib/data/convex.contract.test.ts`)
+- [x] Spot-check script: fixture schools asserted against the Dashboard site (`pnpm tsx scripts/spot-check.ts`); results in [data-sources.md](data-sources.md#verification)
+- [ ] Statewide import into the dev deployment (Sacramento County is loaded; `pnpm run import all` without `--county` does the state)
+- [ ] Prune schools that left the directory (re-runs upsert but never delete)
 
 ### C. Search
 
@@ -182,4 +184,6 @@ Rules:
 
 ## Contract amendments
 
-None yet. Record each as: date, what changed, which streams were notified.
+Record each as: date, what changed, which streams were notified.
+
+- 2026-10-11 (Data): `Enrollment.byRaceEthnicity` in `src/lib/schemas/enrollment.ts` is now `z.object({ RB: Count.optional(), ... }).strict()` instead of `z.partialRecord(RaceEthnicity, Count)`. The TypeScript type is unchanged (`Partial<Record<RaceEthnicity, number>>`), but `convex-helpers` 0.1.128 derives a Convex object with every key required from a partial record, so `convex/schema.ts` rejected any school missing a category (which is nearly all of them). No consumer changes. Streams notified: Lead (owns the file), Detail and Compare (read the field).

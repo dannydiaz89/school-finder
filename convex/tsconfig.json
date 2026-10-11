@@ -11,6 +11,11 @@
     "jsx": "react-jsx",
     "skipLibCheck": true,
     "allowSyntheticDefaultImports": true,
+    /* Domain modules under src/ import each other through the "@/" alias. */
+    "baseUrl": "..",
+    "paths": {
+      "@/*": ["./src/*"]
+    },
 
     /* These compiler options are required by Convex */
     "target": "ESNext",
