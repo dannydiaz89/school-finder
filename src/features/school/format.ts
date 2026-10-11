@@ -21,9 +21,8 @@ export function gradeSpanText(common: Common, labels: Labels, span: GradeSpan): 
 
 /** Join non-empty parts with the locale's separator ("a · b · c"). */
 export function joinParts(common: Common, parts: Array<string | null | undefined>): string {
-  return parts
-    .filter((p): p is string => Boolean(p))
-    .reduce((a, b) => common("join", { a, b }), "");
+  const present = parts.filter((p): p is string => Boolean(p));
+  return present.length ? present.reduce((a, b) => common("join", { a, b })) : "";
 }
 
 /** 0.301 -> "30%". Whole percents for bars and stats. */

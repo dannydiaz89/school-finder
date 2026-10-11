@@ -89,7 +89,7 @@ function PublicEnrollment({ enrollment }: { enrollment: Enrollment }) {
               <Bar
                 key={code}
                 label={labels(raceEthnicityKey(code))}
-                labelWidth="13rem"
+                labelWidth="min(15rem, 55%)"
                 value={fraction}
                 max={1}
                 valueLabel={percent(format, fraction)}

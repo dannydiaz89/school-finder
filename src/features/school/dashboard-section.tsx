@@ -55,7 +55,7 @@ export function DashboardSection({ school, rows }: DashboardSectionProps) {
       {ordered.length === 0 ? (
         <p className="m-0 text-base text-fg-muted">{t("dashboard.empty")}</p>
       ) : (
-        <Table minWidth={520}>
+        <Table minWidth={480}>
           <TableHead>
             <TableRow header>
               <TableHeaderCell>{t("dashboard.columns.indicator")}</TableHeaderCell>

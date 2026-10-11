@@ -3,15 +3,8 @@ import { getTranslations } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { DashboardSection, dashboardYear } from "@/features/school/dashboard-section";
-import { FactsList } from "@/features/school/facts-list";
 import { gradeSpanText, joinParts } from "@/features/school/format";
-import { NearbySection } from "@/features/school/nearby-section";
-import { SchoolHeader } from "@/features/school/school-header";
-import { SchoolStats } from "@/features/school/school-stats";
-import { SectionTabs, type SectionId } from "@/features/school/section";
-import { StudentsSection } from "@/features/school/students-section";
-import { TestsSection } from "@/features/school/tests-section";
+import { SchoolDetailView } from "@/features/school/school-detail-view";
 import { requireLocale } from "@/i18n/locale";
 import { getNearby, getSchool } from "@/lib/data";
 import { affiliationKey, schoolTypeLongKey } from "@/lib/labels";
@@ -36,6 +29,7 @@ async function loadSchool(params: Props["params"]): Promise<SchoolDetail> {
   return detail;
 }
 
+/** "<School name> · School Finder" (the layout adds the suffix) and a line of directory facts. */
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const locale = await requireLocale(params);
   const { school } = await loadSchool(params);
@@ -67,10 +61,8 @@ export default function SchoolPage({ params, searchParams }: Props) {
 
 async function SchoolContent({ params, searchParams }: Props) {
   await requireLocale(params);
-  const detail = await loadSchool(params);
-  const raw = await searchParams;
-  const { school } = detail;
-  const nearby = await getNearby({ cds: school.cds, limit: NEARBY_LIMIT });
+  const [detail, raw] = await Promise.all([loadSchool(params), searchParams]);
+  const nearby = await getNearby({ cds: detail.school.cds, limit: NEARBY_LIMIT });
 
   // Carry the visitor's search state (address, radius, filters, compare list) through every link.
   const query: Record<string, string> = {};
@@ -81,41 +73,7 @@ async function SchoolContent({ params, searchParams }: Props) {
   const home =
     lat !== undefined && lng !== undefined ? { latitude: lat, longitude: lng } : undefined;
 
-  const isPrivate = school.type === "private";
-  const sections: SectionId[] = isPrivate
-    ? ["overview", "students", "nearby"]
-    : ["overview", "dashboard", "tests", "students", "nearby"];
-
-  return (
-    <div className="grid max-w-[calc(var(--content-width)+var(--panel-width)+2.5rem)] grid-cols-1 gap-x-10 gap-y-4 lg:grid-cols-[minmax(0,var(--content-width))_minmax(0,var(--panel-width))] lg:[grid-template-areas:'head_facts'_'tabs_facts'_'stats_facts'_'body_facts']">
-      <div className="lg:[grid-area:head]">
-        <SchoolHeader
-          school={school}
-          dashboardYear={dashboardYear(detail.dashboard)}
-          backHref={{ pathname: "/", query }}
-        />
-      </div>
-      <div className="lg:[grid-area:tabs]">
-        <SectionTabs sections={sections} />
-      </div>
-      <div className="lg:[grid-area:stats]">
-        <SchoolStats detail={detail} />
-      </div>
-      <aside className="lg:[grid-area:facts] lg:pt-2">
-        <FactsList school={school} privateDetail={detail.privateDetail} home={home} />
-      </aside>
-      <div className="lg:[grid-area:body]">
-        {isPrivate ? null : (
-          <>
-            <DashboardSection school={school} rows={detail.dashboard} />
-            <TestsSection cds={school.cds} comparison={detail.caasppComparison} />
-          </>
-        )}
-        <StudentsSection enrollment={detail.enrollment} privateDetail={detail.privateDetail} />
-        <NearbySection cds={school.cds} nearby={nearby} query={query} />
-      </div>
-    </div>
-  );
+  return <SchoolDetailView detail={detail} nearby={nearby} query={query} home={home} />;
 }
 
 function SchoolSkeleton() {
