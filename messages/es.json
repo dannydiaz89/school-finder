@@ -150,14 +150,22 @@
   },
   "compare": {
     "title": "Comparando {count, plural, one {# escuela} other {# escuelas}}",
+    "heading": "Comparar escuelas",
     "subtitle": "Distancias desde {address}. La negrita marca el mejor valor de cada fila donde la comparación tiene sentido.",
-    "empty": "Tu lista de comparación está vacía. Agrega escuelas desde los resultados de búsqueda.",
+    "subtitleNoAddress": "La negrita marca el mejor valor de cada fila donde la comparación tiene sentido.",
+    "emptyTitle": "Tu lista de comparación está vacía",
+    "empty": "Agrega hasta {max, number} escuelas desde los resultados de búsqueda o la página de una escuela.",
+    "backToSearch": "Buscar escuelas",
     "max": "Puedes comparar hasta {max, number} escuelas.",
+    "copied": "Enlace copiado",
+    "copyFailed": "No se pudo copiar el enlace. Cópialo desde la barra de direcciones.",
+    "removeSchool": "Quitar {name}",
     "groups": {
       "location": "Ubicación y grados",
       "dashboard": "California School Dashboard, {year}",
       "tests": "Resultados de pruebas, CAASPP {year}",
-      "students": "Escuela y estudiantes"
+      "students": "Escuela y estudiantes",
+      "testsNote": "· estudiantes que cumplen o superan el estándar"
     },
     "rows": {
       "distance": "Distancia desde casa",
@@ -284,9 +292,6 @@
       "maintained": "Se mantuvo"
     },
     "grade": {
-      "P": "Preescolar",
-      "TK": "TK",
-      "K": "K",
       "1": "1",
       "2": "2",
       "3": "3",
@@ -299,6 +304,9 @@
       "10": "10",
       "11": "11",
       "12": "12",
+      "P": "Preescolar",
+      "TK": "TK",
+      "K": "K",
       "A": "Adultos"
     },
     "gradeBand": {
