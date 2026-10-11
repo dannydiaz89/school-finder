@@ -101,10 +101,10 @@ Rules:
 
 ### A. Design system
 
-- [ ] `TextField`, `Select`, `Checkbox`, `Menu` (Radix dropdown with checkbox items), `Popover`, `FilterBar` (text-tab row with hairline), `Table`, `Bar` (thin comparison bar), `LevelDot` (Dashboard level with text), `TypeDot` (district, charter, private), `StatRow`, `KeyValueList`, `Skeleton`, `EmptyState`
-- [ ] Every component: keyboard support, focus ring from tokens, axe test, dark mode check
-- [ ] `/styleguide` renders every component in both themes with sample props
-- [ ] `docs/design-system.md` with tokens, usage, and do/don't list (no pills, no cards, hairlines)
+- [x] `TextField`, `Select`, `Checkbox`, `Menu` (Radix dropdown with checkbox items), `Popover`, `FilterBar` (text-tab row with hairline), `Table`, `Bar` (thin comparison bar), `LevelDot` (Dashboard level with text), `TypeDot` (district, charter, private), `StatRow`, `KeyValueList`, `Skeleton`, `EmptyState`; also `Radio`, `FilterButton`, `Dialog`, `ResultRow`
+- [x] Every component: keyboard support, focus ring from tokens, axe test, dark mode check
+- [x] `/styleguide` renders every component in both themes with sample props
+- [x] `docs/design-system.md` with tokens, usage, and do/don't list (no pills, no cards, hairlines)
 
 ### B. Data
 

@@ -34,7 +34,8 @@
       "copyLink": "Copy link",
       "clearAll": "Clear all",
       "showMore": "More schools",
-      "back": "Back"
+      "back": "Back",
+      "close": "Close"
     },
     "notRated": "Not rated",
     "notReported": "Not reported",
@@ -42,7 +43,15 @@
     "noData": "—",
     "miles": "{count, number} mi",
     "students": "{count, number} students",
-    "sampleData": "Sample values are illustrative."
+    "sampleData": "Sample values are illustrative.",
+    "gradeSpan": "{low}–{high}",
+    "join": "{a} · {b}",
+    "addressShort": "{street}, {city}",
+    "studentTeacher": "{count, number}:1 student–teacher",
+    "indicatorLevel": "{indicator} {level}",
+    "loading": "Loading",
+    "filterValue": "{label}: {value}",
+    "ratio": "{count, number}:1"
   },
   "search": {
     "title": "Find schools near an address",
