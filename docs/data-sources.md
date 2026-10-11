@@ -1,0 +1,162 @@
+# California school data sources
+
+Verified 2026-10-11. All sources are public and free. Everything below is keyed by the 14-character CDS code (county 2 + district 5 + school 7) except where noted.
+
+## Access warning
+
+`www.cde.ca.gov` HTML pages and the School Directory report endpoint sit behind Radware bot protection. After a handful of automated requests they return a CAPTCHA. Static files under `www.cde.ca.gov/.../documents/*.xlsx`, everything on `www3.cde.ca.gov`, and `api.caschooldashboard.org` were not blocked.
+
+Plan: fetch CDE files in a rare batch job (nightly or weekly), cache the results in our own database, never call CDE from the live request path.
+
+**Status 2026-10-11:** the directory report endpoint was already CAPTCHA-blocked for this machine after the research session, and the Internet Archive serves at most 5 MB of it. The fixture builder (`scripts/build-fixtures.ts`) therefore uses the federal NCES CCD directory plus EDGE geocodes for public schools, FRPM for the educational option, and the partial CDE copy where it has a row. The Data workstream should download the CDE directory from a browser once (or from a machine that is not blocked), save it to `.cache/`, and treat NCES as the fallback. Lessons from building the fixtures:
+
+- NCES gives independent charters their own LEA id, so `ST_SCHID` is not a CDS code for them. Match on NCES id (`NCESDist` + `NCESSchool` in the CDE file) and trust the CDE CDS.
+- The EDGE geocode TXT has no header row. Column order is in `scripts/lib/parse.ts`.
+- CAASPP research files store `Type ID`, `Student Group ID`, and `Grade` as unpadded numbers (`7`, `1`, `13`), not the zero-padded codes in the layout document.
+- FRPM headers contain line breaks; normalize whitespace before matching. Its `Academic Year` is "2024-2025", the other files say "2024-25".
+- In the NCES Private School Survey, the physical-address columns (`PL_*`) are blank when they equal the mailing address (`PADDRS`, `PCITY`, `PSTABB`, `PZIP`). Only 212 of 2,334 California rows have `PL_STABB` set.
+- The CDE affidavit's `CDS Code` loses its leading zero; pad to 14 digits.
+
+## 1. Public school directory (CDE "pubschls")
+
+|               |                                                                                                               |
+| ------------- | ------------------------------------------------------------------------------------------------------------- |
+| Landing       | https://www.cde.ca.gov/ds/si/ds/pubschls.asp                                                                  |
+| TXT download  | https://www.cde.ca.gov/schooldirectory/report?rid=dl1&tp=txt (302 to `sd.cde.ca.gov`, ~8.8 MB, tab-delimited) |
+| XLSX download | https://www.cde.ca.gov/SchoolDirectory/report?rid=dl1&tp=xlsx&ict=Y (~4 MB)                                   |
+| Layout        | https://www.cde.ca.gov/ds/si/ds/fspubschls.asp                                                                |
+| Refresh       | Generated live on request; `LastUpDate` per row                                                               |
+
+Columns (46): `CDSCode, NCESDist, NCESSchool, StatusType, County, District, School, Street, StreetAbr, City, Zip, State, MailStreet, MailStrAbr, MailCity, MailZip, MailState, Phone, Ext, FaxNumber, WebSite, OpenDate, ClosedDate, Charter, CharterNum, FundingType, DOC, DOCType, SOC, SOCType, EdOpsCode, EdOpsName, EILCode, EILName, GSoffered, GSserved, Virtual, Magnet, YearRoundYN, FederalDFCDistrictID, Latitude, Longitude, AdmFName, AdmLName, LastUpDate, Multilingual`
+
+Useful value domains:
+
+- `StatusType`: Active / Closed / Merged / Pending. Filter to Active.
+- `Charter`: Y/N. `FundingType`: Directly funded / Locally funded / Not in CS funding model.
+- `SOC` (school type): 60 Elementary, 62 Intermediate/Middle, 64 Junior High, 65 K-12, 66 High School, 63 Alternative Schools of Choice, 68 Continuation, 08 Preschool, 09 Special Ed, etc.
+- `EILCode`: ELEM, INTMIDJR, HS, ELEMHIGH, PS, A, UG.
+- `Virtual`: F exclusively virtual, V primarily virtual, C primarily classroom, N not virtual.
+- `Magnet`: Y/N. `GSoffered` vs `GSserved` (served comes from actual enrollment).
+
+Gotchas:
+
+- UTF-8, CRLF, tab-delimited, one header row.
+- Missing values are the literal string `No Data`, not blank.
+- Includes closed and merged schools (about 37% of rows). Filter `StatusType = Active` and drop CDS codes ending in `0000000` (those are district/county records).
+- Lat/long present for nearly every active school, in decimal degrees.
+- `NCESDist` + `NCESSchool` = 12-digit `NCESSCH` for joining to NCES files.
+
+## 2. Private schools
+
+### 2a. CDE Private School Affidavit (annual XLSX)
+
+- 2024-25: https://www.cde.ca.gov/ds/si/ps/documents/privateschooldata2425.xlsx (430 KB). Prior years use the same path with `2324`, `2223`, etc.
+- Only schools with 6+ students. One sheet, 5 title rows, header on row 6, about 2,960 rows.
+- Columns: `CDS Code, County, Public School District, School Name, Grade K ... Grade 12 Enroll, Total Enrollment, Previous Year Grads, Full Time Teachers, Part Time Teachers, Administrators, Other Staff, Tax Exempt 501(c)(3) - Fed, Tax Exempt 27301d - CA, Tax Exempt 214 - CA, Tax Exempt`
+- Does NOT include address, phone, lat/long, or religious affiliation. Grade span must be derived from non-zero grade columns.
+- `CDS Code` is stored numeric, so the leading zero is dropped (13 digits). Zero-pad to 14.
+- Posted annually around July.
+
+### 2b. CDE School Directory private-school export
+
+- https://www.cde.ca.gov/SchoolDirectory/active-or-pending-schools/2 offers an export with contact info. Whether it includes lat/long is unverified (bot-blocked during research).
+
+### 2c. NCES Private School Universe Survey (PSS), has lat/long and affiliation
+
+- Data page: https://nces.ed.gov/surveys/pss/pssdata.asp. Latest is 2023-24 (biennial; 2025-26 due spring 2027).
+- CSV: https://nces.ed.gov/surveys/pss/zip/pss2324_pu_csv.zip (4 MB). Layout: https://nces.ed.gov/surveys/pss/pdf/layout2023_24.pdf
+- Key variables: `PPIN` (key), `PINST` (name), `PL_ADD / PL_CIT / PL_STABB / PL_ZIP` (physical address), `LATITUDE24`, `LONGITUDE24`, `LOGR2024 / HIGR2024` (grade span), `NUMSTUDS`, `RELIG` (affiliation), `ORIENT`, `TYPOLOGY`.
+- No CDS code. Join to the CDE affidavit by name + zip fuzzy match.
+
+Private schools do not take state tests and have no Dashboard ratings. Show "Not rated" rather than blanks.
+
+## 3. California School Dashboard research files
+
+Latest: 2025 Dashboard (2024-25 data), released 13 Nov 2025. Hub: https://www.cde.ca.gov/ta/ac/cm/
+
+All files are TXT (tab) or XLSX on `www3.cde.ca.gov/researchfiles/cadashboard/`, one row per entity per student group. Use `rtype = S` and `studentgroup = ALL` for the school-level row.
+
+| Indicator                | 2025 TXT file             | Layout page                               |
+| ------------------------ | ------------------------- | ----------------------------------------- |
+| ELA                      | `eladownload2025.txt`     | https://www.cde.ca.gov/ta/ac/cm/ela24.asp |
+| Math                     | `mathdownload2025.txt`    | `math24.asp`                              |
+| Chronic absenteeism      | `chronicdownload2025.txt` | `chronic24.asp`                           |
+| Suspension rate          | `suspdownload2025.txt`    | `suspindicator24.asp`                     |
+| Graduation rate          | `graddownload2025.txt`    | `gradindicator24.asp`                     |
+| College/Career           | `ccidownload2025.txt`     | `ccdata2024.asp`                          |
+| English Learner Progress | `elpidownload2025.txt`    | `elpi24.asp`                              |
+| Science (new 2025)       | `sciencedownload2025.txt` |                                           |
+
+Full URL pattern: `https://www3.cde.ca.gov/researchfiles/cadashboard/eladownload2025.txt`
+
+Shared columns: `cds, rtype, schoolname, districtname, countyname, charter_flag, coe_flag, dass_flag, studentgroup, currdenom, currstatus, priorstatus, change, statuslevel, changelevel, color, box, currnsizemet, accountabilitymet, indicator, reportingyear`.
+
+- `color`: 1 Red, 2 Orange, 3 Yellow, 4 Green, 5 Blue, 0 none.
+- `currstatus` for ELA/Math is Distance From Standard in scale-score points (e.g. `-51.3`).
+- Minimum n-size is 30; small schools have no color.
+
+Gotcha: `www3.cde.ca.gov` returns 303 to HEAD requests but 200 to GET.
+
+### Undocumented Dashboard JSON API
+
+Found by watching the Dashboard SPA. Open, no key. Fragile, so use only as a cross-check.
+
+- `GET https://api.caschooldashboard.org/LEAs/schoolYears`
+- `GET https://api.caschooldashboard.org/LEAs/{cds}/{schoolYearId}/true` (profile: address, enrollment, charter, grade span)
+- `GET https://api.caschooldashboard.org/Reports/{cds}/{schoolYearId}/SummaryCards` (8 indicators with status, change, performance 1-5)
+
+## 4. CAASPP (Smarter Balanced) test results
+
+- File list: https://caaspp-elpac.ets.org/caaspp/ResearchFileListSB (the old `cde.ca.gov` URL now redirects here).
+- Latest: 2024-25 (test year 2025).
+- Statewide file, all students only: https://caaspp-elpac.ets.org/caaspp/researchfiles/sb_ca2025_1_csv_v1.zip (7.8 MB zip, 30 MB unzipped). All student groups: `sb_ca2025_all_csv_v1.zip` (154 MB).
+- Entities lookup: `sb_ca2025entities_csv.zip`. Layout: https://caaspp-elpac.ets.org/caaspp/docs/2025_SBAC_Research%20File%20Layout.xlsx
+- Format gotcha: the "csv" zip holds a `.txt` that is caret (`^`) delimited.
+- Key: `County Code ^ District Code ^ School Code` + `Type ID` (07 school, 09 direct-funded charter, 10 locally-funded charter) + `Test ID` (1 ELA, 2 Math) + `Student Group ID` (001 all) + `Grade` (13 = all grades).
+- Columns include `Percentage Standard Met and Above`, `Mean Scale Score`, and per-level counts. Groups under 11 students are suppressed.
+
+## 5. Other CDE files
+
+| Dataset                   | File                                                                        | Notes                                                                                                                                                                                                                        |
+| ------------------------- | --------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Census Day enrollment     | https://www3.cde.ca.gov/demo-downloads/census/cdenroll2425.txt (31 MB, tab) | Filter `AggregateLevel = S`, `ReportingCategory = TA` for totals; columns `TOTAL_ENR, GR_TK ... GR_12`, plus race/gender/EL breakdowns in other rows. `*` = suppressed. Layout: https://www.cde.ca.gov/ds/ad/fsenrcensus.asp |
+| Free/reduced meals (FRPM) | https://www.cde.ca.gov/ds/ad/documents/frpm2425.xlsx (2.2 MB)               | Sheet "FRPM School-Level Data", header on row 2. Percents stored as fractions. Also carries charter flag and grade span.                                                                                                     |
+| Student/staff ratios      | https://www3.cde.ca.gov/demo-downloads/staff/strat2324.txt (3.4 MB)         | Latest posted is 2023-24. `TCH_FTE_N`, `STU_TCH_RATIO`. FTE values contain thousands separators.                                                                                                                             |
+| Downloadable files index  | https://www.cde.ca.gov/ds/ad/downloadabledata.asp                           | Also chronic absenteeism, graduation/dropout, staff demographics.                                                                                                                                                            |
+
+## 6. NCES national files (optional, for cross-checks and private-school geocodes)
+
+- CCD school directory 2024-25: https://nces.ed.gov/ccd/Data/zip/ccd_sch_029_2425_w_1a_073025.zip (12 MB). Key `NCESSCH`. No lat/long.
+- EDGE public school geocodes 2024-25: https://nces.ed.gov/programs/edge/data/EDGE_GEOCODE_PUBLICSCH_2425.zip (30 MB). `LAT`, `LON`, locale codes.
+- EDGE private school geocodes 2023-24: https://nces.ed.gov/programs/edge/data/EDGE_GEOCODE_PRIVATESCH_2324.zip (6 MB). Key `PPIN`.
+
+## 7. Attendance boundaries
+
+- NCES SABS, 2015-16, was the final collection: https://nces.ed.gov/programs/edge/SABS (shapefile 556 MB). Old but still the only statewide-ish layer.
+- No current statewide California boundary dataset exists. Large districts publish their own GIS.
+- Plan: show "likely in boundary" from SABS labelled as 2015-16 data, and link to the district's own locator.
+
+## 8. Geocoding the user's address
+
+| Service            | Terms                                                                                                                                                                                      |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| US Census Geocoder | Free, no key, server-side only (no CORS). `https://geocoding.geo.census.gov/geocoder/locations/onelineaddress?address=...&benchmark=Public_AR_Current&format=json`. Street-level accuracy. |
+| Nominatim (OSM)    | 1 request/sec, identifying User-Agent required, no autocomplete, results must be cached. Prototype only.                                                                                   |
+| Mapbox Geocoding   | 100k requests/month free (temporary results), then $0.75 per 1k. Permanent (storable) $5 per 1k.                                                                                           |
+| Google Geocoding   | 10k free/month then $5 per 1k. Results must be displayed on a Google map.                                                                                                                  |
+
+Recommendation: Census geocoder server-side for the MVP, with Mapbox autocomplete later if typing full addresses feels clunky.
+
+## 9. Existing aggregators
+
+- GreatSchools API: open signups, 15k calls/month included, caching not permitted, logo attribution mandatory, pricing unpublished.
+- SchoolDigger API: free tier 20 calls/day, paid from $19.90/month. No boundaries.
+- Niche: no public API.
+
+None are needed. The state and federal files above cover everything in the mockups.
+
+## Unverified
+
+1. Whether the CDE directory private-school export carries lat/long.
+2. Dashboard API `indicatorId` to name mapping.
+3. Penn State LSABS boundary release status.

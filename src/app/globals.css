@@ -1,0 +1,115 @@
+@import "tailwindcss";
+@import "../styles/tokens.css";
+
+/* Dark variant keyed to the theme attribute rather than the OS, so the toggle wins. */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+/*
+ * Expose tokens to Tailwind. Use these utilities in components:
+ *   bg-bg bg-bg-subtle text-fg text-fg-muted text-link text-accent
+ *   border-hairline border-border  rounded-md  text-base text-sm ...
+ */
+@theme inline {
+  --color-bg: var(--bg);
+  --color-bg-subtle: var(--bg-subtle);
+  --color-bg-raised: var(--bg-raised);
+  --color-bg-map: var(--bg-map);
+
+  --color-fg: var(--fg);
+  --color-fg-secondary: var(--fg-secondary);
+  --color-fg-muted: var(--fg-muted);
+  --color-fg-on-accent: var(--fg-on-accent);
+
+  --color-link: var(--link);
+  --color-link-visited: var(--link-visited);
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-subtle: var(--accent-subtle);
+
+  --color-hairline: var(--hairline);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-focus: var(--focus);
+
+  --color-level-red: var(--level-red);
+  --color-level-orange: var(--level-orange);
+  --color-level-yellow: var(--level-yellow);
+  --color-level-green: var(--level-green);
+  --color-level-blue: var(--level-blue);
+  --color-level-none: var(--level-none);
+
+  --color-type-district: var(--type-district);
+  --color-type-charter: var(--type-charter);
+  --color-type-private: var(--type-private);
+
+  --color-bar-track: var(--bar-track);
+  --color-bar-primary: var(--bar-primary);
+  --color-bar-secondary: var(--bar-secondary);
+
+  --font-sans: var(--font-sans), "Google Sans", Roboto, system-ui, sans-serif;
+
+  --text-xs: var(--text-xs);
+  --text-sm: var(--text-sm);
+  --text-base: var(--text-base);
+  --text-md: var(--text-md);
+  --text-lg: var(--text-lg);
+  --text-xl: var(--text-xl);
+  --text-2xl: var(--text-2xl);
+  --text-3xl: var(--text-3xl);
+  --text-4xl: var(--text-4xl);
+  --text-5xl: var(--text-5xl);
+
+  --radius-sm: var(--radius-sm);
+  --radius-md: var(--radius-md);
+  --radius-lg: var(--radius-lg);
+  --radius-full: var(--radius-full);
+
+  --shadow-popover: var(--shadow-popover);
+}
+
+@layer base {
+  html {
+    background: var(--bg);
+    color: var(--fg);
+    font-family: var(--font-sans), "Google Sans", Roboto, system-ui, sans-serif;
+    font-size: var(--text-base);
+    line-height: var(--leading-normal);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background: var(--bg);
+    color: var(--fg);
+  }
+
+  a {
+    color: var(--link);
+  }
+
+  a:hover {
+    text-decoration: underline;
+  }
+
+  /* One focus style for everything interactive. */
+  :focus-visible {
+    outline: 2px solid var(--focus);
+    outline-offset: 2px;
+    border-radius: var(--radius-sm);
+  }
+
+  ::selection {
+    background: var(--accent-subtle);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}

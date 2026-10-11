@@ -1,0 +1,289 @@
+{
+  "common": {
+    "appName": "School Finder",
+    "appNameAccent": "School",
+    "appNameRest": "Finder",
+    "skipToContent": "Skip to content",
+    "nav": {
+      "search": "Search",
+      "compare": "Compare",
+      "compareWithCount": "Compare ({count})",
+      "data": "Data sources",
+      "styleguide": "Style guide"
+    },
+    "theme": {
+      "label": "Theme",
+      "light": "Light",
+      "dark": "Dark",
+      "system": "System"
+    },
+    "locale": {
+      "label": "Language",
+      "en": "English",
+      "es": "Español"
+    },
+    "actions": {
+      "details": "Details",
+      "website": "Website",
+      "addToCompare": "Add to compare",
+      "inCompareList": "In compare list",
+      "remove": "Remove",
+      "reset": "Reset",
+      "apply": "Apply",
+      "cancel": "Cancel",
+      "copyLink": "Copy link",
+      "clearAll": "Clear all",
+      "showMore": "More schools",
+      "back": "Back"
+    },
+    "notRated": "Not rated",
+    "notReported": "Not reported",
+    "notTested": "Not tested",
+    "noData": "—",
+    "miles": "{count, number} mi",
+    "students": "{count, number} students",
+    "sampleData": "Sample values are illustrative."
+  },
+  "search": {
+    "title": "Find schools near an address",
+    "addressLabel": "Home address",
+    "addressPlaceholder": "Street address, city, CA",
+    "radiusLabel": "Radius",
+    "radius": "within {miles, number} mi",
+    "submit": "Find schools",
+    "filters": {
+      "label": "Filters",
+      "type": "Type",
+      "grades": "Grades",
+      "rating": "Rating",
+      "programs": "Programs",
+      "size": "Size",
+      "sort": "Sort",
+      "showSpecialized": "Show specialized schools"
+    },
+    "sort": {
+      "distance": "Distance",
+      "ela": "ELA performance",
+      "math": "Math performance",
+      "enrollment": "Enrollment"
+    },
+    "resultsSummary": "{count, plural, =0 {No schools} one {# school} other {# schools}} within {miles, number} miles",
+    "resultsBreakdown": "{district, number} district, {charter, number} charter, {private, number} private",
+    "hiddenByFilter": "{count, number} hidden by your filters",
+    "notRatedPrivate": "Not rated on the CA School Dashboard (private schools do not take state tests)",
+    "map": {
+      "label": "Map of results",
+      "largerMap": "Larger map",
+      "home": "Home",
+      "radiusRing": "Dashed ring = {miles, number} mi",
+      "pin": "Result {number}: {name}"
+    },
+    "about": {
+      "title": "About these results",
+      "body": "Directory, charter, and address data from the California Department of Education. Ratings from the {year} California School Dashboard. Private schools from the Private School Affidavit.",
+      "link": "Data sources and update dates"
+    },
+    "empty": {
+      "title": "No schools match",
+      "body": "Try a larger radius or fewer filters."
+    },
+    "error": {
+      "geocode": "We could not find that address. Check the spelling and include the city.",
+      "generic": "Something went wrong. Try again."
+    }
+  },
+  "school": {
+    "backToResults": "Back to results",
+    "stats": {
+      "enrollment": "Students, {year}",
+      "studentTeacher": "Student–teacher",
+      "frpm": "Free / reduced meals",
+      "englishLearners": "English learners"
+    },
+    "sections": {
+      "overview": "Overview",
+      "dashboard": "California School Dashboard",
+      "dashboardNote": "{year} · five levels, Blue is highest",
+      "tests": "Test scores",
+      "testsNote": "CAASPP {year} · students meeting or exceeding standard",
+      "students": "Students",
+      "studentsNote": "Census Day enrollment, {year}",
+      "facts": "Directory facts",
+      "nearby": "Nearby alternatives"
+    },
+    "facts": {
+      "address": "Address",
+      "fromHome": "From home",
+      "phone": "Phone",
+      "grades": "Grades",
+      "type": "Type",
+      "charterNumber": "Charter number",
+      "magnet": "Magnet",
+      "virtual": "Virtual instruction",
+      "multilingual": "Multilingual program",
+      "opened": "Opened",
+      "cds": "CDS code",
+      "nces": "NCES ID",
+      "lastUpdated": "Directory updated",
+      "affiliation": "Affiliation",
+      "teachers": "Full-time teachers"
+    },
+    "compare": {
+      "thisSchool": "this school",
+      "district": "District",
+      "state": "California"
+    },
+    "notApplicable": "Graduation rate and College/Career do not apply to this grade span.",
+    "links": {
+      "dashboard": "CA School Dashboard",
+      "directions": "Directions"
+    }
+  },
+  "compare": {
+    "title": "Comparing {count, plural, one {# school} other {# schools}}",
+    "subtitle": "Distances from {address}. Bold marks the best value in a row where a comparison is meaningful.",
+    "empty": "Your compare list is empty. Add schools from search results.",
+    "max": "You can compare up to {max, number} schools.",
+    "groups": {
+      "location": "Location and grades",
+      "dashboard": "California School Dashboard, {year}",
+      "tests": "Test scores, CAASPP {year}",
+      "students": "School and students"
+    },
+    "rows": {
+      "distance": "Distance from home",
+      "grades": "Grades",
+      "tk": "Transitional kindergarten",
+      "enrollment": "Enrollment",
+      "studentTeacher": "Student–teacher ratio",
+      "frpm": "Free / reduced meals",
+      "englishLearners": "English learners",
+      "programs": "Programs",
+      "magnet": "Magnet"
+    },
+    "privateNote": "Private schools file an annual affidavit with the California Department of Education but do not take state tests or appear on the Dashboard, so those rows show \"Not rated\"."
+  },
+  "data": {
+    "title": "Data sources",
+    "intro": "Every number in this app comes from a public file published by a state or federal agency. Nothing is estimated or editorialized.",
+    "updated": "Updated {date, date, medium}",
+    "rows": "{count, number} rows",
+    "source": "Source"
+  },
+  "labels": {
+    "schoolType": {
+      "district": "District",
+      "charter": "Charter",
+      "private": "Private",
+      "districtPublic": "District · public",
+      "charterPublic": "Charter · public"
+    },
+    "level": {
+      "red": "Red",
+      "orange": "Orange",
+      "yellow": "Yellow",
+      "green": "Green",
+      "blue": "Blue",
+      "none": "No level"
+    },
+    "indicator": {
+      "ela": "English Language Arts",
+      "elaShort": "ELA",
+      "math": "Mathematics",
+      "mathShort": "Math",
+      "chronicAbsenteeism": "Chronic absenteeism",
+      "chronicAbsenteeismShort": "Absenteeism",
+      "suspension": "Suspension rate",
+      "suspensionShort": "Suspension",
+      "graduation": "Graduation rate",
+      "graduationShort": "Graduation",
+      "collegeCareer": "College/Career",
+      "collegeCareerShort": "College/Career",
+      "elpi": "English learner progress",
+      "elpiShort": "EL progress",
+      "science": "Science",
+      "scienceShort": "Science"
+    },
+    "change": {
+      "increased": "Increased {points, number}",
+      "declined": "Declined {points, number}",
+      "maintained": "Maintained"
+    },
+    "grade": {
+      "P": "Preschool",
+      "TK": "TK",
+      "K": "K",
+      "1": "1",
+      "2": "2",
+      "3": "3",
+      "4": "4",
+      "5": "5",
+      "6": "6",
+      "7": "7",
+      "8": "8",
+      "9": "9",
+      "10": "10",
+      "11": "11",
+      "12": "12",
+      "A": "Adult"
+    },
+    "gradeBand": {
+      "tk": "TK–K",
+      "elementary": "Elementary",
+      "middle": "Middle",
+      "high": "High"
+    },
+    "instructionLevel": {
+      "PS": "Preschool",
+      "ELEM": "Elementary",
+      "INTMIDJR": "Middle",
+      "ELEMHIGH": "Elementary–high",
+      "HS": "High school",
+      "A": "Adult",
+      "UG": "Ungraded"
+    },
+    "educationalOption": {
+      "TRAD": "Traditional",
+      "ALTSOC": "Alternative school of choice",
+      "CON": "Continuation",
+      "COMM": "County community",
+      "COMMDAY": "Community day",
+      "OPP": "Opportunity",
+      "JUV": "Juvenile court",
+      "YTH": "Youth authority",
+      "SSS": "State special school",
+      "SPEC": "Special education",
+      "SPECON": "Special education consortium",
+      "SPEDATP": "Special education alternative",
+      "HOMHOS": "Home and hospital",
+      "ROP": "Regional occupational program"
+    },
+    "virtual": {
+      "F": "Exclusively virtual",
+      "V": "Primarily virtual",
+      "C": "Primarily classroom",
+      "N": "Not virtual",
+      "P": "Partial virtual"
+    },
+    "program": {
+      "magnet": "Magnet",
+      "multilingual": "Dual language",
+      "virtual": "Virtual"
+    },
+    "affiliation": {
+      "catholic": "Catholic",
+      "otherReligious": "Other religious",
+      "nonsectarian": "Nonsectarian"
+    },
+    "yesNo": {
+      "yes": "Yes",
+      "no": "No"
+    }
+  },
+  "styleguide": {
+    "title": "Style guide",
+    "intro": "Every token and component in both themes.",
+    "tokens": "Tokens",
+    "components": "Components"
+  }
+}

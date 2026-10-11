@@ -1,0 +1,289 @@
+{
+  "common": {
+    "appName": "Buscador de escuelas",
+    "appNameAccent": "School",
+    "appNameRest": "Finder",
+    "skipToContent": "Ir al contenido",
+    "nav": {
+      "search": "Buscar",
+      "compare": "Comparar",
+      "compareWithCount": "Comparar ({count})",
+      "data": "Fuentes de datos",
+      "styleguide": "Guía de estilo"
+    },
+    "theme": {
+      "label": "Tema",
+      "light": "Claro",
+      "dark": "Oscuro",
+      "system": "Sistema"
+    },
+    "locale": {
+      "label": "Idioma",
+      "en": "English",
+      "es": "Español"
+    },
+    "actions": {
+      "details": "Detalles",
+      "website": "Sitio web",
+      "addToCompare": "Agregar a comparar",
+      "inCompareList": "En la lista de comparación",
+      "remove": "Quitar",
+      "reset": "Restablecer",
+      "apply": "Aplicar",
+      "cancel": "Cancelar",
+      "copyLink": "Copiar enlace",
+      "clearAll": "Borrar todo",
+      "showMore": "Más escuelas",
+      "back": "Volver"
+    },
+    "notRated": "Sin calificación",
+    "notReported": "No reportado",
+    "notTested": "Sin evaluar",
+    "noData": "—",
+    "miles": "{count, number} mi",
+    "students": "{count, number} estudiantes",
+    "sampleData": "Los valores de muestra son ilustrativos."
+  },
+  "search": {
+    "title": "Buscar escuelas cerca de una dirección",
+    "addressLabel": "Dirección de casa",
+    "addressPlaceholder": "Calle y número, ciudad, CA",
+    "radiusLabel": "Radio",
+    "radius": "a {miles, number} mi",
+    "submit": "Buscar escuelas",
+    "filters": {
+      "label": "Filtros",
+      "type": "Tipo",
+      "grades": "Grados",
+      "rating": "Calificación",
+      "programs": "Programas",
+      "size": "Tamaño",
+      "sort": "Ordenar",
+      "showSpecialized": "Mostrar escuelas especializadas"
+    },
+    "sort": {
+      "distance": "Distancia",
+      "ela": "Desempeño en lectura",
+      "math": "Desempeño en matemáticas",
+      "enrollment": "Matrícula"
+    },
+    "resultsSummary": "{count, plural, =0 {Ninguna escuela} one {# escuela} other {# escuelas}} a {miles, number} millas",
+    "resultsBreakdown": "{district, number} de distrito, {charter, number} chárter, {private, number} privadas",
+    "hiddenByFilter": "{count, number} ocultas por tus filtros",
+    "notRatedPrivate": "Sin calificación en el CA School Dashboard (las escuelas privadas no toman las pruebas estatales)",
+    "map": {
+      "label": "Mapa de resultados",
+      "largerMap": "Mapa más grande",
+      "home": "Casa",
+      "radiusRing": "Anillo punteado = {miles, number} mi",
+      "pin": "Resultado {number}: {name}"
+    },
+    "about": {
+      "title": "Sobre estos resultados",
+      "body": "Datos de directorio, chárter y dirección del Departamento de Educación de California. Calificaciones del California School Dashboard {year}. Escuelas privadas del Private School Affidavit.",
+      "link": "Fuentes de datos y fechas de actualización"
+    },
+    "empty": {
+      "title": "Ninguna escuela coincide",
+      "body": "Prueba con un radio mayor o menos filtros."
+    },
+    "error": {
+      "geocode": "No encontramos esa dirección. Revisa la ortografía e incluye la ciudad.",
+      "generic": "Algo salió mal. Inténtalo de nuevo."
+    }
+  },
+  "school": {
+    "backToResults": "Volver a los resultados",
+    "stats": {
+      "enrollment": "Estudiantes, {year}",
+      "studentTeacher": "Estudiantes por maestro",
+      "frpm": "Comidas gratis o a precio reducido",
+      "englishLearners": "Aprendices de inglés"
+    },
+    "sections": {
+      "overview": "Resumen",
+      "dashboard": "California School Dashboard",
+      "dashboardNote": "{year} · cinco niveles, Azul es el más alto",
+      "tests": "Resultados de pruebas",
+      "testsNote": "CAASPP {year} · estudiantes que cumplen o superan el estándar",
+      "students": "Estudiantes",
+      "studentsNote": "Matrícula del Día del Censo, {year}",
+      "facts": "Datos del directorio",
+      "nearby": "Alternativas cercanas"
+    },
+    "facts": {
+      "address": "Dirección",
+      "fromHome": "Desde casa",
+      "phone": "Teléfono",
+      "grades": "Grados",
+      "type": "Tipo",
+      "charterNumber": "Número de chárter",
+      "magnet": "Magnet",
+      "virtual": "Instrucción virtual",
+      "multilingual": "Programa multilingüe",
+      "opened": "Apertura",
+      "cds": "Código CDS",
+      "nces": "ID NCES",
+      "lastUpdated": "Directorio actualizado",
+      "affiliation": "Afiliación",
+      "teachers": "Maestros de tiempo completo"
+    },
+    "compare": {
+      "thisSchool": "esta escuela",
+      "district": "Distrito",
+      "state": "California"
+    },
+    "notApplicable": "La tasa de graduación y Universidad/Carrera no aplican a este rango de grados.",
+    "links": {
+      "dashboard": "CA School Dashboard",
+      "directions": "Cómo llegar"
+    }
+  },
+  "compare": {
+    "title": "Comparando {count, plural, one {# escuela} other {# escuelas}}",
+    "subtitle": "Distancias desde {address}. La negrita marca el mejor valor de cada fila donde la comparación tiene sentido.",
+    "empty": "Tu lista de comparación está vacía. Agrega escuelas desde los resultados.",
+    "max": "Puedes comparar hasta {max, number} escuelas.",
+    "groups": {
+      "location": "Ubicación y grados",
+      "dashboard": "California School Dashboard, {year}",
+      "tests": "Resultados de pruebas, CAASPP {year}",
+      "students": "Escuela y estudiantes"
+    },
+    "rows": {
+      "distance": "Distancia desde casa",
+      "grades": "Grados",
+      "tk": "Kínder de transición",
+      "enrollment": "Matrícula",
+      "studentTeacher": "Estudiantes por maestro",
+      "frpm": "Comidas gratis o a precio reducido",
+      "englishLearners": "Aprendices de inglés",
+      "programs": "Programas",
+      "magnet": "Magnet"
+    },
+    "privateNote": "Las escuelas privadas presentan una declaración anual al Departamento de Educación de California, pero no toman las pruebas estatales ni aparecen en el Dashboard, por eso esas filas muestran \"Sin calificación\"."
+  },
+  "data": {
+    "title": "Fuentes de datos",
+    "intro": "Cada cifra en esta aplicación proviene de un archivo público publicado por una agencia estatal o federal. Nada es estimado ni editorializado.",
+    "updated": "Actualizado {date, date, medium}",
+    "rows": "{count, number} filas",
+    "source": "Fuente"
+  },
+  "labels": {
+    "schoolType": {
+      "district": "De distrito",
+      "charter": "Chárter",
+      "private": "Privada",
+      "districtPublic": "De distrito · pública",
+      "charterPublic": "Chárter · pública"
+    },
+    "level": {
+      "red": "Rojo",
+      "orange": "Naranja",
+      "yellow": "Amarillo",
+      "green": "Verde",
+      "blue": "Azul",
+      "none": "Sin nivel"
+    },
+    "indicator": {
+      "ela": "Artes del lenguaje en inglés",
+      "elaShort": "ELA",
+      "math": "Matemáticas",
+      "mathShort": "Mate",
+      "chronicAbsenteeism": "Ausentismo crónico",
+      "chronicAbsenteeismShort": "Ausentismo",
+      "suspension": "Tasa de suspensión",
+      "suspensionShort": "Suspensión",
+      "graduation": "Tasa de graduación",
+      "graduationShort": "Graduación",
+      "collegeCareer": "Universidad/Carrera",
+      "collegeCareerShort": "Universidad/Carrera",
+      "elpi": "Progreso de aprendices de inglés",
+      "elpiShort": "Progreso EL",
+      "science": "Ciencias",
+      "scienceShort": "Ciencias"
+    },
+    "change": {
+      "increased": "Aumentó {points, number}",
+      "declined": "Disminuyó {points, number}",
+      "maintained": "Se mantuvo"
+    },
+    "grade": {
+      "P": "Preescolar",
+      "TK": "TK",
+      "K": "K",
+      "1": "1",
+      "2": "2",
+      "3": "3",
+      "4": "4",
+      "5": "5",
+      "6": "6",
+      "7": "7",
+      "8": "8",
+      "9": "9",
+      "10": "10",
+      "11": "11",
+      "12": "12",
+      "A": "Adultos"
+    },
+    "gradeBand": {
+      "tk": "TK–K",
+      "elementary": "Primaria",
+      "middle": "Secundaria",
+      "high": "Preparatoria"
+    },
+    "instructionLevel": {
+      "PS": "Preescolar",
+      "ELEM": "Primaria",
+      "INTMIDJR": "Secundaria",
+      "ELEMHIGH": "Primaria–preparatoria",
+      "HS": "Preparatoria",
+      "A": "Adultos",
+      "UG": "Sin grado"
+    },
+    "educationalOption": {
+      "TRAD": "Tradicional",
+      "ALTSOC": "Escuela alternativa de elección",
+      "CON": "Continuación",
+      "COMM": "Comunitaria del condado",
+      "COMMDAY": "Comunitaria de día",
+      "OPP": "De oportunidad",
+      "JUV": "Tribunal de menores",
+      "YTH": "Autoridad juvenil",
+      "SSS": "Escuela especial estatal",
+      "SPEC": "Educación especial",
+      "SPECON": "Consorcio de educación especial",
+      "SPEDATP": "Alternativa de educación especial",
+      "HOMHOS": "Hogar y hospital",
+      "ROP": "Programa ocupacional regional"
+    },
+    "virtual": {
+      "F": "Exclusivamente virtual",
+      "V": "Principalmente virtual",
+      "C": "Principalmente presencial",
+      "N": "No virtual",
+      "P": "Parcialmente virtual"
+    },
+    "program": {
+      "magnet": "Magnet",
+      "multilingual": "Lenguaje dual",
+      "virtual": "Virtual"
+    },
+    "affiliation": {
+      "catholic": "Católica",
+      "otherReligious": "Otra religiosa",
+      "nonsectarian": "No confesional"
+    },
+    "yesNo": {
+      "yes": "Sí",
+      "no": "No"
+    }
+  },
+  "styleguide": {
+    "title": "Guía de estilo",
+    "intro": "Cada token y componente en ambos temas.",
+    "tokens": "Tokens",
+    "components": "Componentes"
+  }
+}

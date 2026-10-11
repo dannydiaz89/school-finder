@@ -1,0 +1,178 @@
+/*
+ * Design tokens. Every color, size, and radius in the app comes from here.
+ * Components use the Tailwind utilities generated from these in globals.css
+ * (bg-bg, text-fg, border-hairline, ...), never raw hex values.
+ *
+ * Light is the default. Dark is applied when the root carries data-theme="dark"
+ * (set by the theme toggle) or when the OS prefers dark and no explicit light
+ * choice has been made.
+ */
+
+:root {
+  color-scheme: light;
+
+  /* Surfaces */
+  --bg: #ffffff;
+  --bg-subtle: #f8f9fa;
+  --bg-raised: #ffffff;
+  --bg-map: #f1f3f4;
+
+  /* Text */
+  --fg: #202124;
+  --fg-secondary: #4d5156;
+  --fg-muted: #70757a;
+  --fg-on-accent: #ffffff;
+
+  /* Links and accent */
+  --link: #1a0dab;
+  --link-visited: #681da8;
+  --accent: #1a73e8;
+  --accent-hover: #1765cc;
+  --accent-subtle: #e8f0fe;
+
+  /* Lines */
+  --hairline: #ebebeb;
+  --border: #dadce0;
+  --border-strong: #bdc1c6;
+
+  /* Focus */
+  --focus: #1a73e8;
+
+  /* Shadow for popovers and menus (the only place a shadow is allowed) */
+  --shadow-popover: 0 2px 6px rgba(60, 64, 67, 0.15), 0 1px 2px rgba(60, 64, 67, 0.1);
+
+  /* California School Dashboard performance levels, lowest to highest */
+  --level-red: #d93025;
+  --level-orange: #e8710a;
+  --level-yellow: #f9ab00;
+  --level-green: #188038;
+  --level-blue: #1a73e8;
+  --level-none: #bdc1c6;
+
+  /* School types */
+  --type-district: #1a73e8;
+  --type-charter: #9334e6;
+  --type-private: #12805c;
+
+  /* Charts */
+  --bar-track: #f1f3f4;
+  --bar-primary: #1a73e8;
+  --bar-secondary: #bdc1c6;
+
+  /* Type scale (px) */
+  --text-xs: 12px;
+  --text-sm: 13px;
+  --text-base: 14px;
+  --text-md: 15px;
+  --text-lg: 16px;
+  --text-xl: 18px;
+  --text-2xl: 20px;
+  --text-3xl: 22px;
+  --text-4xl: 26px;
+  --text-5xl: 30px;
+
+  --leading-tight: 1.2;
+  --leading-normal: 1.45;
+  --leading-relaxed: 1.58;
+
+  /* Radii */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-full: 9999px;
+
+  /* Layout */
+  --content-width: 652px;
+  --panel-width: 460px;
+  --gutter: 28px;
+  --left-offset: clamp(28px, 12vw, 184px);
+}
+
+[data-theme="dark"] {
+  color-scheme: dark;
+
+  --bg: #202124;
+  --bg-subtle: #303134;
+  --bg-raised: #303134;
+  --bg-map: #3c4043;
+
+  --fg: #e8eaed;
+  --fg-secondary: #bdc1c6;
+  --fg-muted: #9aa0a6;
+  --fg-on-accent: #202124;
+
+  --link: #8ab4f8;
+  --link-visited: #c58af9;
+  --accent: #8ab4f8;
+  --accent-hover: #aecbfa;
+  --accent-subtle: #394457;
+
+  --hairline: #3c4043;
+  --border: #5f6368;
+  --border-strong: #80868b;
+
+  --focus: #8ab4f8;
+
+  --shadow-popover: 0 2px 6px rgba(0, 0, 0, 0.4), 0 1px 2px rgba(0, 0, 0, 0.3);
+
+  --level-red: #f28b82;
+  --level-orange: #fcad70;
+  --level-yellow: #fdd663;
+  --level-green: #81c995;
+  --level-blue: #8ab4f8;
+  --level-none: #5f6368;
+
+  --type-district: #8ab4f8;
+  --type-charter: #c58af9;
+  --type-private: #5bb974;
+
+  --bar-track: #3c4043;
+  --bar-primary: #8ab4f8;
+  --bar-secondary: #5f6368;
+}
+
+/* OS preference when JavaScript has not set an explicit theme yet. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]):not([data-theme="dark"]) {
+    color-scheme: dark;
+
+    --bg: #202124;
+    --bg-subtle: #303134;
+    --bg-raised: #303134;
+    --bg-map: #3c4043;
+
+    --fg: #e8eaed;
+    --fg-secondary: #bdc1c6;
+    --fg-muted: #9aa0a6;
+    --fg-on-accent: #202124;
+
+    --link: #8ab4f8;
+    --link-visited: #c58af9;
+    --accent: #8ab4f8;
+    --accent-hover: #aecbfa;
+    --accent-subtle: #394457;
+
+    --hairline: #3c4043;
+    --border: #5f6368;
+    --border-strong: #80868b;
+
+    --focus: #8ab4f8;
+
+    --shadow-popover: 0 2px 6px rgba(0, 0, 0, 0.4), 0 1px 2px rgba(0, 0, 0, 0.3);
+
+    --level-red: #f28b82;
+    --level-orange: #fcad70;
+    --level-yellow: #fdd663;
+    --level-green: #81c995;
+    --level-blue: #8ab4f8;
+    --level-none: #5f6368;
+
+    --type-district: #8ab4f8;
+    --type-charter: #c58af9;
+    --type-private: #5bb974;
+
+    --bar-track: #3c4043;
+    --bar-primary: #8ab4f8;
+    --bar-secondary: #5f6368;
+  }
+}
