@@ -120,6 +120,13 @@ export default function SearchMap({
     canvas.removeAttribute("aria-label");
     // Fires on first load and after every setStyle, when sources and layers must be re-added.
     map.on("style.load", () => setStyleReady((n) => n + 1));
+    // On narrow maps the attribution is a toggle that MapLibre opens by default, covering a
+    // third of a phone-sized map. Start it collapsed; the "i" button still reveals the credits.
+    map.once("load", () => {
+      const attribution = container.querySelector(".maplibregl-ctrl-attrib.maplibregl-compact");
+      attribution?.classList.remove("maplibregl-compact-show");
+      attribution?.removeAttribute("open");
+    });
     mapRef.current = map;
     return () => {
       map.remove();

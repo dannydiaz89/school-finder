@@ -33,7 +33,7 @@ describe("useCompareList", () => {
     expect(result.current.has(C)).toBe(false);
     expect(result.current.isFull).toBe(false);
     expect(result.current.max).toBe(5);
-    expect(result.current.query).toBe(`?compare=${A},${B}`);
+    expect(result.current.query).toBe(`?compare=${A},${B}&address=x`);
   });
 
   // URLSearchParams encodes the commas; parseCompareParams decodes them.

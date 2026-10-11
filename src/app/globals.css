@@ -116,3 +116,28 @@
     }
   }
 }
+
+/* Map credits follow the theme instead of MapLibre's fixed white box. */
+.maplibregl-ctrl-attrib {
+  background-color: color-mix(in srgb, var(--bg) 88%, transparent) !important;
+  color: var(--fg-secondary);
+  font-size: 11px;
+}
+
+.maplibregl-ctrl-attrib a {
+  color: var(--fg-secondary);
+}
+
+.maplibregl-ctrl-attrib.maplibregl-compact {
+  background-color: var(--bg) !important;
+}
+
+[data-theme="dark"] .maplibregl-ctrl-attrib-button {
+  filter: invert(1);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .maplibregl-ctrl-attrib-button {
+    filter: invert(1);
+  }
+}

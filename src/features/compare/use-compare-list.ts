@@ -14,6 +14,9 @@ import { MAX_COMPARE, parseCompareParams, type CdsCode } from "@/lib/schemas";
  * component using this hook must render inside a <Suspense> boundary
  * because `useSearchParams` is runtime data under Cache Components.
  */
+/** Search context carried on cross-page links alongside the compare list. */
+const HOME_KEYS = ["address", "lat", "lng", "radius"] as const;
+
 export function useCompareList() {
   const searchParams = useSearchParams();
   const list = useMemo(() => parseCompareParams(searchParams).compare, [searchParams]);
@@ -52,8 +55,21 @@ export function useCompareList() {
 
   const clear = useCallback(() => write([]), [write]);
 
-  /** Query string to append to a link so the list survives navigation, e.g. `?compare=a,b`. */
-  const query = list.length ? `?compare=${list.join(",")}` : "";
+  /**
+   * Query string to append to a link so the visitor's context survives
+   * navigation: the compare list, plus the home address and coordinates when a
+   * search has been run. Detail and compare pages use the coordinates to show
+   * distance from home. Example: `?compare=a,b&address=...&lat=..&lng=..`.
+   */
+  const query = useMemo(() => {
+    const parts: string[] = [];
+    if (list.length) parts.push(`compare=${list.join(",")}`);
+    for (const key of HOME_KEYS) {
+      const value = searchParams.get(key);
+      if (value) parts.push(`${key}=${encodeURIComponent(value)}`);
+    }
+    return parts.length ? `?${parts.join("&")}` : "";
+  }, [list, searchParams]);
 
   return { list, has, add, remove, toggle, clear, isFull, max: MAX_COMPARE, query };
 }

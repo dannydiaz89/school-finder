@@ -24,10 +24,26 @@ describe("CompareNavLink", () => {
   });
 
   it("shows the count and carries the list in the link", () => {
-    query = "compare=34674396034292,34674390102038&address=1420+J+St";
+    query = "compare=34674396034292,34674390102038";
     renderWithIntl(<CompareNavLink />);
     const link = screen.getByRole("link", { name: "Compare (2)" });
     expect(link).toHaveAttribute("href", "/en/compare?compare=34674396034292,34674390102038");
+  });
+
+  it("carries the home address and coordinates so compare can show distance", () => {
+    query = "compare=34674396034292&address=1420+J+St&lat=38.58&lng=-121.49&radius=5&sort=ela";
+    renderWithIntl(<CompareNavLink />);
+    const link = screen.getByRole("link", { name: "Compare (1)" });
+    expect(link).toHaveAttribute(
+      "href",
+      "/en/compare?compare=34674396034292&address=1420%20J%20St&lat=38.58&lng=-121.49&radius=5",
+    );
+  });
+
+  it("keeps the home context even with an empty list", () => {
+    query = "lat=38.58&lng=-121.49";
+    renderWithIntl(<CompareNavLink />);
+    expect(screen.getByRole("link")).toHaveAttribute("href", "/en/compare?lat=38.58&lng=-121.49");
   });
 
   it("ignores a malformed list", () => {
