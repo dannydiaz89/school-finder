@@ -158,11 +158,11 @@ Rules:
 
 ### F. Quality
 
-- [ ] CI workflow: typecheck, lint, unit tests on every PR
-- [ ] Playwright smoke test against fixtures: search, open detail, add to compare
-- [ ] Spanish message file kept in sync; missing-key check in CI
-- [ ] `/about/data` page listing sources and update dates from `importRuns`
-- [ ] README with setup and import instructions
+- [x] CI workflow: typecheck, lint, unit tests on every PR (`.github/workflows/ci.yml`, plus a build and a Playwright job)
+- [~] Playwright smoke test against fixtures: search, open detail, add to compare (`e2e/smoke.spec.ts` covers every page, both controls, and axe in both themes; the search → detail → compare steps are TODOs until C, D, and E land)
+- [x] Spanish message file kept in sync; missing-key check in CI (`src/i18n/messages.test.ts` runs in `pnpm check`)
+- [~] `/about/data` page listing sources and update dates from `importRuns` (page done; dates read from `fixtures.sources` until B lands `importRuns`, swap in `src/app/[locale]/about/data/updates.ts`)
+- [x] README with setup and import instructions
 
 ## Stage 2 — Integration (serial, lead agent)
 
