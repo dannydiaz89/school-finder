@@ -68,7 +68,19 @@
       "programs": "Programas",
       "size": "Tamaño",
       "sort": "Ordenar",
-      "showSpecialized": "Mostrar escuelas especializadas"
+      "showSpecialized": "Mostrar escuelas especializadas",
+      "typeGroup": "Tipo de escuela",
+      "gradesGroup": "Niveles de grado",
+      "ratingGroup": "Nivel mínimo en ELA",
+      "programsGroup": "Programas y afiliación",
+      "sizeGroup": "Matrícula máxima",
+      "sortGroup": "Ordenar por",
+      "specializedShort": "Especializadas",
+      "specializedDescription": "Escuelas de continuación, community day, educación especial y colocaciones similares",
+      "any": "Cualquiera",
+      "ratingValue": "ELA {level} o mejor",
+      "sizeValue": "Hasta {count, number} estudiantes",
+      "privateOnly": "Escuelas privadas"
     },
     "sort": {
       "distance": "Distancia",
@@ -98,8 +110,14 @@
     },
     "error": {
       "geocode": "No encontramos esa dirección. Revisa la ortografía e incluye la ciudad.",
-      "generic": "Algo salió mal. Inténtalo de nuevo."
-    }
+      "generic": "Algo salió mal. Inténtalo de nuevo.",
+      "geocodeTitle": "No se encontró la dirección",
+      "genericTitle": "La búsqueda no está disponible por ahora"
+    },
+    "intro": "Escribe una dirección de casa para ver las escuelas a pocas millas, con distancia, grados, tipo de escuela y niveles del California School Dashboard tomados de archivos públicos.",
+    "resultsLabel": "Resultados de búsqueda",
+    "hiddenSpecialized": "{count, plural, one {# escuela especializada no se muestra} other {# escuelas especializadas no se muestran}}.",
+    "showingCount": "Mostrando {shown, number} de {total, number}"
   },
   "school": {
     "backToResults": "Volver a los resultados",

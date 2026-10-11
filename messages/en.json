@@ -68,7 +68,19 @@
       "programs": "Programs",
       "size": "Size",
       "sort": "Sort",
-      "showSpecialized": "Show specialized schools"
+      "showSpecialized": "Show specialized schools",
+      "typeGroup": "School type",
+      "gradesGroup": "Grade bands",
+      "ratingGroup": "Minimum ELA level",
+      "programsGroup": "Programs and affiliation",
+      "sizeGroup": "Maximum enrollment",
+      "sortGroup": "Sort by",
+      "specializedShort": "Specialized",
+      "specializedDescription": "Continuation, community day, special education, and similar placements",
+      "any": "Any",
+      "ratingValue": "ELA {level} or better",
+      "sizeValue": "Up to {count, number} students",
+      "privateOnly": "Private schools"
     },
     "sort": {
       "distance": "Distance",
@@ -98,8 +110,14 @@
     },
     "error": {
       "geocode": "We could not find that address. Check the spelling and include the city.",
-      "generic": "Something went wrong. Try again."
-    }
+      "generic": "Something went wrong. Try again.",
+      "geocodeTitle": "Address not found",
+      "genericTitle": "Search is unavailable right now"
+    },
+    "intro": "Enter a home address to list the schools within a few miles, with distance, grades, school type, and California School Dashboard levels from public files.",
+    "resultsLabel": "Search results",
+    "hiddenSpecialized": "{count, plural, one {# specialized placement is} other {# specialized placements are}} not shown.",
+    "showingCount": "Showing {shown, number} of {total, number}"
   },
   "school": {
     "backToResults": "Back to results",

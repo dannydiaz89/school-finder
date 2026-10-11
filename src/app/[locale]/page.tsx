@@ -1,37 +1,62 @@
+import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
+import { Suspense } from "react";
+import { Skeleton } from "@/components/ui/skeleton";
+import { AddressForm } from "@/features/search/address-form";
+import { SearchContent } from "@/features/search/search-content";
 import { requireLocale } from "@/i18n/locale";
-import { Button } from "@/components/ui/button";
+import { parseSearchParams } from "@/lib/schemas";
+
+export async function generateMetadata({ params }: PageProps<"/[locale]">): Promise<Metadata> {
+  const locale = await requireLocale(params);
+  const t = await getTranslations({ locale, namespace: "search" });
+  const common = await getTranslations({ locale, namespace: "common" });
+  // The layout's title template applies only to child segments, not to this page, so join here.
+  return {
+    title: { absolute: common("join", { a: t("title"), b: common("appName") }) },
+    description: t("intro"),
+  };
+}
 
 /**
- * Search page. Stage 0 placeholder: the Search workstream replaces this
- * file. It must keep the route, read URL state through
- * `parseSearchParams`, and fetch through `searchSchools` only.
+ * Search page. The heading is the static shell; the address form and the
+ * results both read `searchParams`, which is runtime data under Cache
+ * Components, so each sits in its own Suspense boundary with a skeleton.
+ * The form boundary resolves at once (it only reads the URL); the results
+ * boundary geocodes and searches.
  */
-export default async function SearchPage({ params }: PageProps<"/[locale]">) {
+export default async function SearchPage({ params, searchParams }: PageProps<"/[locale]">) {
   const locale = await requireLocale(params);
   const t = await getTranslations({ locale, namespace: "search" });
 
   return (
     <main className="flex flex-col gap-5 px-7 pt-5 pb-10 pl-[var(--left-offset)]">
-      <h1 className="text-3xl font-normal">{t("title")}</h1>
-      <form className="flex max-w-[690px] items-center gap-3 rounded-full border border-border bg-bg px-4 h-[46px]">
-        <label htmlFor="address" className="sr-only">
-          {t("addressLabel")}
-        </label>
-        <input
-          id="address"
-          name="address"
-          type="text"
-          placeholder={t("addressPlaceholder")}
-          className="flex-1 min-w-0 bg-transparent text-lg text-fg outline-none placeholder:text-fg-muted"
-        />
-        <span aria-hidden="true" className="h-6 w-px bg-border" />
-        <span className="text-base whitespace-nowrap">{t("radius", { miles: 3 })}</span>
-        <Button variant="text" type="submit">
-          {t("submit")}
-        </Button>
-      </form>
-      <p className="text-base text-fg-muted max-w-[652px]">{t("empty.body")}</p>
+      <h1 className="m-0 text-3xl font-normal">{t("title")}</h1>
+      <Suspense fallback={<Skeleton className="h-12 max-w-[690px] rounded-full" />}>
+        <FormWithParams locale={locale} searchParams={searchParams} />
+      </Suspense>
+      <Suspense fallback={<ResultsSkeleton />}>
+        <SearchContent locale={locale} searchParams={searchParams} />
+      </Suspense>
     </main>
+  );
+}
+
+async function FormWithParams({
+  locale,
+  searchParams,
+}: {
+  locale: Awaited<ReturnType<typeof requireLocale>>;
+  searchParams: PageProps<"/[locale]">["searchParams"];
+}) {
+  return <AddressForm locale={locale} params={parseSearchParams(await searchParams)} />;
+}
+
+function ResultsSkeleton() {
+  return (
+    <div className="flex flex-col gap-5">
+      <Skeleton className="h-11 max-w-[var(--content-width)]" />
+      <Skeleton lines={8} className="max-w-[var(--content-width)]" />
+    </div>
   );
 }
