@@ -1,12 +1,26 @@
 "use client";
 
-import { Map as MapLibreMap, Marker, type GeoJSONSource, type LngLatBoundsLike } from "maplibre-gl";
+import {
+  Map as MapLibreMap,
+  Marker,
+  setWorkerUrl,
+  type GeoJSONSource,
+  type LngLatBoundsLike,
+} from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { useTheme } from "next-themes";
 import { useEffect, useRef, useState } from "react";
 import { boundingBox, milesToMeters } from "@/lib/domain/geo";
 import type { CdsCode, Coordinates, SchoolSummary, SchoolType } from "@/lib/schemas";
 import { circlePolygon } from "./radius-circle";
+
+/*
+ * MapLibre resolves its worker next to its own module URL, which the
+ * bundler does not emit. Point it at the worker file as a static asset
+ * instead (the file is self-contained). This module only runs in the
+ * browser: it is loaded with next/dynamic and ssr: false.
+ */
+setWorkerUrl(new URL("maplibre-gl/dist/maplibre-gl-worker.mjs", import.meta.url).href);
 
 export interface SearchMapProps {
   center: Coordinates;
@@ -157,9 +171,12 @@ export default function SearchMap({
       el.title = homeTitle;
       el.innerHTML =
         '<span class="block size-3.5 rounded-full border-2 border-bg bg-fg shadow-popover"></span>';
-      homeRef.current = new Marker({ element: el }).addTo(map);
+      homeRef.current = new Marker({ element: el })
+        .setLngLat([center.longitude, center.latitude])
+        .addTo(map);
+    } else {
+      homeRef.current.setLngLat([center.longitude, center.latitude]);
     }
-    homeRef.current.setLngLat([center.longitude, center.latitude]);
     map.fitBounds(ringBounds(center, radiusMiles), {
       padding: FIT_PADDING,
       animate: !prefersReducedMotion(),

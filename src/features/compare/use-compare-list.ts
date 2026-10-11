@@ -25,7 +25,7 @@ export function useCompareList() {
       else params.delete("compare");
       const query = params.toString();
       const url = `${window.location.pathname}${query ? `?${query}` : ""}${window.location.hash}`;
-      window.history.replaceState(window.history.state, "", url);
+      window.history.replaceState(null, "", url);
     },
     [searchParams],
   );
