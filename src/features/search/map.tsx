@@ -90,6 +90,13 @@ export default function SearchMap({
   const markersRef = useRef(new Map<CdsCode, { marker: Marker; pin: HTMLElement }>());
   const homeRef = useRef<Marker | null>(null);
   const [styleReady, setStyleReady] = useState(0);
+  /**
+   * Whether the CURRENT map instance has finished loading its style. A ref,
+   * not state: when the page is restored from history, React keeps state but
+   * the map is created again, so a remembered "ready" would be a lie and
+   * adding a source would throw "Style is not done loading".
+   */
+  const styleLoadedRef = useRef(false);
   const { resolvedTheme } = useTheme();
   const dark = resolvedTheme === "dark";
 
@@ -119,7 +126,11 @@ export default function SearchMap({
     canvas.removeAttribute("role");
     canvas.removeAttribute("aria-label");
     // Fires on first load and after every setStyle, when sources and layers must be re-added.
-    map.on("style.load", () => setStyleReady((n) => n + 1));
+    styleLoadedRef.current = false;
+    map.on("style.load", () => {
+      styleLoadedRef.current = true;
+      setStyleReady((n) => n + 1);
+    });
     // On narrow maps the attribution is a toggle that MapLibre opens by default, covering a
     // third of a phone-sized map. Start it collapsed; the "i" button still reveals the credits.
     map.once("load", () => {
@@ -129,6 +140,7 @@ export default function SearchMap({
     });
     mapRef.current = map;
     return () => {
+      styleLoadedRef.current = false;
       map.remove();
       mapRef.current = null;
       markers.clear();
@@ -145,13 +157,15 @@ export default function SearchMap({
     const next = dark ? STYLE_DARK : STYLE_LIGHT;
     if (!map || styleRef.current === next) return;
     styleRef.current = next;
+    // The style is unusable until the next "style.load".
+    styleLoadedRef.current = false;
     map.setStyle(next);
   }, [dark]);
 
   // Ring: (re)add after each style load, then keep its data and color current.
   useEffect(() => {
     const map = mapRef.current;
-    if (!map || styleReady === 0) return;
+    if (!map || !styleLoadedRef.current) return;
     const data = circlePolygon(center, milesToMeters(radiusMiles));
     const color = tokenColor("--accent");
     const source = map.getSource(RING_SOURCE) as GeoJSONSource | undefined;

@@ -134,6 +134,25 @@ test("search results lead to a school page and the compare list", async ({ page 
   await expect(columns).toHaveCount(2);
 });
 
+test("going back from a school page restores the results and the map", async ({ page }) => {
+  // Regression: the map is recreated when the page is restored from history, and
+  // drawing the radius ring before its style loaded threw "Style is not done loading".
+  const errors: string[] = [];
+  page.on("pageerror", (error) => errors.push(error.message));
+  await page.goto(SEARCH_URL);
+  await expect(page.locator(".maplibregl-marker").first()).toBeVisible();
+  for (const index of [0, 1]) {
+    await page.getByRole("link", { name: "Details" }).nth(index).click();
+    await expect(page).toHaveURL(/\/en\/school\/\d{14}/);
+    await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+    await page.goBack();
+    await expect(page).toHaveURL(/\/en\?/);
+    await expect(page.locator(".maplibregl-marker").first()).toBeVisible();
+    await expect(page.getByRole("link", { name: "Details" }).first()).toBeVisible();
+  }
+  expect(errors).toEqual([]);
+});
+
 test("type filter narrows results and is reflected in the URL", async ({ page }) => {
   await page.goto(SEARCH_URL);
   await page.getByRole("button", { name: /^Type/ }).click();
