@@ -15,7 +15,7 @@
     "e2e:report": "playwright show-report",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "check": "pnpm typecheck && pnpm lint && pnpm test && pnpm format:check",
+    "check": "next typegen && pnpm typecheck && pnpm lint && pnpm test && pnpm format:check",
     "convex": "convex dev",
     "convex:codegen": "convex codegen",
     "import": "tsx scripts/import.ts"
