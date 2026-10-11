@@ -10,8 +10,8 @@ type Props = {
   updates: SourceUpdates;
 };
 
-const cell = "py-2.5 pr-4 align-top border-b border-hairline";
-const head = `${cell} text-left text-sm font-medium text-fg-muted`;
+const cell = "py-2.5 pr-5 align-top text-left border-b border-hairline";
+const head = `${cell} text-sm font-medium text-fg-muted whitespace-nowrap`;
 
 /**
  * Hairline table of every data source: name (linked to the publisher's page),
@@ -25,7 +25,7 @@ export async function SourcesTable({ locale, sources, updates }: Props) {
 
   return (
     <div className="overflow-x-auto">
-      <table className="w-full border-collapse text-base">
+      <table className="w-full max-w-[1080px] border-collapse text-base">
         <caption className="sr-only">{t("table.caption")}</caption>
         <thead>
           <tr>
@@ -51,15 +51,15 @@ export async function SourcesTable({ locale, sources, updates }: Props) {
             const retrievedAt = source.fileUrl === null ? undefined : updates[source.fileUrl];
             return (
               <tr key={source.id}>
-                <th scope="row" className={`${cell} font-normal whitespace-nowrap`}>
+                <th scope="row" className={`${cell} min-w-[200px] font-normal`}>
                   <ExternalLink href={source.landingUrl}>
                     {t(`sources.${source.id}.name`)}
                   </ExternalLink>
                 </th>
-                <td className={`${cell} text-fg-secondary`}>
+                <td className={`${cell} min-w-[180px] text-fg-secondary`}>
                   {t(`publishers.${source.publisher}`)}
                 </td>
-                <td className={`${cell} min-w-[260px] text-fg-secondary`}>
+                <td className={`${cell} min-w-[280px] text-fg-secondary`}>
                   {t(`sources.${source.id}.takes`)}
                 </td>
                 <td className={`${cell} whitespace-nowrap text-fg-secondary`}>
