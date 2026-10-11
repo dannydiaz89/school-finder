@@ -137,7 +137,8 @@ export function CompareTable({ schools, home, query, onRemove }: CompareTablePro
                 <TypeDot
                   type={school.school.type}
                   detail={typeLine(school)}
-                  className="text-sm text-fg-muted"
+                  // Baseline keeps the dot on the first line when the type line wraps.
+                  className="items-baseline text-sm text-fg-muted"
                 />
                 <Button
                   variant="text"

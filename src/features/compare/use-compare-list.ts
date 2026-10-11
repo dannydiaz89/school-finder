@@ -25,7 +25,9 @@ export function useCompareList() {
       else params.delete("compare");
       const query = params.toString();
       const url = `${window.location.pathname}${query ? `?${query}` : ""}${window.location.hash}`;
-      window.history.replaceState(window.history.state, "", url);
+      // State must be null (or a plain object): Next treats a call that carries
+      // its own `__NA` marker as internal and would not sync `useSearchParams`.
+      window.history.replaceState(null, "", url);
     },
     [searchParams],
   );
