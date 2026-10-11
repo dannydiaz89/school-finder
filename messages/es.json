@@ -166,9 +166,74 @@
   "data": {
     "title": "Fuentes de datos",
     "intro": "Cada cifra en esta aplicación proviene de un archivo público publicado por una agencia estatal o federal. Nada es estimado ni editorializado.",
+    "updatedNote": "La columna Actualizado muestra cuándo se descargó cada archivo por última vez para esta aplicación. Los nombres de escuelas, distritos y direcciones se mantienen en inglés, tal como se publican.",
     "updated": "Actualizado {date, date, medium}",
     "rows": "{count, number} filas",
-    "source": "Fuente"
+    "source": "Fuente",
+    "table": {
+      "caption": "Archivos y servicios públicos que lee la aplicación",
+      "publisher": "Publicado por",
+      "takes": "Qué usa la aplicación",
+      "cadence": "Actualización",
+      "updated": "Actualizado"
+    },
+    "publishers": {
+      "cde": "Departamento de Educación de California",
+      "nces": "Centro Nacional de Estadísticas de Educación (NCES)",
+      "census": "Oficina del Censo de EE. UU."
+    },
+    "cadence": {
+      "onRequest": "Se genera al solicitarlo",
+      "annual": "Anual",
+      "biennial": "Cada dos años",
+      "live": "En vivo, en cada búsqueda"
+    },
+    "sources": {
+      "directory": {
+        "name": "Directorio de escuelas y distritos públicos",
+        "takes": "Nombre, dirección, coordenadas, tipo de escuela, estatus chárter, rango de grados y los indicadores de magnet, multilingüe y virtual de las escuelas públicas activas."
+      },
+      "ccd": {
+        "name": "Directorio de escuelas Common Core of Data del NCES",
+        "takes": "Registro de directorio para las escuelas públicas que faltan en el archivo del CDE."
+      },
+      "edgePublic": {
+        "name": "Geocódigos de escuelas públicas EDGE del NCES",
+        "takes": "Coordenadas de las escuelas públicas que faltan en el archivo del CDE."
+      },
+      "dashboard": {
+        "name": "Archivos de investigación del California School Dashboard",
+        "takes": "Nivel, estado y cambio de cada indicador: ELA, matemáticas, ausentismo crónico, tasa de suspensión, tasa de graduación, Universidad/Carrera, progreso de aprendices de inglés y ciencias. Filas a nivel de escuela para todos los estudiantes."
+      },
+      "caaspp": {
+        "name": "Archivos de investigación de CAASPP",
+        "takes": "Porcentaje de estudiantes que cumplen o superan el estándar en ELA y matemáticas, todos los grados, para cada escuela, su distrito y el estado."
+      },
+      "enrollment": {
+        "name": "Matrícula del Día del Censo",
+        "takes": "Matrícula total, matrícula por grado, raza y etnia, y número de aprendices de inglés."
+      },
+      "frpm": {
+        "name": "Elegibilidad para comidas gratis o a precio reducido (FRPM)",
+        "takes": "Proporción de estudiantes elegibles para comidas gratis o a precio reducido."
+      },
+      "staff": {
+        "name": "Proporción de estudiantes y personal",
+        "takes": "Maestros equivalentes a tiempo completo y proporción de estudiantes por maestro."
+      },
+      "affidavit": {
+        "name": "Declaración anual de escuelas privadas (Private School Affidavit)",
+        "takes": "Nombres de escuelas privadas, distritos, matrícula por grado y número de personal, según lo declarado por cada escuela."
+      },
+      "pss": {
+        "name": "Encuesta de escuelas privadas (PSS) del NCES",
+        "takes": "Dirección, coordenadas, rango de grados y afiliación religiosa de las escuelas privadas, vinculadas a la declaración anual por nombre y código postal."
+      },
+      "geocoder": {
+        "name": "Geocodificador de la Oficina del Censo de EE. UU.",
+        "takes": "Convierte la dirección escrita en el cuadro de búsqueda en coordenadas para la búsqueda por radio."
+      }
+    }
   },
   "labels": {
     "schoolType": {
