@@ -103,11 +103,21 @@
   },
   "school": {
     "backToResults": "Back to results",
+    "tabs": {
+      "label": "Sections",
+      "overview": "Overview",
+      "dashboard": "Dashboard",
+      "tests": "Test scores",
+      "students": "Students",
+      "nearby": "Nearby"
+    },
     "stats": {
       "enrollment": "Students, {year}",
       "studentTeacher": "Student–teacher",
       "frpm": "Free / reduced meals",
-      "englishLearners": "English learners"
+      "englishLearners": "English learners",
+      "fullTimeTeachers": "Full-time teachers",
+      "partTimeTeachers": "Part-time teachers"
     },
     "sections": {
       "overview": "Overview",
@@ -117,25 +127,74 @@
       "testsNote": "CAASPP {year} · students meeting or exceeding standard",
       "students": "Students",
       "studentsNote": "Census Day enrollment, {year}",
+      "affidavitNote": "Private School Affidavit, {year}",
       "facts": "Directory facts",
-      "nearby": "Nearby alternatives"
+      "nearby": "Nearby alternatives",
+      "nearbyNote": "Distances from this school"
+    },
+    "dashboard": {
+      "columns": {
+        "indicator": "Indicator",
+        "level": "Level",
+        "status": "Status",
+        "change": "Change from prior year"
+      },
+      "status": {
+        "distanceAbove": "{points, number} pts above standard",
+        "distanceBelow": "{points, number} pts below standard",
+        "distanceAt": "At standard",
+        "chronicAbsenteeism": "{value, number, ::percent .#} chronically absent",
+        "suspension": "{value, number, ::percent .#} suspended at least once",
+        "graduation": "{value, number, ::percent .#} graduated",
+        "collegeCareer": "{value, number, ::percent .#} prepared",
+        "elpi": "{value, number, ::percent .#} making progress",
+        "science": "{value, number, ::percent .#} met or exceeded standard"
+      },
+      "noLevel": "No level: the indicator had fewer than 30 students.",
+      "empty": "No Dashboard indicators are published for this school.",
+      "link": "Full report on the CA School Dashboard"
+    },
+    "tests": {
+      "subject": "{subject} · this school",
+      "empty": "No CAASPP results are published for this school.",
+      "link": "Results by grade and student group on the CAASPP site"
+    },
+    "students": {
+      "disabilities": "{value, number, percent} students with disabilities",
+      "englishLearners": "{value, number, percent} English learners",
+      "disadvantaged": "{value, number, percent} socioeconomically disadvantaged",
+      "grade": "Grade",
+      "count": "Students",
+      "total": "Total",
+      "empty": "No enrollment data is published for this school."
     },
     "facts": {
       "address": "Address",
+      "fullAddress": "{street}, {city}, CA {zip}",
       "fromHome": "From home",
       "phone": "Phone",
       "grades": "Grades",
+      "gradesOffered": "{span} offered",
+      "gradesServed": "{span} served",
       "type": "Type",
       "charterNumber": "Charter number",
+      "funding": "Charter funding",
+      "fundingType": {
+        "directly": "Directly funded",
+        "locally": "Locally funded",
+        "notInModel": "Not in the charter funding model"
+      },
       "magnet": "Magnet",
       "virtual": "Virtual instruction",
       "multilingual": "Multilingual program",
       "opened": "Opened",
       "cds": "CDS code",
       "nces": "NCES ID",
+      "pss": "NCES PSS ID",
       "lastUpdated": "Directory updated",
       "affiliation": "Affiliation",
-      "teachers": "Full-time teachers"
+      "teachers": "Full-time teachers",
+      "partTimeTeachers": "Part-time teachers"
     },
     "compare": {
       "thisSchool": "this school",
@@ -143,6 +202,13 @@
       "state": "California"
     },
     "notApplicable": "Graduation rate and College/Career do not apply to this grade span.",
+    "private": {
+      "notRated": "Not rated on the California School Dashboard. Private schools do not take state tests."
+    },
+    "nearby": {
+      "compare": "Compare with the {count, number} nearest",
+      "empty": "No other schools in the data have coordinates near this one."
+    },
     "links": {
       "dashboard": "CA School Dashboard",
       "directions": "Directions"
@@ -360,6 +426,17 @@
     "yesNo": {
       "yes": "Yes",
       "no": "No"
+    },
+    "raceEthnicity": {
+      "RB": "African American",
+      "RI": "American Indian or Alaska Native",
+      "RA": "Asian",
+      "RF": "Filipino",
+      "RH": "Hispanic or Latino",
+      "RD": "Not reported",
+      "RP": "Pacific Islander",
+      "RT": "Two or more races",
+      "RW": "White"
     }
   },
   "styleguide": {

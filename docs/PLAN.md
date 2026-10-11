@@ -141,14 +141,14 @@ Rules:
 
 ### D. Detail
 
-- [ ] Route `/school/[cds]` with metadata for sharing
-- [ ] Header, action links, stat row
-- [ ] Dashboard table with status and change
-- [ ] CAASPP bars against district and state
-- [ ] Students section from enrollment and FRPM
-- [ ] Facts list from directory
-- [ ] Nearby alternatives from the radius query
-- [ ] Private school variant: affidavit data, affiliation, no Dashboard rows
+- [x] Route `/school/[cds]` with metadata for sharing
+- [x] Header, action links, stat row
+- [x] Dashboard table with status and change
+- [x] CAASPP bars against district and state
+- [x] Students section from enrollment and FRPM
+- [x] Facts list from directory
+- [x] Nearby alternatives from the radius query
+- [x] Private school variant: affidavit data, affiliation, no Dashboard rows
 
 ### E. Compare
 

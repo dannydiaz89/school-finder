@@ -1,61 +1,88 @@
+import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
+import { Skeleton } from "@/components/ui/skeleton";
+import { gradeSpanText, joinParts } from "@/features/school/format";
+import { SchoolDetailView } from "@/features/school/school-detail-view";
 import { requireLocale } from "@/i18n/locale";
-import { getSchool } from "@/lib/data";
-import { CdsCode } from "@/lib/schemas";
+import { getNearby, getSchool } from "@/lib/data";
+import { affiliationKey, schoolTypeLongKey } from "@/lib/labels";
+import { CdsCode, parseCompareParams, type SchoolDetail } from "@/lib/schemas";
+
+type Props = PageProps<"/[locale]/school/[cds]">;
+
+const NEARBY_LIMIT = 5;
 
 /**
- * School detail. Stage 0 placeholder; the Detail workstream replaces this file.
- *
- * `cds` is runtime data (not in generateStaticParams), so with Cache
- * Components the part that reads it must sit inside a Suspense boundary.
- * The shell above it is prerendered.
+ * School detail: the knowledge-panel page. `cds` and the search params are
+ * runtime data, so everything that reads them sits inside the Suspense
+ * boundary; the shell prerenders with a skeleton.
  */
-export default function SchoolPage({ params }: PageProps<"/[locale]/school/[cds]">) {
-  return (
-    <main className="flex flex-col gap-3 px-7 pt-5 pb-10 pl-[var(--left-offset)]">
-      <Suspense fallback={<SchoolSkeleton />}>
-        <SchoolContent params={params} />
-      </Suspense>
-    </main>
-  );
-}
 
-async function SchoolContent({ params }: Pick<PageProps<"/[locale]/school/[cds]">, "params">) {
-  const locale = await requireLocale(params);
+async function loadSchool(params: Props["params"]): Promise<SchoolDetail> {
   const { cds } = await params;
   const parsed = CdsCode.safeParse(cds);
   if (!parsed.success) notFound();
   const detail = await getSchool({ cds: parsed.data });
   if (!detail) notFound();
-  const t = await getTranslations({ locale, namespace: "school" });
+  return detail;
+}
 
+/** "<School name> · School Finder" (the layout adds the suffix) and a line of directory facts. */
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const locale = await requireLocale(params);
+  const { school } = await loadSchool(params);
+  const common = await getTranslations({ locale, namespace: "common" });
+  const labels = await getTranslations({ locale, namespace: "labels" });
+  const span = school.gradesServed ?? school.gradesOffered;
+  const description = joinParts(common, [
+    labels(schoolTypeLongKey(school.type)),
+    school.type === "private"
+      ? school.affiliation
+        ? labels(affiliationKey(school.affiliation))
+        : null
+      : school.district,
+    span ? gradeSpanText(common, labels, span) : null,
+    school.address.city,
+  ]);
+  return { title: school.name, description };
+}
+
+export default function SchoolPage({ params, searchParams }: Props) {
   return (
-    <>
-      <h1 className="text-5xl font-normal leading-tight">{detail.school.name}</h1>
-      <p className="text-md text-fg-muted">
-        {detail.school.district} · {detail.school.address.city}
-      </p>
-      <h2 className="text-xl font-medium mt-4">{t("sections.facts")}</h2>
-      <dl className="grid grid-cols-[128px_1fr] gap-x-3 text-base max-w-[652px]">
-        <dt className="py-3 border-b border-hairline text-fg-muted">{t("facts.cds")}</dt>
-        <dd className="py-3 border-b border-hairline tabular-nums">{detail.school.cds}</dd>
-        <dt className="py-3 text-fg-muted">{t("facts.address")}</dt>
-        <dd className="py-3">
-          {detail.school.address.street}, {detail.school.address.city}, CA{" "}
-          {detail.school.address.zip}
-        </dd>
-      </dl>
-    </>
+    <main className="px-7 pt-5 pb-10 pl-[var(--left-offset)]">
+      <Suspense fallback={<SchoolSkeleton />}>
+        <SchoolContent params={params} searchParams={searchParams} />
+      </Suspense>
+    </main>
   );
+}
+
+async function SchoolContent({ params, searchParams }: Props) {
+  await requireLocale(params);
+  const [detail, raw] = await Promise.all([loadSchool(params), searchParams]);
+  const nearby = await getNearby({ cds: detail.school.cds, limit: NEARBY_LIMIT });
+
+  // Carry the visitor's search state (address, radius, filters, compare list) through every link.
+  const query: Record<string, string> = {};
+  for (const [key, value] of Object.entries(raw)) {
+    if (typeof value === "string" && value !== "") query[key] = value;
+  }
+  const { lat, lng } = parseCompareParams(raw);
+  const home =
+    lat !== undefined && lng !== undefined ? { latitude: lat, longitude: lng } : undefined;
+
+  return <SchoolDetailView detail={detail} nearby={nearby} query={query} home={home} />;
 }
 
 function SchoolSkeleton() {
   return (
-    <div aria-hidden="true" className="flex flex-col gap-3 max-w-[652px]">
-      <div className="h-9 w-2/3 rounded-sm bg-bg-subtle" />
-      <div className="h-5 w-1/3 rounded-sm bg-bg-subtle" />
+    <div className="flex max-w-[var(--content-width)] flex-col gap-4">
+      <Skeleton className="h-4 w-32" />
+      <Skeleton className="h-8 w-2/3" />
+      <Skeleton className="h-4 w-1/2" />
+      <Skeleton lines={4} className="mt-6" />
     </div>
   );
 }
