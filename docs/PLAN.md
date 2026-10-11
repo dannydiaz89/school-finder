@@ -152,12 +152,13 @@ Rules:
 
 ### E. Compare
 
-- [ ] Compare list in URL, max 5, helpers in `src/features/compare/`
-- [x] `useCompareList` hook in `src/features/compare/use-compare-list.ts` (URL-backed, History API writes); Search and Detail call it
-- [ ] Add and remove from results and detail pages
-- [ ] Compare table with grouped rows and best-in-row emphasis
-- [ ] Copy link, clear all
-- [ ] Phone layout with horizontal scroll
+- [x] Compare list in URL, max 5, helpers in `src/features/compare/` (`best.ts` best-in-row rules, `facts.ts` derived values, both pure and unit-tested)
+- [x] `useCompareList` hook in `src/features/compare/use-compare-list.ts` (URL-backed, History API writes); Search and Detail call it. Writes pass a `null` state: Next skips the `useSearchParams` sync when the call carries its own `__NA` state
+- [~] Add and remove from results and detail pages (Remove on the compare page is done; Search and Detail wire their own controls to the hook)
+- [x] Compare table with grouped rows and best-in-row emphasis (`/[locale]/compare`, `CompareView` filters the server-fetched schools client-side so Remove and Clear all need no round trip)
+- [x] Copy link, clear all (`CopyLinkButton` announces through a live region)
+- [x] Phone layout with horizontal scroll
+- [x] `CompareNavLink` in the header shows "Compare (n)" and keeps the list in the link
 
 ### F. Quality
 

@@ -150,14 +150,22 @@
   },
   "compare": {
     "title": "Comparing {count, plural, one {# school} other {# schools}}",
+    "heading": "Compare schools",
     "subtitle": "Distances from {address}. Bold marks the best value in a row where a comparison is meaningful.",
-    "empty": "Your compare list is empty. Add schools from search results.",
+    "subtitleNoAddress": "Bold marks the best value in a row where a comparison is meaningful.",
+    "emptyTitle": "Your compare list is empty",
+    "empty": "Add up to {max, number} schools from search results or a school's page.",
+    "backToSearch": "Find schools",
     "max": "You can compare up to {max, number} schools.",
+    "copied": "Link copied",
+    "copyFailed": "The link could not be copied. Copy it from the address bar.",
+    "removeSchool": "Remove {name}",
     "groups": {
       "location": "Location and grades",
       "dashboard": "California School Dashboard, {year}",
       "tests": "Test scores, CAASPP {year}",
-      "students": "School and students"
+      "students": "School and students",
+      "testsNote": "· students meeting or exceeding standard"
     },
     "rows": {
       "distance": "Distance from home",
@@ -284,9 +292,6 @@
       "maintained": "Maintained"
     },
     "grade": {
-      "P": "Preschool",
-      "TK": "TK",
-      "K": "K",
       "1": "1",
       "2": "2",
       "3": "3",
@@ -299,6 +304,9 @@
       "10": "10",
       "11": "11",
       "12": "12",
+      "P": "Preschool",
+      "TK": "TK",
+      "K": "K",
       "A": "Adult"
     },
     "gradeBand": {
