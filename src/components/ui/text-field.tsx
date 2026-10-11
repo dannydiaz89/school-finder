@@ -51,7 +51,7 @@ export const TextField = forwardRef<HTMLInputElement, TextFieldProps>(function T
             "h-11 w-full min-w-0 rounded-md border bg-bg px-3 text-base text-fg placeholder:text-fg-muted",
             "hover:border-border-strong disabled:cursor-not-allowed disabled:opacity-50",
             error ? "border-border-strong" : "border-border",
-            leadingIcon && "pl-10",
+            leadingIcon ? "pl-10" : null,
             className,
           )}
           {...rest}
