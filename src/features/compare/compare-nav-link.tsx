@@ -1,7 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { TextLink } from "@/components/ui/text-link";
+import { IntentLink } from "@/components/ui/intent-link";
 import { useCompareList } from "./use-compare-list";
 
 /**
@@ -13,8 +13,8 @@ export function CompareNavLink({ className }: { className?: string }) {
   const t = useTranslations("common");
   const { list, query } = useCompareList();
   return (
-    <TextLink href={`/compare${query}`} className={className}>
+    <IntentLink href={`/compare${query}`} className={className}>
       {list.length ? t("nav.compareWithCount", { count: list.length }) : t("nav.compare")}
-    </TextLink>
+    </IntentLink>
   );
 }

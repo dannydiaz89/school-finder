@@ -10,6 +10,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { TypeDot } from "@/components/ui/type-dot";
 import { useCompareList } from "@/features/compare/use-compare-list";
 import { usePathname, useRouter } from "@/i18n/navigation";
+import { useStartNavigation } from "./pending";
 import {
   SCHOOL_TYPES,
   serializeSearchParams,
@@ -54,6 +55,7 @@ export function SearchResults({ result, params, center, header, footer }: Search
   const common = useTranslations("common");
   const compare = useCompareList();
   const router = useRouter();
+  const startNavigation = useStartNavigation();
   const pathname = usePathname();
   const listRef = useRef<HTMLOListElement>(null);
   const [hoveredCds, setHoveredCds] = useState<CdsCode | null>(null);
@@ -82,7 +84,7 @@ export function SearchResults({ result, params, center, header, footer }: Search
   function showMore() {
     const query = serializeSearchParams({ ...params, page: params.page + 1 });
     if (compare.list.length) query.set("compare", compare.list.join(","));
-    router.replace(`${pathname}?${query.toString()}`, { scroll: false });
+    startNavigation(() => router.replace(`${pathname}?${query.toString()}`, { scroll: false }));
   }
 
   return (

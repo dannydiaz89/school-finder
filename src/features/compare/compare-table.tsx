@@ -13,7 +13,7 @@ import {
   TableHeaderCell,
   TableRow,
 } from "@/components/ui/table";
-import { TextLink } from "@/components/ui/text-link";
+import { IntentLink } from "@/components/ui/intent-link";
 import { TypeDot } from "@/components/ui/type-dot";
 import { formatMiles } from "@/lib/domain/geo";
 import { affiliationKey, gradeKey, indicatorKey, programKey, yesNoKey } from "@/lib/labels";
@@ -127,13 +127,13 @@ export function CompareTable({ schools, home, query, onRemove }: CompareTablePro
           {schools.map((school) => (
             <TableHeaderCell key={school.school.cds} className="pb-3.5">
               <span className="flex flex-col items-start gap-1">
-                <TextLink
+                <IntentLink
                   href={`/school/${school.school.cds}${query}`}
                   tone="link"
                   className="text-md leading-tight"
                 >
                   {school.school.name}
-                </TextLink>
+                </IntentLink>
                 <TypeDot
                   type={school.school.type}
                   detail={typeLine(school)}

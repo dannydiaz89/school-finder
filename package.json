@@ -21,7 +21,6 @@
     "import": "tsx scripts/import.ts"
   },
   "dependencies": {
-    "@convex-dev/geospatial": "^0.2.1",
     "convex": "^1.46.0",
     "convex-helpers": "^0.1.128",
     "csv-parse": "^7.0.3",

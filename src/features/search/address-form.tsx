@@ -1,4 +1,6 @@
+import type { Route } from "next";
 import { getTranslations } from "next-intl/server";
+import Form from "next/form";
 import { Button } from "@/components/ui/button";
 import { Select } from "@/components/ui/select";
 import { TextField } from "@/components/ui/text-field";
@@ -33,9 +35,10 @@ export async function AddressForm({ locale, params }: { locale: Locale; params: 
   // On phones the field and the radius row stack with the components' own borders;
   // from `sm` they sit together inside one rounded pill.
   return (
-    <form
-      method="get"
-      action={getPathname({ locale, href: "/" })}
+    <Form
+      // Navigates on the client when JavaScript is available and is an ordinary GET form when not.
+      // The locale home ("/en", "/es") is a known route; getPathname returns a plain string.
+      action={getPathname({ locale, href: "/" }) as Route}
       className="flex max-w-[690px] flex-wrap items-center gap-2 sm:flex-nowrap sm:rounded-full sm:border sm:border-border sm:bg-bg sm:py-[2px] sm:pl-4 sm:pr-[6px] sm:hover:border-border-strong"
     >
       <TextField
@@ -70,6 +73,6 @@ export async function AddressForm({ locale, params }: { locale: Locale; params: 
       {Array.from(hidden.entries(), ([name, value]) => (
         <input key={name} type="hidden" name={name} value={value} />
       ))}
-    </form>
+    </Form>
   );
 }

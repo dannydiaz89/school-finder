@@ -6,7 +6,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { gradeSpanText, joinParts } from "@/features/school/format";
 import { SchoolDetailView } from "@/features/school/school-detail-view";
 import { requireLocale } from "@/i18n/locale";
-import { getNearby, getSchool } from "@/lib/data";
+import { cachedGetNearby, cachedGetSchool } from "@/lib/data/cached";
 import { affiliationKey, schoolTypeLongKey } from "@/lib/labels";
 import { CdsCode, parseCompareParams, type SchoolDetail } from "@/lib/schemas";
 
@@ -24,7 +24,7 @@ async function loadSchool(params: Props["params"]): Promise<SchoolDetail> {
   const { cds } = await params;
   const parsed = CdsCode.safeParse(cds);
   if (!parsed.success) notFound();
-  const detail = await getSchool({ cds: parsed.data });
+  const detail = await cachedGetSchool({ cds: parsed.data });
   if (!detail) notFound();
   return detail;
 }
@@ -49,6 +49,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return { title: school.name, description };
 }
 
+async function loadNearby(params: Props["params"]) {
+  const parsed = CdsCode.safeParse((await params).cds);
+  // An invalid or unknown code is reported by loadSchool; there is nothing nearby to list.
+  return parsed.success ? cachedGetNearby({ cds: parsed.data, limit: NEARBY_LIMIT }) : [];
+}
+
 export default function SchoolPage({ params, searchParams }: Props) {
   return (
     <main className="px-7 pt-5 pb-10 pl-[var(--left-offset)]">
@@ -61,8 +67,12 @@ export default function SchoolPage({ params, searchParams }: Props) {
 
 async function SchoolContent({ params, searchParams }: Props) {
   await requireLocale(params);
-  const [detail, raw] = await Promise.all([loadSchool(params), searchParams]);
-  const nearby = await getNearby({ cds: detail.school.cds, limit: NEARBY_LIMIT });
+  // The school and its neighbors only need the code from the URL, so fetch them together.
+  const [detail, raw, nearby] = await Promise.all([
+    loadSchool(params),
+    searchParams,
+    loadNearby(params),
+  ]);
 
   // Carry the visitor's search state (address, radius, filters, compare list) through every link.
   const query: Record<string, string> = {};

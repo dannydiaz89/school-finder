@@ -3,12 +3,14 @@ import { z } from "zod";
 import { api } from "../../../convex/_generated/api";
 import { getEnv } from "@/lib/schemas/env";
 import {
+  RadiusRows,
   SchoolDetail,
   SchoolSummary,
   SearchResult,
   type GetSchoolArgs,
   type GetSchoolsByCdsArgs,
   type NearbyArgs,
+  type RadiusArgs,
 } from "@/lib/schemas";
 import type { SchoolDataSource } from "./index";
 
@@ -46,5 +48,8 @@ export const convexDataSource: SchoolDataSource = {
   },
   async getSchoolsByCds(args: GetSchoolsByCdsArgs) {
     return z.array(SchoolDetail).parse(await getClient().query(api.schools.byCds, args));
+  },
+  async getSchoolsInRadius(args: RadiusArgs) {
+    return RadiusRows.parse(await getClient().query(api.schools.inRadius, args));
   },
 };

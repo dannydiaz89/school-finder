@@ -3,6 +3,8 @@ import {
   GetSchoolArgs,
   GetSchoolsByCdsArgs,
   NearbyArgs,
+  RadiusArgs,
+  RadiusRows,
   SchoolDetail,
   SchoolSummary,
   SearchArgs,
@@ -26,6 +28,7 @@ export interface SchoolDataSource {
   getSchool(args: GetSchoolArgs): Promise<SchoolDetail | null>;
   getNearby(args: NearbyArgs): Promise<SchoolSummary[]>;
   getSchoolsByCds(args: GetSchoolsByCdsArgs): Promise<SchoolDetail[]>;
+  getSchoolsInRadius(args: RadiusArgs): Promise<RadiusRows>;
 }
 
 let source: SchoolDataSource | undefined;
@@ -74,4 +77,15 @@ export async function getSchoolsByCds(
   const args = GetSchoolsByCdsArgs.parse(input);
   const result = await (await resolveSource()).getSchoolsByCds(args);
   return z.array(SchoolDetail).parse(result);
+}
+
+/**
+ * Every school within a radius, unfiltered. Pages cache this once per address
+ * and apply filters, sorting, and paging to it with `assembleSearchResult`,
+ * so changing a filter never reaches the backend.
+ */
+export async function getSchoolsInRadius(input: z.input<typeof RadiusArgs>): Promise<RadiusRows> {
+  const args = RadiusArgs.parse(input);
+  const result = await (await resolveSource()).getSchoolsInRadius(args);
+  return RadiusRows.parse(result);
 }

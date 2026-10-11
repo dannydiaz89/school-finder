@@ -195,6 +195,10 @@ Rules:
 - A search examines at most the nearest 1,200 schools. Past that the result is marked `truncated` and the page says so. Only downtown Los Angeles beyond about 12 miles reaches it.
 - Preschool-only programs are hidden by default with the other specialized placements. CDE codes many of them as elementary level, so the rule keys on an offered grade span that ends at preschool.
 
+- Radius search uses a plain grid index on the schools table (`src/lib/domain/grid.ts`, index `by_geo`) instead of the `@convex-dev/geospatial` component, which was removed. The component's nearest-neighbor query cost about 1.2 seconds regardless of result size; the grid costs one indexed range read per grid row and answers in about 100 ms. Counts were verified identical to the component for five cities at three radii. It is also directly portable to Postgres.
+- Pages read through cached wrappers in `src/lib/data/cached.ts` (`"use cache"`, hours, tag `schools`). For radii up to 5 miles the schools around an address are fetched once and filters, sorting, and paging are applied in the web process with the same `assembleSearchResult` the backend uses, so a filter change makes no backend call. `scripts/verify-local-filter.ts` proves the two paths agree on live data.
+- Links to data-backed pages use `IntentLink`, which loads the destination on hover, focus, or touch so the click shows the page without a skeleton.
+
 ## Contract amendments
 
 Record each as: date, what changed, which streams were notified.
@@ -202,3 +206,4 @@ Record each as: date, what changed, which streams were notified.
 - 2026-10-11 (Data): `Enrollment.byRaceEthnicity` in `src/lib/schemas/enrollment.ts` is now `z.object({ RB: Count.optional(), ... }).strict()` instead of `z.partialRecord(RaceEthnicity, Count)`. The TypeScript type is unchanged (`Partial<Record<RaceEthnicity, number>>`), but `convex-helpers` 0.1.128 derives a Convex object with every key required from a partial record, so `convex/schema.ts` rejected any school missing a category (which is nearly all of them). No consumer changes. Streams notified: Lead (owns the file), Detail and Compare (read the field).
 
 - 2026-10-11: `SearchSummary` added (the distance-independent part of `SchoolSummary`), stored as an optional `summary` field on the Convex `schools` table. `SearchResult` gained `truncated` (defaults to false). All streams merged before this; no one to notify.
+- 2026-10-11: fifth data-access function `getSchoolsInRadius` (`RadiusArgs` → `RadiusRows`) added for local filtering. Convex `schools` table gained optional `geoRow`, `geoCol` and index `by_geo`.

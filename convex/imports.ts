@@ -4,7 +4,7 @@ import type { WithoutSystemFields } from "convex/server";
 import { v } from "convex/values";
 import { z } from "zod";
 import { internalMutation, internalQuery, type MutationCtx } from "./_generated/server";
-import type { Doc, Id, TableNames } from "./_generated/dataModel";
+import type { Doc, TableNames } from "./_generated/dataModel";
 import {
   CaasppResult,
   DashboardIndicator,
@@ -14,7 +14,7 @@ import {
   School,
   StaffRatio,
 } from "../src/lib/schemas";
-import { schoolIndex } from "./geospatial";
+import { cellOf } from "../src/lib/domain/grid";
 import { loadSummaryRecord } from "./lib/records";
 import { summaryOf } from "../src/lib/domain/records";
 
@@ -74,19 +74,16 @@ export const upsertSchools = zInternalMutation({
         .query("schools")
         .withIndex("by_cds", (q) => q.eq("cds", school.cds))
         .first();
-      let id: Id<"schools">;
-      if (existing) {
-        id = existing._id;
+      const cell = school.coordinates ? cellOf(school.coordinates) : undefined;
+      const doc = {
+        ...school,
         // Keep the precomputed search summary; it is refreshed by rebuildSummaries.
-        await ctx.db.replace(id, { ...school, summary: existing.summary });
-      } else {
-        id = await ctx.db.insert("schools", school);
-      }
-      if (school.coordinates) {
-        await schoolIndex.insert(ctx, id, school.coordinates, { type: school.type });
-      } else if (existing?.coordinates) {
-        await schoolIndex.remove(ctx, id);
-      }
+        summary: existing?.summary,
+        geoRow: cell?.row,
+        geoCol: cell?.col,
+      };
+      if (existing) await ctx.db.replace(existing._id, doc);
+      else await ctx.db.insert("schools", doc);
       written += 1;
     }
     return written;
@@ -143,24 +140,8 @@ export const listPrivateOverrides = zInternalQuery({
  * Re-insert every school with coordinates into the spatial index, one page
  * per call. Returns the cursor for the next page or null when finished.
  */
-export const rebuildGeoIndex = internalMutation({
-  args: { cursor: v.union(v.string(), v.null()), pageSize: v.optional(v.number()) },
-  handler: async (ctx, args) => {
-    const page = await ctx.db
-      .query("schools")
-      .paginate({ cursor: args.cursor, numItems: args.pageSize ?? 100 });
-    let indexed = 0;
-    for (const school of page.page) {
-      if (!school.coordinates) continue;
-      await schoolIndex.insert(ctx, school._id, school.coordinates, { type: school.type });
-      indexed += 1;
-    }
-    return { indexed, cursor: page.isDone ? null : page.continueCursor };
-  },
-});
-
 /**
- * Recompute the stored search summary for a page of schools. Run after any
+ * Recompute the stored search summary and grid cell for a page of schools. Run after any
  * import that changes Dashboard rows, enrollment, staff ratios, or private
  * school details. Each school costs about a dozen reads here, once, so that a
  * search costs one.
@@ -173,7 +154,8 @@ export const rebuildSummaries = internalMutation({
       .paginate({ cursor: args.cursor, numItems: args.pageSize ?? 100 });
     for (const school of page.page) {
       const summary = summaryOf(await loadSummaryRecord(ctx, school));
-      await ctx.db.patch(school._id, { summary });
+      const cell = school.coordinates ? cellOf(school.coordinates) : undefined;
+      await ctx.db.patch(school._id, { summary, geoRow: cell?.row, geoCol: cell?.col });
     }
     return { updated: page.page.length, cursor: page.isDone ? null : page.continueCursor };
   },
@@ -213,7 +195,6 @@ export const clearAll = internalMutation({
     const name = table as CdsTable | "schools" | "importRuns";
     const docs = await ctx.db.query(name).take(1000);
     for (const doc of docs) {
-      if (name === "schools") await schoolIndex.remove(ctx, doc._id as Id<"schools">);
       await ctx.db.delete(doc._id);
     }
     return docs.length;

@@ -3,7 +3,8 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { TextLink } from "@/components/ui/text-link";
 import { redirect } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
-import { searchSchools } from "@/lib/data";
+import { PendingRegion, SearchPendingProvider } from "./pending";
+import { cachedSearchSchools } from "@/lib/data/cached";
 import {
   DEFAULT_PAGE_SIZE,
   parseSearchParams,
@@ -95,7 +96,7 @@ export async function SearchContent({
     p.lat !== undefined && p.lng !== undefined ? { latitude: p.lat, longitude: p.lng } : null;
   if (!center) return geocodeAndRedirect(p, compare, locale, t);
 
-  const result = await searchSchools({
+  const result = await cachedSearchSchools({
     center,
     radiusMiles: p.radius,
     filters: toSearchFilters(p),
@@ -145,9 +146,19 @@ export async function SearchContent({
     ) : null;
 
   return (
-    <div className="flex flex-col gap-5">
-      <FilterRow params={p} />
-      <SearchResults result={result} params={p} center={center} header={header} footer={footer} />
-    </div>
+    <SearchPendingProvider>
+      <div className="flex flex-col gap-5">
+        <FilterRow params={p} />
+        <PendingRegion>
+          <SearchResults
+            result={result}
+            params={p}
+            center={center}
+            header={header}
+            footer={footer}
+          />
+        </PendingRegion>
+      </div>
+    </SearchPendingProvider>
   );
 }

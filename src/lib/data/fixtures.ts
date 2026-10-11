@@ -11,6 +11,8 @@ import type {
   GetSchoolArgs,
   GetSchoolsByCdsArgs,
   NearbyArgs,
+  RadiusArgs,
+  RadiusRows,
   SchoolDetail,
   SchoolRecord,
   SchoolSummary,
@@ -88,5 +90,13 @@ export const fixturesDataSource: SchoolDataSource = {
       .map((cds) => byCds.get(cds))
       .filter((r): r is SchoolRecord => r !== undefined)
       .map(detail);
+  },
+
+  async getSchoolsInRadius(args: RadiusArgs): Promise<RadiusRows> {
+    const radiusMeters = milesToMeters(args.radiusMiles);
+    const rows = fixtures.schools
+      .map((r) => toSummary(r, args.center))
+      .filter((row) => row.distanceMeters <= radiusMeters);
+    return { rows, truncated: false };
   },
 };

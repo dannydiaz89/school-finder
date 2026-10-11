@@ -5,7 +5,7 @@
  *                            [--dry-run] [--batch 500] [--env .env.local]
  *
  * Sources: directory, dashboard, caaspp, enrollment, frpm, staff,
- * private-affidavit, private-pss, geo-index, all.
+ * private-affidavit, private-pss, search-rows, all.
  *
  * Each source downloads its file into the cache (skipped when present),
  * validates every row with the Zod row schema in src/lib/schemas/imports,
@@ -24,7 +24,6 @@ import { dashboard } from "./sources/dashboard";
 import { directory } from "./sources/directory";
 import { enrollment } from "./sources/enrollment";
 import { frpm } from "./sources/frpm";
-import { geoIndex } from "./sources/geo-index";
 import { privateAffidavit, privatePss } from "./sources/private";
 import { searchRows } from "./sources/search-rows";
 import { staff } from "./sources/staff";
@@ -43,7 +42,7 @@ const SOURCES: Source[] = [
 
 function usage(): never {
   console.error(
-    `Usage: pnpm run import <${[...SOURCES.map((s) => s.name), geoIndex.name, searchRows.name, "all"].join("|")}> ` +
+    `Usage: pnpm run import <${[...SOURCES.map((s) => s.name), searchRows.name, "all"].join("|")}> ` +
       `[--year 2024-25] [--cache .cache] [--county Sacramento] [--dry-run] [--batch 500]`,
   );
   process.exit(2);
@@ -64,9 +63,7 @@ async function main() {
   const [name] = positionals;
   if (!name) usage();
   const selected =
-    name === "all"
-      ? [...SOURCES]
-      : [...SOURCES, geoIndex, searchRows].filter((s) => s.name === name);
+    name === "all" ? [...SOURCES] : [...SOURCES, searchRows].filter((s) => s.name === name);
   if (selected.length === 0) usage();
   if (name === "all" && values.year) {
     console.error("--year applies to one source at a time; each source has its own default year.");

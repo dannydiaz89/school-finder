@@ -2,7 +2,7 @@
 
 import { useTranslations } from "next-intl";
 import { ResultRow } from "@/components/ui/result-row";
-import { TextLink } from "@/components/ui/text-link";
+import { IntentLink } from "@/components/ui/intent-link";
 import { useCompareList } from "@/features/compare/use-compare-list";
 import { MAX_COMPARE, type CdsCode, type SchoolSummary } from "@/lib/schemas";
 import { Section } from "./section";
@@ -55,9 +55,11 @@ export function NearbySection({ cds, nearby, query }: NearbySectionProps) {
             ))}
           </ol>
           <p className="m-0 text-base">
-            <TextLink href={{ pathname: "/compare", query: { ...query, compare: all.join(",") } }}>
+            <IntentLink
+              href={{ pathname: "/compare", query: { ...query, compare: all.join(",") } }}
+            >
               {t("nearby.compare", { count: all.length - 1 })}
-            </TextLink>
+            </IntentLink>
           </p>
         </>
       )}

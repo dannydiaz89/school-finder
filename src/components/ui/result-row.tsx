@@ -10,7 +10,7 @@ import { Button } from "./button";
 import { cx } from "./cx";
 import { ExternalLink } from "./external-link";
 import { LevelDot } from "./level-dot";
-import { TextLink } from "./text-link";
+import { IntentLink } from "./intent-link";
 import { TypeDot } from "./type-dot";
 
 export interface ResultRowProps {
@@ -90,9 +90,9 @@ export function ResultRow({
         </span>
         <TypeDot type={school.type} detail={join([context, grades, distance])} />
       </div>
-      <TextLink href={href} tone="link" className="w-fit text-2xl leading-tight">
+      <IntentLink href={href} tone="link" className="w-fit text-2xl leading-tight">
         {school.name}
-      </TextLink>
+      </IntentLink>
       {meta ? <p className="m-0 text-base leading-relaxed text-fg-secondary">{meta}</p> : null}
       {note ? <p className="m-0 text-base text-fg-muted">{note}</p> : null}
       {rated.length > 0 ? (
@@ -115,7 +115,7 @@ export function ResultRow({
         >
           {inCompare ? t("actions.inCompareList") : t("actions.addToCompare")}
         </Button>
-        <TextLink href={href}>{t("actions.details")}</TextLink>
+        <IntentLink href={href}>{t("actions.details")}</IntentLink>
         {school.website ? (
           <ExternalLink href={school.website}>{t("actions.website")}</ExternalLink>
         ) : null}

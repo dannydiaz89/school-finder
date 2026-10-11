@@ -7,6 +7,7 @@ import { LevelDot } from "@/components/ui/level-dot";
 import { Menu, type MenuOption } from "@/components/ui/menu";
 import { TypeDot } from "@/components/ui/type-dot";
 import { usePathname, useRouter } from "@/i18n/navigation";
+import { useStartNavigation } from "./pending";
 import { affiliationKey, gradeBandKey, levelKey, programKey, schoolTypeKey } from "@/lib/labels";
 import {
   Affiliation,
@@ -44,6 +45,7 @@ export function FilterRow({ params }: { params: SearchParams }) {
   const t = useTranslations();
   const format = useFormatter();
   const router = useRouter();
+  const startNavigation = useStartNavigation();
   const pathname = usePathname();
   const current = useSearchParams();
 
@@ -52,7 +54,7 @@ export function FilterRow({ params }: { params: SearchParams }) {
     const compare = current.get("compare");
     if (compare) query.set("compare", compare);
     const qs = query.toString();
-    router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+    startNavigation(() => router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false }));
   }
 
   /** "Type: District, Charter" when narrowed, otherwise the bare label. */

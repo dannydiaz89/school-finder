@@ -1,11 +1,12 @@
 import { NoOp } from "convex-helpers/server/customFunctions";
 import { zCustomQuery } from "convex-helpers/server/zod4";
-import { query } from "./_generated/server";
+import { query, type QueryCtx } from "./_generated/server";
 import type { Doc } from "./_generated/dataModel";
 import {
   GetSchoolArgs,
   GetSchoolsByCdsArgs,
   NearbyArgs,
+  RadiusArgs,
   SearchArgs,
   type CdsCode,
   type SchoolDetail,
@@ -13,9 +14,9 @@ import {
 } from "../src/lib/schemas";
 import { isSpecializedPlacement } from "../src/lib/domain/filters";
 import { milesToMeters } from "../src/lib/domain/geo";
+import { rowRanges } from "../src/lib/domain/grid";
 import { buildComparison, rowFromSummary, summaryOf } from "../src/lib/domain/records";
 import { assembleSearchResult } from "../src/lib/domain/search";
-import { schoolIndex } from "./geospatial";
 import {
   loadCaasppByCds,
   loadRecord,
@@ -33,33 +34,42 @@ import {
 const zQuery = zCustomQuery(query, NoOp);
 
 /**
- * Upper bound on candidates pulled from the spatial index for one search.
- * Convex allows 4,096 document reads per query and each candidate costs about
- * three (the index entry, its cell, and the school), measured in downtown Los
- * Angeles: 1,233 candidates pass, 1,500 fail. 1,200 leaves headroom. When the
- * cap is hit the result is marked `truncated` and the page says so.
+ * Safety bound on schools examined by one search. The densest case, 25 miles
+ * around downtown Los Angeles, holds roughly 4,000. Past the bound the result
+ * is marked `truncated`, keeps the nearest schools, and the page says so.
  */
-export const MAX_CANDIDATES = 1200;
+export const MAX_CANDIDATES = 6000;
 /** CDS of the statewide CAASPP rows. */
 const STATE_CDS = "00000000000000" as CdsCode;
 
-async function summariesNear(
-  ctx: Parameters<typeof loadSummaryRecord>[0],
+/**
+ * Every school within `radiusMeters` of `center`, as search rows. One indexed
+ * range read per grid row the circle touches, then an exact distance check.
+ * Each school costs one document: its summary was computed at import time.
+ */
+async function rowsWithin(
+  ctx: QueryCtx,
   center: { latitude: number; longitude: number },
-  limit: number,
-  maxDistance?: number,
+  radiusMeters: number,
 ): Promise<SchoolSummary[]> {
-  const hits = await schoolIndex.nearest(ctx, { point: center, limit, maxDistance });
-  const docs = await Promise.all(hits.map((hit) => ctx.db.get(hit.key)));
-  const schools = docs.filter((d): d is Doc<"schools"> => d !== null);
-  return Promise.all(
-    schools.map(async (doc) => {
-      // One read per school: the summary was computed at import time. A school imported
-      // since the last rebuild has none yet, so compute it on the spot for that one.
+  const pages = await Promise.all(
+    rowRanges(center, radiusMeters).map((range) =>
+      ctx.db
+        .query("schools")
+        .withIndex("by_geo", (q) =>
+          q.eq("geoRow", range.row).gte("geoCol", range.colMin).lte("geoCol", range.colMax),
+        )
+        .collect(),
+    ),
+  );
+  const rows = await Promise.all(
+    pages.flat().map(async (doc) => {
+      // A school imported since the last rebuild has no summary yet; compute it for that one.
       const summary = doc.summary ?? summaryOf(await loadSummaryRecord(ctx, doc));
       return rowFromSummary(toSchool(doc), summary, center);
     }),
   );
+  return rows.filter((row) => row.distanceMeters <= radiusMeters);
 }
 
 async function detail(
@@ -75,15 +85,32 @@ async function detail(
   return { ...record, caasppComparison: buildComparison(record.caaspp, district, state) };
 }
 
+/** Rows within the radius, nearest first when the safety bound is exceeded. */
+async function boundedRows(
+  ctx: QueryCtx,
+  center: { latitude: number; longitude: number },
+  radiusMiles: number,
+): Promise<{ rows: SchoolSummary[]; truncated: boolean }> {
+  const inRadius = await rowsWithin(ctx, center, milesToMeters(radiusMiles));
+  if (inRadius.length <= MAX_CANDIDATES) return { rows: inRadius, truncated: false };
+  const nearest = inRadius
+    .sort((a, b) => a.distanceMeters - b.distanceMeters)
+    .slice(0, MAX_CANDIDATES);
+  return { rows: nearest, truncated: true };
+}
+
 export const search = zQuery({
   args: SearchArgs.shape,
   handler: async (ctx, args) => {
-    const radiusMeters = milesToMeters(args.radiusMiles);
-    // The index measures distance its own way; ask for a little more and let the domain cut exactly.
-    const candidates = await summariesNear(ctx, args.center, MAX_CANDIDATES, radiusMeters * 1.02);
-    const inRadius = candidates.filter((row) => row.distanceMeters <= radiusMeters);
-    return assembleSearchResult(inRadius, args, candidates.length >= MAX_CANDIDATES);
+    const { rows, truncated } = await boundedRows(ctx, args.center, args.radiusMiles);
+    return assembleSearchResult(rows, args, truncated);
   },
+});
+
+/** Unfiltered rows for a radius; pages cache these and filter them locally. */
+export const inRadius = zQuery({
+  args: RadiusArgs.shape,
+  handler: async (ctx, args) => boundedRows(ctx, args.center, args.radiusMiles),
 });
 
 export const get = zQuery({
@@ -94,23 +121,23 @@ export const get = zQuery({
   },
 });
 
+/** Radii tried in turn when looking for a school's neighbors, in miles. */
+const NEARBY_RADII = [2, 6, 20, 60];
+
 export const nearby = zQuery({
   args: NearbyArgs.shape,
   handler: async (ctx, args) => {
     const school = await schoolByCds(ctx, args.cds);
     const center = school?.coordinates;
     if (!school || !center) return [];
-    // Placements and the school itself are dropped after the fact, so over-fetch and widen if needed.
-    let want = args.limit * 3 + 5;
-    for (let attempt = 0; attempt < 4; attempt += 1) {
-      const rows = await summariesNear(ctx, center, want);
-      const kept = rows
-        .filter((r) => r.school.cds !== args.cds && !isSpecializedPlacement(r.school))
-        .sort((a, b) => a.distanceMeters - b.distanceMeters);
-      if (kept.length >= args.limit || rows.length < want) return kept.slice(0, args.limit);
-      want *= 2;
+    // Widen the circle until it holds enough ordinary schools; cities stop at the first try.
+    let kept: SchoolSummary[] = [];
+    for (const miles of NEARBY_RADII) {
+      const rows = await rowsWithin(ctx, center, milesToMeters(miles));
+      kept = rows.filter((r) => r.school.cds !== args.cds && !isSpecializedPlacement(r.school));
+      if (kept.length >= args.limit) break;
     }
-    return [];
+    return kept.sort((a, b) => a.distanceMeters - b.distanceMeters).slice(0, args.limit);
   },
 });
 

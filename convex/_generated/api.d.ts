@@ -8,7 +8,6 @@
  * @module
  */
 
-import type * as geospatial from "../geospatial.js";
 import type * as imports from "../imports.js";
 import type * as lib_records from "../lib/records.js";
 import type * as schools from "../schools.js";
@@ -20,7 +19,6 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
-  geospatial: typeof geospatial;
   imports: typeof imports;
   "lib/records": typeof lib_records;
   schools: typeof schools;
@@ -52,6 +50,4 @@ export declare const internal: FilterApi<
   FunctionReference<any, "internal">
 >;
 
-export declare const components: {
-  geospatial: import("@convex-dev/geospatial/_generated/component.js").ComponentApi<"geospatial">;
-};
+export declare const components: {};

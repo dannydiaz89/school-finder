@@ -34,7 +34,7 @@ Next.js App Router, TypeScript strict, Tailwind v4 with design tokens, next-intl
 ## Rules that are not negotiable
 
 1. **Zod is the source of truth.** A type is `z.infer` of a schema in `src/lib/schemas/`. Never write an interface or type alias that describes data; derive it. Untrusted input (query strings, env, source files, external responses) is parsed with a schema before use. Objects we own are `.strict()`.
-2. **Convex is behind the boundary.** UI code imports from `@/lib/data`, never from `convex/` or `convex/react`. No `useQuery` subscriptions in pages. The four functions in `src/lib/data/index.ts` are the whole API; add a fifth only as a contract amendment in `docs/PLAN.md`.
+2. **Convex is behind the boundary.** UI code imports from `@/lib/data`, never from `convex/` or `convex/react`. No `useQuery` subscriptions in pages. The five functions in `src/lib/data/index.ts` are the whole API; add another only as a contract amendment in `docs/PLAN.md`. Pages call the cached wrappers in `src/lib/data/cached.ts`, never the adapters.
 3. **Convex functions stay thin.** No filtering, sorting, or scoring logic inside `convex/*.ts`. Put it in `src/lib/domain/` with a unit test and call it from the function.
 4. **Copy is factual and neutral.** The app shows what public files say and nothing else. No descriptions of what a school type is like, no claims about how to enroll (lottery, application, boundaries), no tuition, no program descriptions beyond the directory's magnet, multilingual, and virtual flags. If context is needed, link to the source.
 5. **Charter schools are public.** Labels read "District · public", "Charter · public", "Private". Never present charter as not public.
@@ -102,5 +102,6 @@ Both themes are complete sets of the same tokens. `next-themes` sets `data-theme
 - `convex/schema.ts` is derived from the Zod domain schemas with `zodToConvexFields`. Add fields in `src/lib/schemas/`, not here. Indexes are decided here.
 - Field names must start with a letter or underscore; that is why per-grade counts are arrays of `{ grade, count }` rather than records.
 - Queries use `zCustomQuery` from `convex-helpers/server/zod4` with `args: Schema.shape`.
-- The geospatial index is `convex/geospatial.ts`. Radius queries go through it, never a full table scan.
+- Radius search uses the grid in `src/lib/domain/grid.ts` and the `by_geo` index on `schools`: one range read per grid row, then an exact distance check. Never a full table scan, and no spatial component.
+- A search row is one document: the `summary` stored on each school at import time. Do not add per-row lookups to search; extend the summary and `rebuildSummaries` instead.
 - `pnpm convex` must be running (or `pnpm convex:codegen` run) after changing functions so `_generated` is current. Commit `_generated`.

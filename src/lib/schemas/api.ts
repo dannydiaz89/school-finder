@@ -112,6 +112,24 @@ export const SearchResult = z
   .strict();
 export type SearchResult = z.infer<typeof SearchResult>;
 
+/** Every school within a radius, unfiltered: the raw material a page filters and sorts. */
+export const RadiusArgs = z
+  .object({
+    center: Coordinates,
+    radiusMiles: z.number().min(0.25).max(MAX_RADIUS_MILES),
+  })
+  .strict();
+export type RadiusArgs = z.infer<typeof RadiusArgs>;
+
+export const RadiusRows = z
+  .object({
+    rows: z.array(SchoolSummary),
+    /** True when the area holds more schools than one read examines; `rows` are then the nearest. */
+    truncated: z.boolean().default(false),
+  })
+  .strict();
+export type RadiusRows = z.infer<typeof RadiusRows>;
+
 export const GetSchoolArgs = z.object({ cds: CdsCode }).strict();
 export type GetSchoolArgs = z.infer<typeof GetSchoolArgs>;
 

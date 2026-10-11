@@ -23,7 +23,11 @@ export default defineSchema({
     ...zodToConvexFields(School.shape),
     /** Precomputed search row (see SearchSummary). Rebuilt at the end of every import. */
     summary: v.optional(zodToConvex(SearchSummary)),
+    /** Grid cell for radius search (see src/lib/domain/grid.ts). Absent when a school has no coordinates. */
+    geoRow: v.optional(v.float64()),
+    geoCol: v.optional(v.float64()),
   })
+    .index("by_geo", ["geoRow", "geoCol"])
     .index("by_cds", ["cds"])
     .index("by_type", ["type"])
     .index("by_districtCds", ["districtCds"]),

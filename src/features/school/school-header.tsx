@@ -2,7 +2,7 @@ import { useTranslations } from "next-intl";
 import { Suspense, type ComponentProps } from "react";
 import { ExternalLink } from "@/components/ui/external-link";
 import { Skeleton } from "@/components/ui/skeleton";
-import { TextLink } from "@/components/ui/text-link";
+import { IntentLink } from "@/components/ui/intent-link";
 import { TypeDot } from "@/components/ui/type-dot";
 import type { Link } from "@/i18n/navigation";
 import { affiliationKey, instructionLevelKey } from "@/lib/labels";
@@ -42,9 +42,9 @@ export function SchoolHeader({ school, dashboardYear, backHref }: SchoolHeaderPr
 
   return (
     <header className="flex flex-col gap-2">
-      <TextLink href={backHref} tone="muted" className="w-fit text-base">
+      <IntentLink href={backHref} tone="muted" className="w-fit text-base">
         {t("backToResults")}
-      </TextLink>
+      </IntentLink>
       <h1 className="m-0 text-5xl font-normal leading-tight text-fg">{school.name}</h1>
       <p className="m-0 text-base text-fg-secondary">
         <TypeDot type={school.type} detail={subtitle || undefined} />

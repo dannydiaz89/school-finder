@@ -60,12 +60,14 @@ const byCds = (ctx: QueryCtx, cds: CdsCode) => ({
       .first(),
 });
 
-/** A stored school document as the domain `School`: no system fields, no search summary. */
+/** A stored school document as the domain `School`: no system fields, search summary, or grid cell. */
 export function toSchool(doc: Doc<"schools">): School {
   const copy: Record<string, unknown> = { ...doc };
   delete copy._id;
   delete copy._creationTime;
   delete copy.summary;
+  delete copy.geoRow;
+  delete copy.geoCol;
   return copy as School;
 }
 
