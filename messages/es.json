@@ -103,11 +103,16 @@
   },
   "school": {
     "backToResults": "Volver a los resultados",
+    "tabs": {
+      "label": "Secciones"
+    },
     "stats": {
       "enrollment": "Estudiantes, {year}",
       "studentTeacher": "Estudiantes por maestro",
       "frpm": "Comidas gratis o a precio reducido",
-      "englishLearners": "Aprendices de inglés"
+      "englishLearners": "Aprendices de inglés",
+      "fullTimeTeachers": "Maestros de tiempo completo",
+      "partTimeTeachers": "Maestros de medio tiempo"
     },
     "sections": {
       "overview": "Resumen",
@@ -117,32 +122,88 @@
       "testsNote": "CAASPP {year} · estudiantes que cumplen o superan el estándar",
       "students": "Estudiantes",
       "studentsNote": "Matrícula del Día del Censo, {year}",
+      "affidavitNote": "Declaración jurada de escuela privada, {year}",
       "facts": "Datos del directorio",
-      "nearby": "Alternativas cercanas"
+      "nearby": "Alternativas cercanas",
+      "nearbyNote": "Distancias desde esta escuela"
+    },
+    "dashboard": {
+      "columns": {
+        "indicator": "Indicador",
+        "level": "Nivel",
+        "status": "Estado",
+        "change": "Cambio respecto al año anterior"
+      },
+      "status": {
+        "distanceAbove": "{points, number} puntos por encima del estándar",
+        "distanceBelow": "{points, number} puntos por debajo del estándar",
+        "distanceAt": "En el estándar",
+        "chronicAbsenteeism": "{value, number, ::percent .#} con ausentismo crónico",
+        "suspension": "{value, number, ::percent .#} suspendidos al menos una vez",
+        "graduation": "{value, number, ::percent .#} graduados",
+        "collegeCareer": "{value, number, ::percent .#} preparados",
+        "elpi": "{value, number, ::percent .#} con progreso",
+        "science": "{value, number, ::percent .#} cumplieron o superaron el estándar"
+      },
+      "noLevel": "Sin nivel: el indicador tuvo menos de 30 estudiantes.",
+      "empty": "No se publican indicadores del Dashboard para esta escuela.",
+      "link": "Informe completo en el CA School Dashboard"
+    },
+    "tests": {
+      "subject": "{subject} · esta escuela",
+      "empty": "No se publican resultados CAASPP para esta escuela.",
+      "link": "Resultados por grado y grupo de estudiantes en el sitio de CAASPP"
+    },
+    "students": {
+      "disabilities": "{value, number, ::percent .#} estudiantes con discapacidades",
+      "englishLearners": "{value, number, ::percent .#} aprendices de inglés",
+      "disadvantaged": "{value, number, ::percent .#} en desventaja socioeconómica",
+      "grade": "Grado",
+      "count": "Estudiantes",
+      "total": "Total",
+      "empty": "No se publican datos de matrícula para esta escuela."
     },
     "facts": {
       "address": "Dirección",
+      "fullAddress": "{street}, {city}, CA {zip}",
       "fromHome": "Desde casa",
       "phone": "Teléfono",
       "grades": "Grados",
+      "gradesOffered": "{span} ofrecidos",
+      "gradesServed": "{span} atendidos",
       "type": "Tipo",
       "charterNumber": "Número de chárter",
+      "funding": "Financiamiento chárter",
+      "fundingType": {
+        "directly": "Financiamiento directo",
+        "locally": "Financiamiento local",
+        "notInModel": "Fuera del modelo de financiamiento chárter"
+      },
       "magnet": "Magnet",
       "virtual": "Instrucción virtual",
       "multilingual": "Programa multilingüe",
       "opened": "Fecha de apertura",
       "cds": "Código CDS",
       "nces": "ID NCES",
+      "pss": "ID NCES PSS",
       "lastUpdated": "Directorio actualizado",
       "affiliation": "Afiliación",
-      "teachers": "Maestros de tiempo completo"
+      "teachers": "Maestros de tiempo completo",
+      "partTimeTeachers": "Maestros de medio tiempo"
     },
     "compare": {
       "thisSchool": "esta escuela",
       "district": "Distrito",
       "state": "California"
     },
-    "notApplicable": "La tasa de graduación y Universidad/Carrera no corresponden a este rango de grados.",
+    "notApplicable": "La tasa de graduación y Universidad/Carrera no aplican a este rango de grados.",
+    "private": {
+      "notRated": "Sin calificación en el California School Dashboard. Las escuelas privadas no presentan las pruebas estatales."
+    },
+    "nearby": {
+      "compare": "Comparar con las {count, number} más cercanas",
+      "empty": "Ninguna otra escuela en los datos tiene coordenadas cerca de esta."
+    },
     "links": {
       "dashboard": "CA School Dashboard",
       "directions": "Cómo llegar"
@@ -360,6 +421,17 @@
     "yesNo": {
       "yes": "Sí",
       "no": "No"
+    },
+    "raceEthnicity": {
+      "RB": "Afroamericano",
+      "RI": "Indígena americano o nativo de Alaska",
+      "RA": "Asiático",
+      "RF": "Filipino",
+      "RH": "Hispano o latino",
+      "RD": "No reportado",
+      "RP": "Isleño del Pacífico",
+      "RT": "Dos o más razas",
+      "RW": "Blanco"
     }
   },
   "styleguide": {
