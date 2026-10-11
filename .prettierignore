@@ -3,3 +3,6 @@ node_modules
 pnpm-lock.yaml
 convex/_generated
 .cache
+test-results
+playwright-report
+blob-report
