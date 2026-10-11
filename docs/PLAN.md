@@ -2,7 +2,7 @@
 
 Status legend: `[ ]` not started · `[~]` in progress · `[x]` done · `[-]` dropped
 
-Last updated: 2026-10-11 (Stage 0 built)
+Last updated: 2026-10-11 (Stage 1 merged; Stage 2 in progress)
 
 ## Goal
 
@@ -94,7 +94,7 @@ Rules:
 - [x] Route map, URL state helpers, message namespaces and the key-tree check
 - [x] Minimal `Button`, `TextLink`, `VisuallyHidden` so streams can start
 - [x] Vitest, Testing Library, axe setup with one passing example test
-- [ ] Tag `v0.0.1-foundation`; dispatch Stage 1 workstreams
+- [x] Tag `v0.0.1-foundation`; dispatch Stage 1 workstreams
 - [x] Fixture file: 39 real Sacramento-area schools (32 public, 7 private) with Dashboard, CAASPP, enrollment, FRPM, staff, and affidavit data, built by `scripts/build-fixtures.ts`
 
 ## Stage 1 — Parallel workstreams
@@ -170,7 +170,7 @@ Rules:
 
 ## Stage 2 — Integration (serial, lead agent)
 
-- [ ] Switch UI streams from fixtures to real data once B lands
+- [x] Switch UI streams from fixtures to real data once B lands (DATA_SOURCE=convex in .env.local; two counties loaded in the dev deployment; e2e stays on fixtures)
 - [ ] Lighthouse and axe pass on the three main pages, both themes
 - [ ] Deploy to Vercel and Convex production
 - [ ] Tag `v0.1.0`
