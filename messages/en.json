@@ -166,9 +166,74 @@
   "data": {
     "title": "Data sources",
     "intro": "Every number in this app comes from a public file published by a state or federal agency. Nothing is estimated or editorialized.",
+    "updatedNote": "The Updated column shows when each file was last retrieved for this app. School names, districts, and addresses stay in English as published.",
     "updated": "Updated {date, date, medium}",
     "rows": "{count, number} rows",
-    "source": "Source"
+    "source": "Source",
+    "table": {
+      "caption": "Public files and services the app reads",
+      "publisher": "Publisher",
+      "takes": "What the app uses",
+      "cadence": "Refresh",
+      "updated": "Updated"
+    },
+    "publishers": {
+      "cde": "California Department of Education",
+      "nces": "National Center for Education Statistics",
+      "census": "U.S. Census Bureau"
+    },
+    "cadence": {
+      "onRequest": "Generated on request",
+      "annual": "Annual",
+      "biennial": "Every two years",
+      "live": "Live, per search"
+    },
+    "sources": {
+      "directory": {
+        "name": "Public Schools and Districts directory",
+        "takes": "Name, address, coordinates, school type, charter status, grade span, and the magnet, multilingual, and virtual flags for active public schools."
+      },
+      "ccd": {
+        "name": "NCES Common Core of Data school directory",
+        "takes": "Directory record for public schools missing from the CDE file."
+      },
+      "edgePublic": {
+        "name": "NCES EDGE public school geocodes",
+        "takes": "Coordinates for public schools missing from the CDE file."
+      },
+      "dashboard": {
+        "name": "California School Dashboard research files",
+        "takes": "Level, status, and change for each indicator: ELA, Math, chronic absenteeism, suspension rate, graduation rate, College/Career, English learner progress, and science. School-level rows for all students."
+      },
+      "caaspp": {
+        "name": "CAASPP research files",
+        "takes": "Percentage of students meeting or exceeding standard in ELA and Math, all grades, for each school, its district, and the state."
+      },
+      "enrollment": {
+        "name": "Census Day enrollment",
+        "takes": "Total enrollment, enrollment by grade, race and ethnicity, and English learner counts."
+      },
+      "frpm": {
+        "name": "Free or reduced-price meal eligibility (FRPM)",
+        "takes": "Share of students eligible for free or reduced-price meals."
+      },
+      "staff": {
+        "name": "Student and staff ratios",
+        "takes": "Teacher full-time equivalents and the student–teacher ratio."
+      },
+      "affidavit": {
+        "name": "Private School Affidavit",
+        "takes": "Private school names, districts, enrollment by grade, and staff counts, as filed by each school."
+      },
+      "pss": {
+        "name": "NCES Private School Universe Survey",
+        "takes": "Address, coordinates, grade span, and religious affiliation for private schools, matched to the affidavit by name and ZIP code."
+      },
+      "geocoder": {
+        "name": "U.S. Census Geocoder",
+        "takes": "Turns the address typed into the search box into coordinates for the radius search."
+      }
+    }
   },
   "labels": {
     "schoolType": {

@@ -25,7 +25,7 @@
     "actions": {
       "details": "Detalles",
       "website": "Sitio web",
-      "addToCompare": "Agregar a comparar",
+      "addToCompare": "Agregar a la comparación",
       "inCompareList": "En la lista de comparación",
       "remove": "Quitar",
       "reset": "Restablecer",
@@ -49,7 +49,7 @@
     "addressLabel": "Dirección de casa",
     "addressPlaceholder": "Calle y número, ciudad, CA",
     "radiusLabel": "Radio",
-    "radius": "a {miles, number} mi",
+    "radius": "hasta {miles, number} mi",
     "submit": "Buscar escuelas",
     "filters": {
       "label": "Filtros",
@@ -63,14 +63,14 @@
     },
     "sort": {
       "distance": "Distancia",
-      "ela": "Desempeño en lectura",
+      "ela": "Desempeño en ELA",
       "math": "Desempeño en matemáticas",
       "enrollment": "Matrícula"
     },
-    "resultsSummary": "{count, plural, =0 {Ninguna escuela} one {# escuela} other {# escuelas}} a {miles, number} millas",
+    "resultsSummary": "{count, plural, =0 {Ninguna escuela} one {# escuela} other {# escuelas}} en un radio de {miles, number} millas",
     "resultsBreakdown": "{district, number} de distrito, {charter, number} chárter, {private, number} privadas",
     "hiddenByFilter": "{count, number} ocultas por tus filtros",
-    "notRatedPrivate": "Sin calificación en el CA School Dashboard (las escuelas privadas no toman las pruebas estatales)",
+    "notRatedPrivate": "Sin calificación en el CA School Dashboard (las escuelas privadas no presentan las pruebas estatales)",
     "map": {
       "label": "Mapa de resultados",
       "largerMap": "Mapa más grande",
@@ -80,12 +80,12 @@
     },
     "about": {
       "title": "Sobre estos resultados",
-      "body": "Datos de directorio, chárter y dirección del Departamento de Educación de California. Calificaciones del California School Dashboard {year}. Escuelas privadas del Private School Affidavit.",
+      "body": "Datos de directorio, estatus chárter y direcciones del Departamento de Educación de California. Calificaciones del California School Dashboard {year}. Escuelas privadas según la declaración anual (Private School Affidavit).",
       "link": "Fuentes de datos y fechas de actualización"
     },
     "empty": {
       "title": "Ninguna escuela coincide",
-      "body": "Prueba con un radio mayor o menos filtros."
+      "body": "Prueba con un radio mayor o con menos filtros."
     },
     "error": {
       "geocode": "No encontramos esa dirección. Revisa la ortografía e incluye la ciudad.",
@@ -103,7 +103,7 @@
     "sections": {
       "overview": "Resumen",
       "dashboard": "California School Dashboard",
-      "dashboardNote": "{year} · cinco niveles, Azul es el más alto",
+      "dashboardNote": "{year} · cinco niveles; Azul es el más alto",
       "tests": "Resultados de pruebas",
       "testsNote": "CAASPP {year} · estudiantes que cumplen o superan el estándar",
       "students": "Estudiantes",
@@ -121,7 +121,7 @@
       "magnet": "Magnet",
       "virtual": "Instrucción virtual",
       "multilingual": "Programa multilingüe",
-      "opened": "Apertura",
+      "opened": "Fecha de apertura",
       "cds": "Código CDS",
       "nces": "ID NCES",
       "lastUpdated": "Directorio actualizado",
@@ -133,7 +133,7 @@
       "district": "Distrito",
       "state": "California"
     },
-    "notApplicable": "La tasa de graduación y Universidad/Carrera no aplican a este rango de grados.",
+    "notApplicable": "La tasa de graduación y Universidad/Carrera no corresponden a este rango de grados.",
     "links": {
       "dashboard": "CA School Dashboard",
       "directions": "Cómo llegar"
@@ -142,7 +142,7 @@
   "compare": {
     "title": "Comparando {count, plural, one {# escuela} other {# escuelas}}",
     "subtitle": "Distancias desde {address}. La negrita marca el mejor valor de cada fila donde la comparación tiene sentido.",
-    "empty": "Tu lista de comparación está vacía. Agrega escuelas desde los resultados.",
+    "empty": "Tu lista de comparación está vacía. Agrega escuelas desde los resultados de búsqueda.",
     "max": "Puedes comparar hasta {max, number} escuelas.",
     "groups": {
       "location": "Ubicación y grados",
@@ -161,14 +161,79 @@
       "programs": "Programas",
       "magnet": "Magnet"
     },
-    "privateNote": "Las escuelas privadas presentan una declaración anual al Departamento de Educación de California, pero no toman las pruebas estatales ni aparecen en el Dashboard, por eso esas filas muestran \"Sin calificación\"."
+    "privateNote": "Las escuelas privadas presentan una declaración anual al Departamento de Educación de California, pero no presentan las pruebas estatales ni aparecen en el Dashboard, por eso esas filas muestran \"Sin calificación\"."
   },
   "data": {
     "title": "Fuentes de datos",
-    "intro": "Cada cifra en esta aplicación proviene de un archivo público publicado por una agencia estatal o federal. Nada es estimado ni editorializado.",
+    "intro": "Cada cifra en esta aplicación proviene de un archivo público publicado por una agencia estatal o federal. Ninguna cifra es una estimación ni una interpretación.",
+    "updatedNote": "La columna Actualizado muestra cuándo se descargó cada archivo por última vez para esta aplicación. Los nombres de escuelas, distritos y direcciones se mantienen en inglés, tal como se publican.",
     "updated": "Actualizado {date, date, medium}",
     "rows": "{count, number} filas",
-    "source": "Fuente"
+    "source": "Fuente",
+    "table": {
+      "caption": "Archivos y servicios públicos que lee la aplicación",
+      "publisher": "Publicado por",
+      "takes": "Qué usa la aplicación",
+      "cadence": "Actualización",
+      "updated": "Actualizado"
+    },
+    "publishers": {
+      "cde": "Departamento de Educación de California",
+      "nces": "Centro Nacional de Estadísticas de Educación (NCES)",
+      "census": "Oficina del Censo de EE. UU."
+    },
+    "cadence": {
+      "onRequest": "Se genera al solicitarlo",
+      "annual": "Anual",
+      "biennial": "Cada dos años",
+      "live": "En vivo, en cada búsqueda"
+    },
+    "sources": {
+      "directory": {
+        "name": "Directorio de escuelas y distritos públicos",
+        "takes": "Nombre, dirección, coordenadas, tipo de escuela, estatus chárter, rango de grados y los indicadores de magnet, multilingüe y virtual de las escuelas públicas activas."
+      },
+      "ccd": {
+        "name": "Directorio de escuelas Common Core of Data del NCES",
+        "takes": "Registro de directorio para las escuelas públicas que faltan en el archivo del CDE."
+      },
+      "edgePublic": {
+        "name": "Geocódigos de escuelas públicas EDGE del NCES",
+        "takes": "Coordenadas de las escuelas públicas que faltan en el archivo del CDE."
+      },
+      "dashboard": {
+        "name": "Archivos de investigación del California School Dashboard",
+        "takes": "Nivel, estado y cambio de cada indicador: ELA, matemáticas, ausentismo crónico, tasa de suspensión, tasa de graduación, Universidad/Carrera, progreso de aprendices de inglés y ciencias. Filas a nivel de escuela para todos los estudiantes."
+      },
+      "caaspp": {
+        "name": "Archivos de investigación de CAASPP",
+        "takes": "Porcentaje de estudiantes que cumplen o superan el estándar en ELA y matemáticas, todos los grados, para cada escuela, su distrito y el estado."
+      },
+      "enrollment": {
+        "name": "Matrícula del Día del Censo",
+        "takes": "Matrícula total, matrícula por grado, raza y etnia, y número de aprendices de inglés."
+      },
+      "frpm": {
+        "name": "Elegibilidad para comidas gratis o a precio reducido (FRPM)",
+        "takes": "Proporción de estudiantes elegibles para comidas gratis o a precio reducido."
+      },
+      "staff": {
+        "name": "Proporción de estudiantes y personal",
+        "takes": "Maestros equivalentes a tiempo completo y proporción de estudiantes por maestro."
+      },
+      "affidavit": {
+        "name": "Declaración anual de escuelas privadas (Private School Affidavit)",
+        "takes": "Nombres de escuelas privadas, distritos, matrícula por grado y número de personal, según lo declarado por cada escuela."
+      },
+      "pss": {
+        "name": "Encuesta de escuelas privadas (PSS) del NCES",
+        "takes": "Dirección, coordenadas, rango de grados y afiliación religiosa de las escuelas privadas, vinculadas a la declaración anual por nombre y código postal."
+      },
+      "geocoder": {
+        "name": "Geocodificador de la Oficina del Censo de EE. UU.",
+        "takes": "Convierte la dirección escrita en el cuadro de búsqueda en coordenadas para la búsqueda por radio."
+      }
+    }
   },
   "labels": {
     "schoolType": {
@@ -187,10 +252,10 @@
       "none": "Sin nivel"
     },
     "indicator": {
-      "ela": "Artes del lenguaje en inglés",
+      "ela": "Artes lingüísticas en inglés",
       "elaShort": "ELA",
       "math": "Matemáticas",
-      "mathShort": "Mate",
+      "mathShort": "Mat.",
       "chronicAbsenteeism": "Ausentismo crónico",
       "chronicAbsenteeismShort": "Ausentismo",
       "suspension": "Tasa de suspensión",
