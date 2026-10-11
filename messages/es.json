@@ -34,7 +34,8 @@
       "copyLink": "Copiar enlace",
       "clearAll": "Borrar todo",
       "showMore": "Más escuelas",
-      "back": "Volver"
+      "back": "Volver",
+      "close": "Cerrar"
     },
     "notRated": "Sin calificación",
     "notReported": "No reportado",
@@ -42,7 +43,13 @@
     "noData": "—",
     "miles": "{count, number} mi",
     "students": "{count, number} estudiantes",
-    "sampleData": "Los valores de muestra son ilustrativos."
+    "sampleData": "Los valores de muestra son ilustrativos.",
+    "gradeSpan": "{low}–{high}",
+    "join": "{a} · {b}",
+    "addressShort": "{street}, {city}",
+    "studentTeacher": "{count, number}:1 estudiantes por maestro",
+    "indicatorLevel": "{indicator} {level}",
+    "loading": "Cargando"
   },
   "search": {
     "title": "Buscar escuelas cerca de una dirección",
