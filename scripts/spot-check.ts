@@ -37,10 +37,26 @@ const SummaryCards = z.array(
       indicatorId: z.number(),
       primary: z
         .object({
-          status: z.number().nullable(),
-          change: z.number().nullable(),
-          performance: z.number().nullable(),
-          count: z.number().nullable(),
+          status: z
+            .number()
+            .nullish()
+            .transform((v) => v ?? null),
+          change: z
+            .number()
+            .nullish()
+            .transform((v) => v ?? null),
+          performance: z
+            .number()
+            .nullish()
+            .transform((v) => v ?? null),
+          count: z
+            .number()
+            .nullish()
+            .transform((v) => v ?? null),
+          changeId: z
+            .number()
+            .nullish()
+            .transform((v) => v ?? null),
         })
         .loose()
         .nullable(),
@@ -104,8 +120,10 @@ async function main() {
       const level = theirs.performance ? DASHBOARD_LEVELS[theirs.performance - 1] : null;
       if (!near(mine.status, theirs.status))
         problems.push(`${id} status ${mine.status} vs ${theirs.status}`);
-      if (!near(mine.change, theirs.change))
-        problems.push(`${id} change ${mine.change} vs ${theirs.change}`);
+      // The site serializes a blank change (n-size not met) as 0 with no change level.
+      const theirChange = theirs.change === 0 && !theirs.changeId ? null : theirs.change;
+      if (!near(mine.change, theirChange))
+        problems.push(`${id} change ${mine.change} vs ${theirChange}`);
       if (mine.level !== level) problems.push(`${id} level ${mine.level} vs ${level}`);
     }
     compared += checked;
