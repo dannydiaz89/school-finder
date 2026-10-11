@@ -151,7 +151,8 @@ Rules:
 ### E. Compare
 
 - [ ] Compare list in URL, max 5, helpers in `src/features/compare/`
-- [ ] Add and remove from results and detail pages (exposes a `useCompareList` hook the other streams call)
+- [x] `useCompareList` hook in `src/features/compare/use-compare-list.ts` (URL-backed, History API writes); Search and Detail call it
+- [ ] Add and remove from results and detail pages
 - [ ] Compare table with grouped rows and best-in-row emphasis
 - [ ] Copy link, clear all
 - [ ] Phone layout with horizontal scroll

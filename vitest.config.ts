@@ -20,6 +20,8 @@ export default defineConfig({
   test: {
     setupFiles: ["./src/test/setup.ts"],
     css: false,
+    // next-intl's client build imports next/navigation; inline it so jsdom tests can render Link.
+    server: { deps: { inline: ["next-intl"] } },
     projects: [
       {
         ...shared,

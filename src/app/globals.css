@@ -30,6 +30,9 @@
   --color-border: var(--border);
   --color-border-strong: var(--border-strong);
   --color-focus: var(--focus);
+  --color-error: var(--error);
+  --color-error-text: var(--error-text);
+  --color-bg-skeleton: var(--bg-skeleton);
 
   --color-level-red: var(--level-red);
   --color-level-orange: var(--level-orange);

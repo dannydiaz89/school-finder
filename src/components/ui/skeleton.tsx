@@ -19,7 +19,7 @@ export function Skeleton({ lines = 1, className }: SkeletonProps) {
     return (
       <span
         aria-hidden="true"
-        className={cx("block h-3.5 animate-pulse rounded-sm bg-bg-map", className)}
+        className={cx("block h-3.5 animate-pulse rounded-sm bg-bg-skeleton", className)}
       />
     );
   }
@@ -29,7 +29,7 @@ export function Skeleton({ lines = 1, className }: SkeletonProps) {
         <span
           key={i}
           className={cx(
-            "block h-3.5 animate-pulse rounded-sm bg-bg-map",
+            "block h-3.5 animate-pulse rounded-sm bg-bg-skeleton",
             widths[i % widths.length],
           )}
         />
