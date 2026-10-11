@@ -104,7 +104,12 @@
   "school": {
     "backToResults": "Back to results",
     "tabs": {
-      "label": "Sections"
+      "label": "Sections",
+      "overview": "Overview",
+      "dashboard": "Dashboard",
+      "tests": "Test scores",
+      "students": "Students",
+      "nearby": "Nearby"
     },
     "stats": {
       "enrollment": "Students, {year}",
@@ -155,9 +160,9 @@
       "link": "Results by grade and student group on the CAASPP site"
     },
     "students": {
-      "disabilities": "{value, number, ::percent .#} students with disabilities",
-      "englishLearners": "{value, number, ::percent .#} English learners",
-      "disadvantaged": "{value, number, ::percent .#} socioeconomically disadvantaged",
+      "disabilities": "{value, number, percent} students with disabilities",
+      "englishLearners": "{value, number, percent} English learners",
+      "disadvantaged": "{value, number, percent} socioeconomically disadvantaged",
       "grade": "Grade",
       "count": "Students",
       "total": "Total",

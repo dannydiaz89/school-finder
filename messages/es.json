@@ -104,7 +104,12 @@
   "school": {
     "backToResults": "Volver a los resultados",
     "tabs": {
-      "label": "Secciones"
+      "label": "Secciones",
+      "overview": "Resumen",
+      "dashboard": "Dashboard",
+      "tests": "Resultados de pruebas",
+      "students": "Estudiantes",
+      "nearby": "Cercanas"
     },
     "stats": {
       "enrollment": "Estudiantes, {year}",
@@ -155,9 +160,9 @@
       "link": "Resultados por grado y grupo de estudiantes en el sitio de CAASPP"
     },
     "students": {
-      "disabilities": "{value, number, ::percent .#} estudiantes con discapacidades",
-      "englishLearners": "{value, number, ::percent .#} aprendices de inglés",
-      "disadvantaged": "{value, number, ::percent .#} en desventaja socioeconómica",
+      "disabilities": "{value, number, percent} estudiantes con discapacidades",
+      "englishLearners": "{value, number, percent} aprendices de inglés",
+      "disadvantaged": "{value, number, percent} en desventaja socioeconómica",
       "grade": "Grado",
       "count": "Estudiantes",
       "total": "Total",
