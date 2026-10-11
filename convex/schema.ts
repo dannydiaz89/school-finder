@@ -1,6 +1,6 @@
 import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
-import { zodToConvexFields } from "convex-helpers/server/zod4";
+import { zodToConvex, zodToConvexFields } from "convex-helpers/server/zod4";
 import {
   CaasppResult,
   DashboardIndicator,
@@ -8,6 +8,7 @@ import {
   Frpm,
   PrivateSchoolDetail,
   School,
+  SearchSummary,
   StaffRatio,
 } from "../src/lib/schemas";
 
@@ -18,7 +19,11 @@ import {
  */
 
 export default defineSchema({
-  schools: defineTable(zodToConvexFields(School.shape))
+  schools: defineTable({
+    ...zodToConvexFields(School.shape),
+    /** Precomputed search row (see SearchSummary). Rebuilt at the end of every import. */
+    summary: v.optional(zodToConvex(SearchSummary)),
+  })
     .index("by_cds", ["cds"])
     .index("by_type", ["type"])
     .index("by_districtCds", ["districtCds"]),

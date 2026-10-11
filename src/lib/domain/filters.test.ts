@@ -41,6 +41,23 @@ describe("isSpecializedPlacement", () => {
       isSpecializedPlacement(school({ instructionLevel: "A", educationalOption: "TRAD" })),
     ).toBe(true);
   });
+  it("flags preschool-only programs", () => {
+    expect(
+      isSpecializedPlacement(school({ instructionLevel: "PS", educationalOption: undefined })),
+    ).toBe(true);
+  });
+  it("flags programs that offer only preschool even when coded as elementary", () => {
+    expect(
+      isSpecializedPlacement(
+        school({ instructionLevel: "ELEM", gradesOffered: { low: "P", high: "P" } }),
+      ),
+    ).toBe(true);
+    expect(
+      isSpecializedPlacement(
+        school({ instructionLevel: "ELEM", gradesOffered: { low: "P", high: "5" } }),
+      ),
+    ).toBe(false);
+  });
   it("never flags private schools", () => {
     expect(isSpecializedPlacement(school({ type: "private", educationalOption: undefined }))).toBe(
       false,

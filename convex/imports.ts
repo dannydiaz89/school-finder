@@ -15,6 +15,8 @@ import {
   StaffRatio,
 } from "../src/lib/schemas";
 import { schoolIndex } from "./geospatial";
+import { loadSummaryRecord } from "./lib/records";
+import { summaryOf } from "../src/lib/domain/records";
 
 /**
  * Internal mutations the import script calls in batches. Every upsert is
@@ -75,7 +77,8 @@ export const upsertSchools = zInternalMutation({
       let id: Id<"schools">;
       if (existing) {
         id = existing._id;
-        await ctx.db.replace(id, school);
+        // Keep the precomputed search summary; it is refreshed by rebuildSummaries.
+        await ctx.db.replace(id, { ...school, summary: existing.summary });
       } else {
         id = await ctx.db.insert("schools", school);
       }
@@ -153,6 +156,26 @@ export const rebuildGeoIndex = internalMutation({
       indexed += 1;
     }
     return { indexed, cursor: page.isDone ? null : page.continueCursor };
+  },
+});
+
+/**
+ * Recompute the stored search summary for a page of schools. Run after any
+ * import that changes Dashboard rows, enrollment, staff ratios, or private
+ * school details. Each school costs about a dozen reads here, once, so that a
+ * search costs one.
+ */
+export const rebuildSummaries = internalMutation({
+  args: { cursor: v.union(v.string(), v.null()), pageSize: v.optional(v.number()) },
+  handler: async (ctx, args) => {
+    const page = await ctx.db
+      .query("schools")
+      .paginate({ cursor: args.cursor, numItems: args.pageSize ?? 100 });
+    for (const school of page.page) {
+      const summary = summaryOf(await loadSummaryRecord(ctx, school));
+      await ctx.db.patch(school._id, { summary });
+    }
+    return { updated: page.page.length, cursor: page.isDone ? null : page.continueCursor };
   },
 });
 

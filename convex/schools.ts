@@ -13,10 +13,16 @@ import {
 } from "../src/lib/schemas";
 import { isSpecializedPlacement } from "../src/lib/domain/filters";
 import { milesToMeters } from "../src/lib/domain/geo";
-import { buildComparison, toSummary } from "../src/lib/domain/records";
+import { buildComparison, rowFromSummary, summaryOf } from "../src/lib/domain/records";
 import { assembleSearchResult } from "../src/lib/domain/search";
 import { schoolIndex } from "./geospatial";
-import { loadCaasppByCds, loadRecord, loadSummaryRecord, schoolByCds } from "./lib/records";
+import {
+  loadCaasppByCds,
+  loadRecord,
+  loadSummaryRecord,
+  schoolByCds,
+  toSchool,
+} from "./lib/records";
 
 /**
  * Thin public queries behind src/lib/data/convex.ts. Arguments are validated
@@ -26,8 +32,14 @@ import { loadCaasppByCds, loadRecord, loadSummaryRecord, schoolByCds } from "./l
 
 const zQuery = zCustomQuery(query, NoOp);
 
-/** Upper bound on candidates pulled from the spatial index for one search. */
-const MAX_CANDIDATES = 1500;
+/**
+ * Upper bound on candidates pulled from the spatial index for one search.
+ * Convex allows 4,096 document reads per query and each candidate costs about
+ * three (the index entry, its cell, and the school), measured in downtown Los
+ * Angeles: 1,233 candidates pass, 1,500 fail. 1,200 leaves headroom. When the
+ * cap is hit the result is marked `truncated` and the page says so.
+ */
+export const MAX_CANDIDATES = 1200;
 /** CDS of the statewide CAASPP rows. */
 const STATE_CDS = "00000000000000" as CdsCode;
 
@@ -40,8 +52,14 @@ async function summariesNear(
   const hits = await schoolIndex.nearest(ctx, { point: center, limit, maxDistance });
   const docs = await Promise.all(hits.map((hit) => ctx.db.get(hit.key)));
   const schools = docs.filter((d): d is Doc<"schools"> => d !== null);
-  const records = await Promise.all(schools.map((s) => loadSummaryRecord(ctx, s)));
-  return records.map((r) => toSummary(r, center));
+  return Promise.all(
+    schools.map(async (doc) => {
+      // One read per school: the summary was computed at import time. A school imported
+      // since the last rebuild has none yet, so compute it on the spot for that one.
+      const summary = doc.summary ?? summaryOf(await loadSummaryRecord(ctx, doc));
+      return rowFromSummary(toSchool(doc), summary, center);
+    }),
+  );
 }
 
 async function detail(
@@ -64,7 +82,7 @@ export const search = zQuery({
     // The index measures distance its own way; ask for a little more and let the domain cut exactly.
     const candidates = await summariesNear(ctx, args.center, MAX_CANDIDATES, radiusMeters * 1.02);
     const inRadius = candidates.filter((row) => row.distanceMeters <= radiusMeters);
-    return assembleSearchResult(inRadius, args);
+    return assembleSearchResult(inRadius, args, candidates.length >= MAX_CANDIDATES);
   },
 });
 

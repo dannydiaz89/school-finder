@@ -63,6 +63,7 @@ export const fixturesDataSource: SchoolDataSource = {
         ),
       ),
       hiddenSpecialized,
+      truncated: false,
     };
   },
 

@@ -126,6 +126,7 @@ export async function SearchContent({
           </TextLink>
         </p>
       ) : null}
+      {result.truncated ? <p className="m-0 text-sm text-fg-muted">{t("truncated")}</p> : null}
       {result.total === 0 ? (
         <EmptyState titleAs="h3" title={t("empty.title")} body={t("empty.body")} />
       ) : null}

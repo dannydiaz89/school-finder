@@ -26,6 +26,7 @@ import { enrollment } from "./sources/enrollment";
 import { frpm } from "./sources/frpm";
 import { geoIndex } from "./sources/geo-index";
 import { privateAffidavit, privatePss } from "./sources/private";
+import { searchRows } from "./sources/search-rows";
 import { staff } from "./sources/staff";
 import type { Source } from "./sources/types";
 
@@ -42,7 +43,7 @@ const SOURCES: Source[] = [
 
 function usage(): never {
   console.error(
-    `Usage: pnpm import <${[...SOURCES.map((s) => s.name), geoIndex.name, "all"].join("|")}> ` +
+    `Usage: pnpm run import <${[...SOURCES.map((s) => s.name), geoIndex.name, searchRows.name, "all"].join("|")}> ` +
       `[--year 2024-25] [--cache .cache] [--county Sacramento] [--dry-run] [--batch 500]`,
   );
   process.exit(2);
@@ -62,12 +63,18 @@ async function main() {
   });
   const [name] = positionals;
   if (!name) usage();
-  const selected = name === "all" ? SOURCES : [...SOURCES, geoIndex].filter((s) => s.name === name);
+  const selected =
+    name === "all"
+      ? [...SOURCES]
+      : [...SOURCES, geoIndex, searchRows].filter((s) => s.name === name);
   if (selected.length === 0) usage();
   if (name === "all" && values.year) {
     console.error("--year applies to one source at a time; each source has its own default year.");
     process.exit(2);
   }
+
+  // Any data import changes what search rows show, so refresh the stored summaries last.
+  if (selected.some((s) => SOURCES.includes(s))) selected.push(searchRows);
 
   const county = values.county ? countyCode(values.county) : undefined;
   if (values.county && !county) {

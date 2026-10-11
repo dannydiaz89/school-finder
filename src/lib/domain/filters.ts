@@ -19,7 +19,10 @@ export const ORDINARY_OPTIONS: ReadonlySet<EducationalOption> = new Set(["TRAD",
 
 export function isSpecializedPlacement(school: School): boolean {
   if (school.type === "private") return false;
-  if (school.instructionLevel === "A") return true;
+  // Adult schools and preschool-only programs are not K-12 choices. CDE codes many
+  // preschool programs as elementary level, so the offered grade span is the reliable signal.
+  if (school.instructionLevel === "A" || school.instructionLevel === "PS") return true;
+  if (school.gradesOffered?.high === "P") return true;
   if (school.educationalOption && !ORDINARY_OPTIONS.has(school.educationalOption)) return true;
   return false;
 }

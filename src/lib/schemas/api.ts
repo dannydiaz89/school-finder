@@ -78,6 +78,18 @@ export const SchoolSummary = z
   .strict();
 export type SchoolSummary = z.infer<typeof SchoolSummary>;
 
+/**
+ * The part of a search row that does not depend on where the search is
+ * centered. Stored on each school document at import time so a search costs
+ * one read per candidate instead of a dozen.
+ */
+export const SearchSummary = SchoolSummary.pick({
+  dashboard: true,
+  enrollment: true,
+  studentTeacherRatio: true,
+}).strict();
+export type SearchSummary = z.infer<typeof SearchSummary>;
+
 export const SearchResult = z
   .object({
     schools: z.array(SchoolSummary),
@@ -87,6 +99,15 @@ export const SearchResult = z
     countsByType: z.object({ district: Count, charter: Count, private: Count }).strict(),
     /** Schools within the radius that were hidden because includeSpecialized is false. */
     hiddenSpecialized: Count,
+    /**
+     * True when the area holds more schools than one search examines. The rows
+     * and counts then cover only the nearest schools, and the UI says so.
+     *
+     * Defaults to false so a backend deployed before this field existed still
+     * parses. New result fields should always be added this way: the web app
+     * and the backend deploy separately and may briefly be out of step.
+     */
+    truncated: z.boolean().default(false),
   })
   .strict();
 export type SearchResult = z.infer<typeof SearchResult>;

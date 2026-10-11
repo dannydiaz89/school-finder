@@ -40,6 +40,7 @@ const result: SearchResult = {
   total: 10,
   countsByType: { district: 7, charter: 2, private: 1 },
   hiddenSpecialized: 0,
+  truncated: false,
 };
 const params = parseSearchParams({ lat: String(home.latitude), lng: String(home.longitude) });
 

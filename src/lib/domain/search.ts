@@ -6,7 +6,11 @@ import { countByType, isSpecializedPlacement, matchesFilters, sortRows } from ".
  * apply filters, sort, count, page. Every backend calls this after it has
  * gathered the candidates, so results are identical whatever gathered them.
  */
-export function assembleSearchResult(inRadius: SchoolSummary[], args: SearchArgs): SearchResult {
+export function assembleSearchResult(
+  inRadius: SchoolSummary[],
+  args: SearchArgs,
+  truncated = false,
+): SearchResult {
   const visible = inRadius.filter(
     (row) => args.filters.includeSpecialized || !isSpecializedPlacement(row.school),
   );
@@ -19,5 +23,6 @@ export function assembleSearchResult(inRadius: SchoolSummary[], args: SearchArgs
     total: matched.length,
     countsByType: countByType(visible),
     hiddenSpecialized: inRadius.length - visible.length,
+    truncated,
   };
 }

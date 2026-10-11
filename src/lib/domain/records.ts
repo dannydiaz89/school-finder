@@ -3,8 +3,10 @@ import type {
   CaasppResult,
   Coordinates,
   DashboardSummary,
+  School,
   SchoolRecord,
   SchoolSummary,
+  SearchSummary,
 } from "@/lib/schemas";
 import { haversineMeters } from "./geo";
 
@@ -23,15 +25,31 @@ export function summarizeDashboard(record: SchoolRecord): DashboardSummary {
   return summary;
 }
 
-export function toSummary(record: SchoolRecord, from: Coordinates): SchoolSummary {
-  const coords = record.school.coordinates;
+/** The distance-independent part of a search row, computed from a school's stored records. */
+export function summaryOf(record: SchoolRecord): SearchSummary {
   return {
-    school: record.school,
-    distanceMeters: coords ? haversineMeters(from, coords) : Number.POSITIVE_INFINITY,
     dashboard: summarizeDashboard(record),
     enrollment: record.enrollment?.total ?? record.privateDetail?.totalEnrollment ?? null,
     studentTeacherRatio: record.staff?.studentTeacherRatio ?? null,
   };
+}
+
+/** A search row from a school and its precomputed summary. */
+export function rowFromSummary(
+  school: School,
+  summary: SearchSummary,
+  from: Coordinates,
+): SchoolSummary {
+  const coords = school.coordinates;
+  return {
+    school,
+    distanceMeters: coords ? haversineMeters(from, coords) : Number.POSITIVE_INFINITY,
+    ...summary,
+  };
+}
+
+export function toSummary(record: SchoolRecord, from: Coordinates): SchoolSummary {
+  return rowFromSummary(record.school, summaryOf(record), from);
 }
 
 /** All-grades, all-students percent met-and-above for one subject, or null. */

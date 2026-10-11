@@ -98,6 +98,7 @@ Both themes are complete sets of the same tokens. `next-themes` sets `data-theme
 
 ## Convex notes
 
+- The web app and Convex deploy separately. A new field on a result schema must have a `.default(...)` so an older backend still parses, and a removed field must stay optional for one release. Deploy Convex first, then the web app.
 - `convex/schema.ts` is derived from the Zod domain schemas with `zodToConvexFields`. Add fields in `src/lib/schemas/`, not here. Indexes are decided here.
 - Field names must start with a letter or underscore; that is why per-grade counts are arrays of `{ grade, count }` rather than records.
 - Queries use `zCustomQuery` from `convex-helpers/server/zod4` with `args: Schema.shape`.

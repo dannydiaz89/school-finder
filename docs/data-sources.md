@@ -216,6 +216,12 @@ Recommendation: Census geocoder server-side for the MVP, with Mapbox autocomplet
 
 None are needed. The state and federal files above cover everything in the mockups.
 
+## Operating notes
+
+- **The contract test wipes the deployment it runs against.** `CONVEX_CONTRACT_TESTS=1 pnpm test src/lib/data/convex.contract.test.ts` clears every data table and loads the 40 fixture schools. Run it against a throwaway Convex deployment, or re-run `pnpm run import all` afterwards (about ten minutes with a warm `.cache/`).
+- **Search summaries.** `pnpm run import search-rows` recomputes the summary stored on each school (about a minute for the state). It runs automatically at the end of any other import.
+- **Deploy order.** Deploy Convex functions before the web app. New result fields carry defaults so a brief mismatch does not break pages.
+
 ## Unverified
 
 1. Whether the CDE directory private-school export carries lat/long.

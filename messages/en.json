@@ -117,7 +117,8 @@
     "intro": "Enter a home address to list the schools within a few miles, with distance, grades, school type, and California School Dashboard levels from public files.",
     "resultsLabel": "Search results",
     "hiddenSpecialized": "{count, plural, one {# specialized placement is} other {# specialized placements are}} not shown.",
-    "showingCount": "Showing {shown, number} of {total, number}"
+    "showingCount": "Showing {shown, number} of {total, number}",
+    "truncated": "This area has more schools than one search can list. Results and counts cover the nearest schools only. Choose a smaller radius to see every school in it."
   },
   "school": {
     "backToResults": "Back to results",

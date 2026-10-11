@@ -117,7 +117,8 @@
     "intro": "Escribe una dirección de casa para ver las escuelas a pocas millas, con distancia, grados, tipo de escuela y niveles del California School Dashboard tomados de archivos públicos.",
     "resultsLabel": "Resultados de búsqueda",
     "hiddenSpecialized": "{count, plural, one {# escuela especializada no se muestra} other {# escuelas especializadas no se muestran}}.",
-    "showingCount": "Mostrando {shown, number} de {total, number}"
+    "showingCount": "Mostrando {shown, number} de {total, number}",
+    "truncated": "Esta zona tiene más escuelas de las que una búsqueda puede mostrar. Los resultados y los conteos incluyen solo las escuelas más cercanas. Elige un radio menor para ver todas las escuelas dentro de él."
   },
   "school": {
     "backToResults": "Volver a los resultados",

@@ -60,6 +60,15 @@ const byCds = (ctx: QueryCtx, cds: CdsCode) => ({
       .first(),
 });
 
+/** A stored school document as the domain `School`: no system fields, no search summary. */
+export function toSchool(doc: Doc<"schools">): School {
+  const copy: Record<string, unknown> = { ...doc };
+  delete copy._id;
+  delete copy._creationTime;
+  delete copy.summary;
+  return copy as School;
+}
+
 export async function loadCaasppByCds(ctx: QueryCtx, cds: CdsCode): Promise<CaasppResult[]> {
   const rows = await byCds(ctx, cds).caaspp();
   return rows.map((r) => stripSystem(r) as CaasppResult);
@@ -77,7 +86,7 @@ export async function loadRecord(ctx: QueryCtx, school: Doc<"schools">): Promise
     school.type === "private" ? q.privateDetail() : Promise.resolve(null),
   ]);
   return {
-    school: stripSystem(school) as School,
+    school: toSchool(school),
     dashboard: dashboard.map((d) => stripSystem(d) as DashboardIndicator),
     caaspp: caaspp.map((c) => stripSystem(c) as CaasppResult),
     enrollment: enrollment ? (stripSystem(enrollment) as Enrollment) : null,
@@ -100,7 +109,7 @@ export async function loadSummaryRecord(
     school.type === "private" ? q.privateDetail() : Promise.resolve(null),
   ]);
   return {
-    school: stripSystem(school) as School,
+    school: toSchool(school),
     dashboard: dashboard.map((d) => stripSystem(d) as DashboardIndicator),
     caaspp: [],
     enrollment: enrollment ? (stripSystem(enrollment) as Enrollment) : null,

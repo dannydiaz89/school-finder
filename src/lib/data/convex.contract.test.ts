@@ -152,6 +152,15 @@ describe.skipIf(!enabled)("Convex adapter matches the fixtures adapter", () => {
     await client.mutation(internal.imports.upsertPrivateDetails, {
       rows: records.flatMap((r) => (r.privateDetail ? [r.privateDetail] : [])),
     });
+    // Search reads the precomputed summary, so build it the way an import does.
+    let cursor: string | null = null;
+    do {
+      const page: { cursor: string | null } = await client.mutation(
+        internal.imports.rebuildSummaries,
+        { cursor, pageSize: 100 },
+      );
+      cursor = page.cursor;
+    } while (cursor !== null);
 
     convex = (await import("./convex")).convexDataSource;
     fixturesSource = (await import("./fixtures")).fixturesDataSource;

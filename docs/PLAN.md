@@ -171,7 +171,9 @@ Rules:
 ## Stage 2 — Integration (serial, lead agent)
 
 - [x] Switch UI streams from fixtures to real data once B lands (DATA_SOURCE=convex in .env.local; two counties loaded in the dev deployment; e2e stays on fixtures)
-- [ ] Lighthouse and axe pass on the three main pages, both themes
+- [x] Statewide import into the dev deployment: 10,537 public schools, 1,574 private schools placed, zero rejected rows
+- [x] Local end-to-end verification against live data (17 flow checks) plus back-navigation regression
+- [~] Lighthouse and axe pass on the three main pages, both themes (axe passes in the smoke suite for four pages in both themes; Lighthouse not run)
 - [ ] Deploy to Vercel and Convex production
 - [ ] Tag `v0.1.0`
 
@@ -189,8 +191,14 @@ Rules:
 - The compare list is filtered client-side after the server fetches every school in the URL, so Remove and Clear all are instant.
 - Private schools match the federal survey by Dice similarity on normalized names within the same county, threshold 0.8, overrides table first. Roughly half of affidavit schools have a survey row; the rest are mostly very small schools.
 
+- Search reads a precomputed summary stored on each school document (`summary`, rebuilt by `pnpm run import search-rows`, which runs automatically after any import). Without it a search cost about twelve reads per school and a 10-mile search in Los Angeles hit Convex's 4,096-read limit.
+- A search examines at most the nearest 1,200 schools. Past that the result is marked `truncated` and the page says so. Only downtown Los Angeles beyond about 12 miles reaches it.
+- Preschool-only programs are hidden by default with the other specialized placements. CDE codes many of them as elementary level, so the rule keys on an offered grade span that ends at preschool.
+
 ## Contract amendments
 
 Record each as: date, what changed, which streams were notified.
 
 - 2026-10-11 (Data): `Enrollment.byRaceEthnicity` in `src/lib/schemas/enrollment.ts` is now `z.object({ RB: Count.optional(), ... }).strict()` instead of `z.partialRecord(RaceEthnicity, Count)`. The TypeScript type is unchanged (`Partial<Record<RaceEthnicity, number>>`), but `convex-helpers` 0.1.128 derives a Convex object with every key required from a partial record, so `convex/schema.ts` rejected any school missing a category (which is nearly all of them). No consumer changes. Streams notified: Lead (owns the file), Detail and Compare (read the field).
+
+- 2026-10-11: `SearchSummary` added (the distance-independent part of `SchoolSummary`), stored as an optional `summary` field on the Convex `schools` table. `SearchResult` gained `truncated` (defaults to false). All streams merged before this; no one to notify.
