@@ -183,6 +183,12 @@ Rules:
 - [ ] Sign-in and saved lists
 - [ ] Historical trends per school (prior Dashboard years)
 
+## Decisions made during Stage 1
+
+- Unknown school codes render the localized 404 page with `noindex` but return HTTP 200, because the prerendered shell is sent before the lookup runs. Accepted: the fast shell matters more than the status code for a page nobody links to. Revisit if crawl hygiene becomes an issue.
+- The compare list is filtered client-side after the server fetches every school in the URL, so Remove and Clear all are instant.
+- Private schools match the federal survey by Dice similarity on normalized names within the same county, threshold 0.8, overrides table first. Roughly half of affidavit schools have a survey row; the rest are mostly very small schools.
+
 ## Contract amendments
 
 Record each as: date, what changed, which streams were notified.

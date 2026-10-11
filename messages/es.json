@@ -437,6 +437,11 @@
       "RP": "Isleño del Pacífico",
       "RT": "Dos o más razas",
       "RW": "Blanco"
+    },
+    "charterFunding": {
+      "directly": "Financiamiento directo",
+      "locally": "Financiamiento local",
+      "notInModel": "Fuera del modelo de financiamiento chárter"
     }
   },
   "styleguide": {

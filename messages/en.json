@@ -437,6 +437,11 @@
       "RP": "Pacific Islander",
       "RT": "Two or more races",
       "RW": "White"
+    },
+    "charterFunding": {
+      "directly": "Directly funded",
+      "locally": "Locally funded",
+      "notInModel": "Not in the charter funding model"
     }
   },
   "styleguide": {

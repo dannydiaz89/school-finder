@@ -1,5 +1,7 @@
 import type {
   Affiliation,
+  CharterFunding,
+  RaceEthnicity,
   DashboardIndicatorId,
   DashboardLevel,
   EducationalOption,
@@ -33,6 +35,8 @@ export const educationalOptionKey = (opt: EducationalOption) => `educationalOpti
 export const virtualKey = (v: VirtualStatus) => `virtual.${v}` as const;
 export const programKey = (p: Program) => `program.${p}` as const;
 export const affiliationKey = (a: Affiliation) => `affiliation.${a}` as const;
+export const raceEthnicityKey = (code: RaceEthnicity) => `raceEthnicity.${code}` as const;
+export const charterFundingKey = (f: CharterFunding) => `charterFunding.${f}` as const;
 export const yesNoKey = (value: boolean) =>
   value ? ("yesNo.yes" as const) : ("yesNo.no" as const);
 
