@@ -49,3 +49,6 @@ next-env.d.ts
 /playwright-report/
 /blob-report/
 /playwright/.cache/
+
+# agent worktrees created by the Claude desktop app
+/.claude/worktrees/

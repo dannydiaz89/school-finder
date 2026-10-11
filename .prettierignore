@@ -6,3 +6,4 @@ convex/_generated
 test-results
 playwright-report
 blob-report
+.claude/worktrees
