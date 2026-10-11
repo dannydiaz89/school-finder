@@ -10,7 +10,12 @@ import { parseSearchParams } from "@/lib/schemas";
 export async function generateMetadata({ params }: PageProps<"/[locale]">): Promise<Metadata> {
   const locale = await requireLocale(params);
   const t = await getTranslations({ locale, namespace: "search" });
-  return { title: t("title"), description: t("intro") };
+  const common = await getTranslations({ locale, namespace: "common" });
+  // The layout's title template applies only to child segments, not to this page, so join here.
+  return {
+    title: { absolute: common("join", { a: t("title"), b: common("appName") }) },
+    description: t("intro"),
+  };
 }
 
 /**
