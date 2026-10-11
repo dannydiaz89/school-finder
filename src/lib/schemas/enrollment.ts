@@ -12,7 +12,14 @@ export const Enrollment = z
     year: SchoolYear,
     total: Count,
     byGrade: z.array(GradeCount),
-    byRaceEthnicity: z.partialRecord(RaceEthnicity, Count),
+    /**
+     * Keyed by RaceEthnicity. Spelled as an object of optional keys rather than
+     * `z.partialRecord` because convex-helpers derives required fields from a
+     * partial record, which would reject every school missing a category.
+     */
+    byRaceEthnicity: z
+      .object(Object.fromEntries(RaceEthnicity.options.map((code) => [code, Count.optional()])))
+      .strict() as z.ZodObject<Record<RaceEthnicity, z.ZodOptional<typeof Count>>>,
     englishLearners: Count.optional(),
     studentsWithDisabilities: Count.optional(),
     socioeconomicallyDisadvantaged: Count.optional(),
