@@ -30,10 +30,11 @@ const STOP_WORDS = new Set([
   "12",
 ]);
 
-/** Lowercase, "saint" -> "st", punctuation and generic words removed. */
+/** Lowercase, "saint" -> "st", punctuation and generic words removed. A "dba" name wins over the legal name. */
 export function normalizeName(name: string): string {
   return name
     .toLowerCase()
+    .replace(/^.*\bdba\b/, "")
     .replace(/\bsaint\b/g, "st")
     .replace(/[^a-z0-9 ]+/g, " ")
     .split(/\s+/)

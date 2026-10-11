@@ -100,6 +100,7 @@ describe("name matching", () => {
   it("normalizes saint and generic words", () => {
     expect(normalizeName("St. Francis of Assisi Elementary School")).toBe("st francis assisi");
     expect(normalizeName("SAINT FRANCIS OF ASSISI ELEMENTARY")).toBe("st francis assisi");
+    expect(normalizeName("Riverside School Inc., dba Brookfield School")).toBe("brookfield");
   });
   it("scores similar names high and different names low", () => {
     expect(nameSimilarity("St. Robert Catholic School", "ST ROBERT SCHOOL")).toBe(1);
