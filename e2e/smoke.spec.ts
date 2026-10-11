@@ -25,6 +25,11 @@ type Theme = (typeof THEMES)[number];
 async function setTheme(page: Page, theme: Theme) {
   await page.getByLabel("Theme").selectOption(theme);
   await expect(page.locator("html")).toHaveAttribute("data-theme", theme);
+  // Let color transitions finish before axe samples computed colors.
+  await page.evaluate(() =>
+    Promise.all(document.getAnimations().map((a) => a.finished.catch(() => undefined))),
+  );
+  await page.waitForTimeout(350);
 }
 
 async function expectNoSeriousAxeViolations(page: Page) {
@@ -98,8 +103,44 @@ for (const theme of THEMES) {
   });
 }
 
-// TODO(search): type a fixture address, submit, and assert numbered result rows.
-// TODO(detail): open the first result's "Details" link and assert the school heading.
-// TODO(compare): click "Add to compare" on a result, open /compare, and assert the
-// school appears as a column. Enable once the Search, Detail, and Compare
-// workstreams land their pages.
+/** A search URL with coordinates already resolved, so no geocoder call is needed. */
+const SEARCH_URL =
+  "/en?address=1420+J+Street%2C+Sacramento%2C+CA+95814&lat=38.57871&lng=-121.48766&radius=3";
+
+test("search results lead to a school page and the compare list", async ({ page }) => {
+  await page.goto(SEARCH_URL);
+  const rows = page.getByRole("main").getByRole("list").first().getByRole("listitem");
+  await expect(rows.first()).toBeVisible();
+  expect(await rows.count()).toBeGreaterThan(5);
+
+  // Add two schools to the compare list; the URL carries the list.
+  const toggles = page.getByRole("button", { name: /Add to compare/ });
+  await toggles.nth(0).click();
+  await toggles.nth(0).click(); // the first row's button is now "In compare list", so nth(0) is the second row
+  await expect(page).toHaveURL(/compare=\d{14}(%2C|,)\d{14}/);
+  await expect(page.getByRole("link", { name: /Compare \(2\)/ })).toBeVisible();
+
+  // Open the first result's details.
+  await page.getByRole("link", { name: "Details" }).first().click();
+  await expect(page).toHaveURL(/\/en\/school\/\d{14}/);
+  await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+  await expect(page).toHaveURL(/compare=/);
+
+  // The compare page shows both schools as columns.
+  await page.getByRole("link", { name: /Compare \(2\)/ }).click();
+  await expect(page).toHaveURL(/\/en\/compare\?compare=/);
+  await expect(page.getByRole("heading", { level: 1 })).toContainText(/2/);
+  const columns = page.getByRole("table").locator("thead a");
+  await expect(columns).toHaveCount(2);
+});
+
+test("type filter narrows results and is reflected in the URL", async ({ page }) => {
+  await page.goto(SEARCH_URL);
+  await page.getByRole("button", { name: /^Type/ }).click();
+  const dialog = page.getByRole("dialog").or(page.locator("[data-radix-popper-content-wrapper]"));
+  await dialog.getByLabel(/District/).uncheck();
+  await dialog.getByLabel(/Private/).uncheck();
+  await dialog.getByRole("button", { name: "Apply" }).click();
+  await expect(page).toHaveURL(/types=charter/);
+  await expect(page.getByRole("button", { name: /^Type: Charter/ })).toBeVisible();
+});
