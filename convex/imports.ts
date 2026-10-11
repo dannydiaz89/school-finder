@@ -1,0 +1,198 @@
+import { NoOp } from "convex-helpers/server/customFunctions";
+import { zCustomMutation, zCustomQuery } from "convex-helpers/server/zod4";
+import type { WithoutSystemFields } from "convex/server";
+import { v } from "convex/values";
+import { z } from "zod";
+import { internalMutation, internalQuery, type MutationCtx } from "./_generated/server";
+import type { Doc, Id, TableNames } from "./_generated/dataModel";
+import {
+  CaasppResult,
+  DashboardIndicator,
+  Enrollment,
+  Frpm,
+  PrivateSchoolDetail,
+  School,
+  StaffRatio,
+} from "../src/lib/schemas";
+import { schoolIndex } from "./geospatial";
+
+/**
+ * Internal mutations the import script calls in batches. Every upsert is
+ * keyed so re-running an import rewrites the same documents instead of
+ * adding duplicates. Rows arrive already validated by the domain schemas;
+ * the Zod arg validators check them again at the door.
+ */
+
+const zInternalMutation = zCustomMutation(internalMutation, NoOp);
+const zInternalQuery = zCustomQuery(internalQuery, NoOp);
+
+type CdsTable = Extract<
+  TableNames,
+  "dashboard" | "caaspp" | "enrollment" | "frpm" | "staffRatios" | "privateDetails"
+>;
+
+/**
+ * Replace-or-insert into a table indexed by cds. `sameKey` says which
+ * existing document (if any) the incoming row stands for; for one-row-per-
+ * school tables it is always the first match.
+ */
+async function upsertByCds<T extends CdsTable>(
+  ctx: MutationCtx,
+  table: T,
+  rows: WithoutSystemFields<Doc<T>>[],
+  sameKey: (
+    existing: WithoutSystemFields<Doc<T>>,
+    incoming: WithoutSystemFields<Doc<T>>,
+  ) => boolean,
+): Promise<number> {
+  let written = 0;
+  for (const row of rows) {
+    const existing = await ctx.db
+      .query(table)
+      .withIndex("by_cds", (q) => q.eq("cds", row.cds))
+      .collect();
+    const match = existing.find((doc) =>
+      sameKey(doc as unknown as WithoutSystemFields<Doc<T>>, row),
+    );
+    // The generic table name keeps TypeScript from narrowing the document type; the rows
+    // were validated by the Zod arg validator for exactly this table.
+    if (match) await ctx.db.replace(match._id, row as never);
+    else await ctx.db.insert(table, row as never);
+    written += 1;
+  }
+  return written;
+}
+
+export const upsertSchools = zInternalMutation({
+  args: { schools: z.array(School) },
+  handler: async (ctx, { schools }) => {
+    let written = 0;
+    for (const school of schools) {
+      const existing = await ctx.db
+        .query("schools")
+        .withIndex("by_cds", (q) => q.eq("cds", school.cds))
+        .first();
+      let id: Id<"schools">;
+      if (existing) {
+        id = existing._id;
+        await ctx.db.replace(id, school);
+      } else {
+        id = await ctx.db.insert("schools", school);
+      }
+      if (school.coordinates) {
+        await schoolIndex.insert(ctx, id, school.coordinates, { type: school.type });
+      } else if (existing?.coordinates) {
+        await schoolIndex.remove(ctx, id);
+      }
+      written += 1;
+    }
+    return written;
+  },
+});
+
+export const upsertDashboard = zInternalMutation({
+  args: { rows: z.array(DashboardIndicator) },
+  handler: (ctx, { rows }) =>
+    upsertByCds(ctx, "dashboard", rows, (a, b) => a.year === b.year && a.indicator === b.indicator),
+});
+
+export const upsertCaaspp = zInternalMutation({
+  args: { rows: z.array(CaasppResult) },
+  handler: (ctx, { rows }) =>
+    upsertByCds(
+      ctx,
+      "caaspp",
+      rows,
+      (a, b) => a.year === b.year && a.subject === b.subject && a.grade === b.grade,
+    ),
+});
+
+export const upsertEnrollment = zInternalMutation({
+  args: { rows: z.array(Enrollment) },
+  handler: (ctx, { rows }) => upsertByCds(ctx, "enrollment", rows, () => true),
+});
+
+export const upsertFrpm = zInternalMutation({
+  args: { rows: z.array(Frpm) },
+  handler: (ctx, { rows }) => upsertByCds(ctx, "frpm", rows, () => true),
+});
+
+export const upsertStaff = zInternalMutation({
+  args: { rows: z.array(StaffRatio) },
+  handler: (ctx, { rows }) => upsertByCds(ctx, "staffRatios", rows, () => true),
+});
+
+export const upsertPrivateDetails = zInternalMutation({
+  args: { rows: z.array(PrivateSchoolDetail) },
+  handler: (ctx, { rows }) => upsertByCds(ctx, "privateDetails", rows, () => true),
+});
+
+/** Hand-curated private school matches: cds -> PSS id, or null to force "no match". */
+export const listPrivateOverrides = zInternalQuery({
+  args: {},
+  handler: async (ctx) => {
+    const rows = await ctx.db.query("privateSchoolOverrides").collect();
+    return rows.map((r) => ({ cds: r.cds, pssId: r.pssId }));
+  },
+});
+
+/**
+ * Re-insert every school with coordinates into the spatial index, one page
+ * per call. Returns the cursor for the next page or null when finished.
+ */
+export const rebuildGeoIndex = internalMutation({
+  args: { cursor: v.union(v.string(), v.null()), pageSize: v.optional(v.number()) },
+  handler: async (ctx, args) => {
+    const page = await ctx.db
+      .query("schools")
+      .paginate({ cursor: args.cursor, numItems: args.pageSize ?? 100 });
+    let indexed = 0;
+    for (const school of page.page) {
+      if (!school.coordinates) continue;
+      await schoolIndex.insert(ctx, school._id, school.coordinates, { type: school.type });
+      indexed += 1;
+    }
+    return { indexed, cursor: page.isDone ? null : page.continueCursor };
+  },
+});
+
+export const startRun = internalMutation({
+  args: { source: v.string(), url: v.string(), year: v.string() },
+  handler: (ctx, args) =>
+    ctx.db.insert("importRuns", {
+      ...args,
+      rowsRead: 0,
+      rowsWritten: 0,
+      rowsRejected: 0,
+      startedAt: Date.now(),
+      finishedAt: null,
+      error: null,
+    }),
+});
+
+export const finishRun = internalMutation({
+  args: {
+    id: v.id("importRuns"),
+    rowsRead: v.number(),
+    rowsWritten: v.number(),
+    rowsRejected: v.number(),
+    error: v.union(v.string(), v.null()),
+  },
+  handler: async (ctx, { id, ...rest }) => {
+    await ctx.db.patch(id, { ...rest, finishedAt: Date.now() });
+  },
+});
+
+/** Test support: empty every data table so a contract test can load fixtures from scratch. */
+export const clearAll = internalMutation({
+  args: { table: v.string() },
+  handler: async (ctx, { table }) => {
+    const name = table as CdsTable | "schools" | "importRuns";
+    const docs = await ctx.db.query(name).take(1000);
+    for (const doc of docs) {
+      if (name === "schools") await schoolIndex.remove(ctx, doc._id as Id<"schools">);
+      await ctx.db.delete(doc._id);
+    }
+    return docs.length;
+  },
+});

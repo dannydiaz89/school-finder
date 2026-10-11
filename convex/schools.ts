@@ -1,48 +1,107 @@
 import { NoOp } from "convex-helpers/server/customFunctions";
 import { zCustomQuery } from "convex-helpers/server/zod4";
 import { query } from "./_generated/server";
-import { GetSchoolArgs, GetSchoolsByCdsArgs, NearbyArgs, SearchArgs } from "../src/lib/schemas";
+import type { Doc } from "./_generated/dataModel";
+import {
+  GetSchoolArgs,
+  GetSchoolsByCdsArgs,
+  NearbyArgs,
+  SearchArgs,
+  type CdsCode,
+  type SchoolDetail,
+  type SchoolSummary,
+} from "../src/lib/schemas";
+import { isSpecializedPlacement } from "../src/lib/domain/filters";
+import { milesToMeters } from "../src/lib/domain/geo";
+import { buildComparison, toSummary } from "../src/lib/domain/records";
+import { assembleSearchResult } from "../src/lib/domain/search";
+import { schoolIndex } from "./geospatial";
+import { loadCaasppByCds, loadRecord, loadSummaryRecord, schoolByCds } from "./lib/records";
 
 /**
  * Thin public queries behind src/lib/data/convex.ts. Arguments are validated
- * with the shared Zod schemas. Bodies must stay small: look up documents,
- * then hand them to pure functions in src/lib/domain.
- *
- * Stage 0 leaves these as stubs. The Data workstream fills them in and must
- * keep the signatures identical.
+ * with the shared Zod schemas. Bodies look up documents and hand them to the
+ * pure functions in src/lib/domain; no filtering or scoring lives here.
  */
 
 const zQuery = zCustomQuery(query, NoOp);
 
+/** Upper bound on candidates pulled from the spatial index for one search. */
+const MAX_CANDIDATES = 1500;
+/** CDS of the statewide CAASPP rows. */
+const STATE_CDS = "00000000000000" as CdsCode;
+
+async function summariesNear(
+  ctx: Parameters<typeof loadSummaryRecord>[0],
+  center: { latitude: number; longitude: number },
+  limit: number,
+  maxDistance?: number,
+): Promise<SchoolSummary[]> {
+  const hits = await schoolIndex.nearest(ctx, { point: center, limit, maxDistance });
+  const docs = await Promise.all(hits.map((hit) => ctx.db.get(hit.key)));
+  const schools = docs.filter((d): d is Doc<"schools"> => d !== null);
+  const records = await Promise.all(schools.map((s) => loadSummaryRecord(ctx, s)));
+  return records.map((r) => toSummary(r, center));
+}
+
+async function detail(
+  ctx: Parameters<typeof loadRecord>[0],
+  school: Doc<"schools">,
+): Promise<SchoolDetail> {
+  const record = await loadRecord(ctx, school);
+  if (school.type === "private") return { ...record, caasppComparison: null };
+  const [district, state] = await Promise.all([
+    school.districtCds ? loadCaasppByCds(ctx, school.districtCds) : Promise.resolve([]),
+    loadCaasppByCds(ctx, STATE_CDS),
+  ]);
+  return { ...record, caasppComparison: buildComparison(record.caaspp, district, state) };
+}
+
 export const search = zQuery({
   args: SearchArgs.shape,
-  handler: async () => {
-    return {
-      schools: [],
-      total: 0,
-      countsByType: { district: 0, charter: 0, private: 0 },
-      hiddenSpecialized: 0,
-    };
+  handler: async (ctx, args) => {
+    const radiusMeters = milesToMeters(args.radiusMiles);
+    // The index measures distance its own way; ask for a little more and let the domain cut exactly.
+    const candidates = await summariesNear(ctx, args.center, MAX_CANDIDATES, radiusMeters * 1.02);
+    const inRadius = candidates.filter((row) => row.distanceMeters <= radiusMeters);
+    return assembleSearchResult(inRadius, args);
   },
 });
 
 export const get = zQuery({
   args: GetSchoolArgs.shape,
-  handler: async () => {
-    return null;
+  handler: async (ctx, args) => {
+    const school = await schoolByCds(ctx, args.cds);
+    return school ? detail(ctx, school) : null;
   },
 });
 
 export const nearby = zQuery({
   args: NearbyArgs.shape,
-  handler: async () => {
+  handler: async (ctx, args) => {
+    const school = await schoolByCds(ctx, args.cds);
+    const center = school?.coordinates;
+    if (!school || !center) return [];
+    // Placements and the school itself are dropped after the fact, so over-fetch and widen if needed.
+    let want = args.limit * 3 + 5;
+    for (let attempt = 0; attempt < 4; attempt += 1) {
+      const rows = await summariesNear(ctx, center, want);
+      const kept = rows
+        .filter((r) => r.school.cds !== args.cds && !isSpecializedPlacement(r.school))
+        .sort((a, b) => a.distanceMeters - b.distanceMeters);
+      if (kept.length >= args.limit || rows.length < want) return kept.slice(0, args.limit);
+      want *= 2;
+    }
     return [];
   },
 });
 
 export const byCds = zQuery({
   args: GetSchoolsByCdsArgs.shape,
-  handler: async () => {
-    return [];
+  handler: async (ctx, args) => {
+    const schools = await Promise.all(args.cds.map((cds) => schoolByCds(ctx, cds)));
+    return Promise.all(
+      schools.filter((s): s is Doc<"schools"> => s !== null).map((s) => detail(ctx, s)),
+    );
   },
 });
