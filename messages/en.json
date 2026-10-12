@@ -59,7 +59,7 @@
     "ratio": "{count, number}:1"
   },
   "search": {
-    "title": "Find schools near an address",
+    "title": "Find a school",
     "addressLabel": "Address, city, ZIP code, or school",
     "addressPlaceholder": "Address, city, ZIP code, or school name",
     "radiusLabel": "Radius",
@@ -120,7 +120,7 @@
       "geocodeTitle": "Nothing found",
       "genericTitle": "Search is unavailable right now"
     },
-    "intro": "Enter a street address, a California city, a ZIP code, or a school's name. A place lists the schools within a few miles, with distance, grades, school type, and California School Dashboard levels from public files.",
+    "intro": "Search by street address, California city, ZIP code, or school name. See each school's type, grades, and California School Dashboard results from public files. Compare schools side by side, or keep a list to follow in My schools.",
     "resultsLabel": "Search results",
     "hiddenSpecialized": "{count, plural, one {# specialized placement is} other {# specialized placements are}} not shown.",
     "showingCount": "Showing {shown, number} of {total, number}",

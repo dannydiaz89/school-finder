@@ -59,7 +59,7 @@
     "ratio": "{count, number}:1"
   },
   "search": {
-    "title": "Buscar escuelas cerca de una dirección",
+    "title": "Buscar una escuela",
     "addressLabel": "Dirección, ciudad, código postal o escuela",
     "addressPlaceholder": "Dirección, ciudad, código postal o nombre de escuela",
     "radiusLabel": "Radio",
@@ -120,7 +120,7 @@
       "geocodeTitle": "Sin resultados",
       "genericTitle": "La búsqueda no está disponible por ahora"
     },
-    "intro": "Escribe una dirección, una ciudad de California, un código postal o el nombre de una escuela. Un lugar muestra las escuelas a pocas millas, con distancia, grados, tipo de escuela y niveles del California School Dashboard tomados de archivos públicos.",
+    "intro": "Busca por dirección, ciudad de California, código postal o nombre de escuela. Consulta el tipo, los grados y los resultados del California School Dashboard de cada escuela, tomados de archivos públicos. Compara escuelas lado a lado o guarda una lista para seguirlas en Mis escuelas.",
     "resultsLabel": "Resultados de búsqueda",
     "hiddenSpecialized": "{count, plural, one {# escuela especializada no se muestra} other {# escuelas especializadas no se muestran}}.",
     "showingCount": "Mostrando {shown, number} de {total, number}",
@@ -299,7 +299,7 @@
     "subtitle": "{count, plural, one {# escuela} other {# escuelas}} · California School Dashboard {year}: nivel, resultado y cambio respecto al año anterior",
     "storageNote": "Esta lista se guarda en este navegador. No aparece en otro navegador ni en otro dispositivo, y se elimina al borrar los datos del sitio.",
     "emptyTitle": "Aún no hay escuelas guardadas",
-    "empty": "Agregue una escuela desde los resultados de búsqueda o desde su página. La lista admite hasta {max, number}.",
+    "empty": "Agrega una escuela desde los resultados de búsqueda o desde su página. La lista admite hasta {max, number}.",
     "find": "Buscar escuelas",
     "columns": {
       "school": "Escuela",
