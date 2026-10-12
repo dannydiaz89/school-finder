@@ -3,7 +3,14 @@ import { cacheLife, cacheTag } from "next/cache";
 import type { z } from "zod";
 import { assembleSearchResult } from "@/lib/domain/search";
 import { SearchArgs, type RadiusArgs } from "@/lib/schemas";
-import { getNearby, getSchool, getSchoolsByCds, getSchoolsInRadius, searchSchools } from "./index";
+import {
+  findSchoolsByName,
+  getNearby,
+  getSchool,
+  getSchoolsByCds,
+  getSchoolsInRadius,
+  searchSchools,
+} from "./index";
 
 /**
  * Cached versions of the data-access functions, for pages. School data
@@ -74,4 +81,11 @@ export async function cachedGetSchoolsByCds(args: Parameters<typeof getSchoolsBy
   cacheLife("hours");
   cacheTag(SCHOOLS_CACHE_TAG);
   return getSchoolsByCds(args);
+}
+
+export async function cachedFindSchoolsByName(args: Parameters<typeof findSchoolsByName>[0]) {
+  "use cache";
+  cacheLife("hours");
+  cacheTag(SCHOOLS_CACHE_TAG);
+  return findSchoolsByName(args);
 }

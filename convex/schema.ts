@@ -26,8 +26,11 @@ export default defineSchema({
     /** Grid cell for radius search (see src/lib/domain/grid.ts). Absent when a school has no coordinates. */
     geoRow: v.optional(v.float64()),
     geoCol: v.optional(v.float64()),
+    /** Normalized name, city, and district for name search (see src/lib/domain/names.ts). */
+    searchText: v.optional(v.string()),
   })
     .index("by_geo", ["geoRow", "geoCol"])
+    .searchIndex("search_text", { searchField: "searchText" })
     .index("by_cds", ["cds"])
     .index("by_type", ["type"])
     .index("by_districtCds", ["districtCds"]),

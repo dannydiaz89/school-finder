@@ -5,6 +5,7 @@ import type { Doc } from "./_generated/dataModel";
 import {
   GetSchoolArgs,
   GetSchoolsByCdsArgs,
+  NameSearchArgs,
   NearbyArgs,
   RadiusArgs,
   SearchArgs,
@@ -15,6 +16,7 @@ import {
 import { isSpecializedPlacement } from "../src/lib/domain/filters";
 import { milesToMeters } from "../src/lib/domain/geo";
 import { rowRanges } from "../src/lib/domain/grid";
+import { normalizeName, rankByName } from "../src/lib/domain/names";
 import { buildComparison, rowFromSummary, summaryOf } from "../src/lib/domain/records";
 import { assembleSearchResult } from "../src/lib/domain/search";
 import {
@@ -111,6 +113,37 @@ export const search = zQuery({
 export const inRadius = zQuery({
   args: RadiusArgs.shape,
   handler: async (ctx, args) => boundedRows(ctx, args.center, args.radiusMiles),
+});
+
+/** How many text-index hits to consider before applying the exact word rule and ranking. */
+const NAME_CANDIDATES = 200;
+
+/**
+ * Name search. The text index over name, city, and district proposes candidates
+ * (it matches any word and treats the last as a prefix); `rankByName` then keeps
+ * only schools where every word typed begins a word of the name or its city or
+ * district, and orders them.
+ */
+export const findByName = zQuery({
+  args: NameSearchArgs.shape,
+  handler: async (ctx, args) => {
+    const candidates = await ctx.db
+      .query("schools")
+      .withSearchIndex("search_text", (q) => q.search("searchText", normalizeName(args.query)))
+      .take(NAME_CANDIDATES);
+    const ranked = rankByName(
+      candidates,
+      args.query,
+      (doc) => doc.name,
+      (doc) => `${doc.address.city} ${doc.district}`,
+    ).slice(0, args.limit);
+    return Promise.all(
+      ranked.map(async (doc) => ({
+        school: toSchool(doc),
+        ...(doc.summary ?? summaryOf(await loadSummaryRecord(ctx, doc))),
+      })),
+    );
+  },
 });
 
 export const get = zQuery({

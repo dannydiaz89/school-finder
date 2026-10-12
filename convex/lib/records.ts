@@ -68,6 +68,7 @@ export function toSchool(doc: Doc<"schools">): School {
   delete copy.summary;
   delete copy.geoRow;
   delete copy.geoCol;
+  delete copy.searchText;
   return copy as School;
 }
 

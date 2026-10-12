@@ -50,7 +50,7 @@ test("search page renders the header and the search form", async ({ page }) => {
   await expect(header.getByRole("link", { name: "School Finder" })).toBeVisible();
   await expect(header.getByRole("navigation", { name: "School Finder" })).toBeVisible();
   await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
-  await expect(page.getByLabel("Address, city, or ZIP code")).toBeVisible();
+  await expect(page.getByLabel("Address, city, ZIP code, or school")).toBeVisible();
   await expect(page.getByRole("button", { name: "Find schools" })).toBeVisible();
 });
 
@@ -160,7 +160,7 @@ for (const { query, loc } of [
   test(`searching by ${loc} lists schools around its center`, async ({ page }) => {
     // Cities and ZIP codes resolve from the bundled Census table, so this needs no network.
     await page.goto("/en");
-    await page.getByLabel("Address, city, or ZIP code").fill(query);
+    await page.getByLabel("Address, city, ZIP code, or school").fill(query);
     await page.getByRole("button", { name: "Find schools" }).click();
     await expect(page).toHaveURL(new RegExp(`loc=${loc}.*lat=|lat=.*loc=${loc}`));
     const rows = page.getByRole("main").getByRole("list").first().getByRole("listitem");
@@ -169,10 +169,33 @@ for (const { query, loc } of [
   });
 }
 
+test("searching by school name lists matching schools and opens one", async ({ page }) => {
+  await page.goto("/en");
+  await page.getByLabel("Address, city, ZIP code, or school").fill("theodore judah");
+  await page.getByRole("button", { name: "Find schools" }).click();
+  const main = page.getByRole("main");
+  await expect(main.getByText(/1 school matching/)).toBeVisible();
+  // No location was given, so there is no map and no distance.
+  await expect(page.locator(".maplibregl-map")).toHaveCount(0);
+  await main.getByRole("link", { name: "Theodore Judah Elementary" }).click();
+  await expect(page).toHaveURL(/\/en\/school\/34674396034292/);
+  await expect(
+    page.getByRole("heading", { level: 1, name: "Theodore Judah Elementary" }),
+  ).toBeVisible();
+});
+
+test("a school name can be narrowed with its city", async ({ page }) => {
+  await page.goto("/en?address=elementary+sacramento");
+  // Direct children only: each row holds a nested list of rating dots.
+  const rows = page.getByRole("main").locator("ol > li");
+  await expect(rows.first()).toBeVisible();
+  for (const text of await rows.allInnerTexts()) expect(text).toMatch(/Elementary/);
+});
+
 test("an unknown place says so", async ({ page }) => {
   // A ZIP code outside California is answered from the bundled table; no geocoder call.
   await page.goto("/en?address=00000");
-  await expect(page.getByRole("heading", { name: "Place not found" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Nothing found" })).toBeVisible();
 });
 
 test("type filter narrows results and is reflected in the URL", async ({ page }) => {

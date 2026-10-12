@@ -55,8 +55,8 @@
   },
   "search": {
     "title": "Buscar escuelas cerca de una dirección",
-    "addressLabel": "Dirección, ciudad o código postal",
-    "addressPlaceholder": "Dirección, ciudad o código postal",
+    "addressLabel": "Dirección, ciudad, código postal o escuela",
+    "addressPlaceholder": "Dirección, ciudad, código postal o nombre de escuela",
     "radiusLabel": "Radio",
     "radius": "hasta {miles, number} mi",
     "submit": "Buscar escuelas",
@@ -110,16 +110,23 @@
       "body": "Prueba con un radio mayor o con menos filtros."
     },
     "error": {
-      "geocode": "No encontramos ese lugar. Escribe una dirección con su ciudad, el nombre de una ciudad de California o un código postal de cinco dígitos.",
+      "geocode": "No encontramos eso. Escribe una dirección con su ciudad, una ciudad de California, un código postal de cinco dígitos o parte del nombre de una escuela.",
       "generic": "Algo salió mal. Inténtalo de nuevo.",
-      "geocodeTitle": "Lugar no encontrado",
+      "geocodeTitle": "Sin resultados",
       "genericTitle": "La búsqueda no está disponible por ahora"
     },
-    "intro": "Escribe una dirección, una ciudad de California o un código postal para ver las escuelas a pocas millas, con distancia, grados, tipo de escuela y niveles del California School Dashboard tomados de archivos públicos.",
+    "intro": "Escribe una dirección, una ciudad de California, un código postal o el nombre de una escuela. Un lugar muestra las escuelas a pocas millas, con distancia, grados, tipo de escuela y niveles del California School Dashboard tomados de archivos públicos.",
     "resultsLabel": "Resultados de búsqueda",
     "hiddenSpecialized": "{count, plural, one {# escuela especializada no se muestra} other {# escuelas especializadas no se muestran}}.",
     "showingCount": "Mostrando {shown, number} de {total, number}",
-    "truncated": "Esta zona tiene más escuelas de las que una búsqueda puede mostrar. Los resultados y los conteos incluyen solo las escuelas más cercanas. Elige un radio menor para ver todas las escuelas dentro de él."
+    "truncated": "Esta zona tiene más escuelas de las que una búsqueda puede mostrar. Los resultados y los conteos incluyen solo las escuelas más cercanas. Elige un radio menor para ver todas las escuelas dentro de él.",
+    "names": {
+      "summary": "{count, plural, one {# escuela} other {# escuelas}} que coinciden con «{query}»",
+      "hint": "Coincidencias por nombre en toda California. Para ver las escuelas cerca de un lugar, escribe una ciudad, un código postal o una dirección.",
+      "limit": "Hay más. Agrega otra palabra, como la ciudad o «High», para reducir la lista.",
+      "alsoNamed": "Escuelas con «{query}» en el nombre",
+      "summaryCapped": "Las primeras {count, number} escuelas que coinciden con «{query}»"
+    }
   },
   "school": {
     "backToResults": "Volver a los resultados",

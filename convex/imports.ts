@@ -15,6 +15,7 @@ import {
   StaffRatio,
 } from "../src/lib/schemas";
 import { cellOf } from "../src/lib/domain/grid";
+import { searchTextOf } from "../src/lib/domain/names";
 import { loadSummaryRecord } from "./lib/records";
 import { summaryOf } from "../src/lib/domain/records";
 
@@ -81,6 +82,7 @@ export const upsertSchools = zInternalMutation({
         summary: existing?.summary,
         geoRow: cell?.row,
         geoCol: cell?.col,
+        searchText: searchTextOf(school.name, school.address.city, school.district),
       };
       if (existing) await ctx.db.replace(existing._id, doc);
       else await ctx.db.insert("schools", doc);
@@ -155,7 +157,12 @@ export const rebuildSummaries = internalMutation({
     for (const school of page.page) {
       const summary = summaryOf(await loadSummaryRecord(ctx, school));
       const cell = school.coordinates ? cellOf(school.coordinates) : undefined;
-      await ctx.db.patch(school._id, { summary, geoRow: cell?.row, geoCol: cell?.col });
+      await ctx.db.patch(school._id, {
+        summary,
+        geoRow: cell?.row,
+        geoCol: cell?.col,
+        searchText: searchTextOf(school.name, school.address.city, school.district),
+      });
     }
     return { updated: page.page.length, cursor: page.isDone ? null : page.continueCursor };
   },

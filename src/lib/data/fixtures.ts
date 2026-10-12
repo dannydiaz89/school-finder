@@ -5,11 +5,14 @@ import {
   sortRows,
 } from "@/lib/domain/filters";
 import { milesToMeters } from "@/lib/domain/geo";
-import { buildComparison, toSummary } from "@/lib/domain/records";
+import { rankByName } from "@/lib/domain/names";
+import { buildComparison, summaryOf, toSummary } from "@/lib/domain/records";
 import { fixtures } from "@/fixtures";
 import type {
   GetSchoolArgs,
   GetSchoolsByCdsArgs,
+  NameMatch,
+  NameSearchArgs,
   NearbyArgs,
   RadiusArgs,
   RadiusRows,
@@ -98,5 +101,16 @@ export const fixturesDataSource: SchoolDataSource = {
       .map((r) => toSummary(r, args.center))
       .filter((row) => row.distanceMeters <= radiusMeters);
     return { rows, truncated: false };
+  },
+
+  async findSchoolsByName(args: NameSearchArgs): Promise<NameMatch[]> {
+    return rankByName(
+      fixtures.schools,
+      args.query,
+      (r) => r.school.name,
+      (r) => `${r.school.address.city} ${r.school.district}`,
+    )
+      .slice(0, args.limit)
+      .map((r) => ({ school: r.school, ...summaryOf(r) }));
   },
 };

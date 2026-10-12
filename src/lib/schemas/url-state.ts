@@ -64,6 +64,8 @@ export const SearchParams = z
     size: z.coerce.number().int().positive().nullable().default(null),
     specialized: flag.default(false),
     sort: SortKey.default("distance"),
+    /** Treat the text as a school name even when it is also a city, e.g. "Lincoln". */
+    by: z.enum(["name"]).optional(),
     page: z.coerce.number().int().min(1).default(1),
   })
   .strict();
@@ -131,6 +133,7 @@ export function serializeSearchParams(p: Partial<SearchParams>): URLSearchParams
   const out = new URLSearchParams();
   if (p.address) out.set("address", p.address);
   if (p.loc) out.set("loc", p.loc);
+  if (p.by) out.set("by", p.by);
   if (p.lat !== undefined) out.set("lat", p.lat.toFixed(5));
   if (p.lng !== undefined) out.set("lng", p.lng.toFixed(5));
   if (p.radius !== undefined && p.radius !== DEFAULT_RADIUS_MILES)

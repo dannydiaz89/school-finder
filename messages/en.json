@@ -55,8 +55,8 @@
   },
   "search": {
     "title": "Find schools near an address",
-    "addressLabel": "Address, city, or ZIP code",
-    "addressPlaceholder": "Street address, city, or ZIP code",
+    "addressLabel": "Address, city, ZIP code, or school",
+    "addressPlaceholder": "Address, city, ZIP code, or school name",
     "radiusLabel": "Radius",
     "radius": "within {miles, number} mi",
     "submit": "Find schools",
@@ -110,16 +110,23 @@
       "body": "Try a larger radius or fewer filters."
     },
     "error": {
-      "geocode": "We could not find that place. Enter a street address with its city, a California city name, or a five-digit ZIP code.",
+      "geocode": "We could not find that. Enter a street address with its city, a California city, a five-digit ZIP code, or part of a school's name.",
       "generic": "Something went wrong. Try again.",
-      "geocodeTitle": "Place not found",
+      "geocodeTitle": "Nothing found",
       "genericTitle": "Search is unavailable right now"
     },
-    "intro": "Enter a street address, a California city, or a ZIP code to list the schools within a few miles, with distance, grades, school type, and California School Dashboard levels from public files.",
+    "intro": "Enter a street address, a California city, a ZIP code, or a school's name. A place lists the schools within a few miles, with distance, grades, school type, and California School Dashboard levels from public files.",
     "resultsLabel": "Search results",
     "hiddenSpecialized": "{count, plural, one {# specialized placement is} other {# specialized placements are}} not shown.",
     "showingCount": "Showing {shown, number} of {total, number}",
-    "truncated": "This area has more schools than one search can list. Results and counts cover the nearest schools only. Choose a smaller radius to see every school in it."
+    "truncated": "This area has more schools than one search can list. Results and counts cover the nearest schools only. Choose a smaller radius to see every school in it.",
+    "names": {
+      "summary": "{count, plural, one {# school} other {# schools}} matching “{query}”",
+      "hint": "Matched by name across California. To see the schools near a place, enter a city, ZIP code, or street address.",
+      "limit": "There are more. Add another word, such as the city or “High”, to narrow it down.",
+      "alsoNamed": "Schools with “{query}” in the name",
+      "summaryCapped": "The first {count, number} schools matching “{query}”"
+    }
   },
   "school": {
     "backToResults": "Back to results",

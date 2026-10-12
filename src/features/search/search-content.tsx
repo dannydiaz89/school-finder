@@ -4,8 +4,9 @@ import { TextLink } from "@/components/ui/text-link";
 import { redirect } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
 import { PendingRegion, SearchPendingProvider } from "./pending";
-import { cachedSearchSchools } from "@/lib/data/cached";
+import { cachedFindSchoolsByName, cachedSearchSchools } from "@/lib/data/cached";
 import {
+  type GeocodeResult,
   DEFAULT_PAGE_SIZE,
   parseSearchParams,
   serializeSearchParams,
@@ -14,6 +15,8 @@ import {
 } from "@/lib/schemas";
 import { FilterRow } from "./filter-row";
 import { geocodeAddress, GeocodeError, GeocodeQuery } from "./geocode";
+import { NameResults } from "./name-results";
+import { isZipOnly, locatePlace } from "./places";
 import { SearchResults } from "./results";
 
 type RawSearchParams = Promise<Record<string, string | string[] | undefined>>;
@@ -35,12 +38,22 @@ function searchHref(p: SearchParams, compare: string | undefined): string {
 
 type Translator = Awaited<ReturnType<typeof getTranslations<"search">>>;
 
+/** Name matches listed on one page; more than this and the visitor should add a word. */
+const NAME_LIMIT = 40;
+
 /**
- * No coordinates yet. With an address, geocode it and redirect to the same
- * URL with lat/lng so the result is shareable; show the error states
- * otherwise. Without an address, the one-line prompt.
+ * No coordinates yet: work out what the text means.
+ *
+ * 1. A city or ZIP code resolves from the bundled table and redirects to the
+ *    same URL with its center, so the result is shareable.
+ * 2. Text that starts with a house number is a street address: geocode it.
+ * 3. Anything else is tried as a school name, then as an address without a
+ *    number ("Capitol Mall, Sacramento").
+ *
+ * `by=name` skips straight to the name search, for names that are also
+ * cities ("Lincoln").
  */
-async function geocodeAndRedirect(
+async function resolveQuery(
   p: SearchParams,
   compare: string | undefined,
   locale: Locale,
@@ -51,33 +64,65 @@ async function geocodeAndRedirect(
       <p className="m-0 max-w-[var(--content-width)] text-base text-fg-secondary">{t("intro")}</p>
     );
   }
+  const notFound = (
+    <EmptyState titleAs="h2" title={t("error.geocodeTitle")} body={t("error.geocode")} />
+  );
   const query = GeocodeQuery.safeParse(p.address);
-  if (!query.success) {
-    return <EmptyState titleAs="h2" title={t("error.geocodeTitle")} body={t("error.geocode")} />;
+  if (!query.success) return notFound;
+  const text = query.data;
+
+  const toLocation = (found: GeocodeResult) =>
+    redirect({
+      href: searchHref(
+        {
+          ...p,
+          lat: found.latitude,
+          lng: found.longitude,
+          loc: found.kind === "address" ? undefined : found.kind,
+          by: undefined,
+          page: 1,
+        },
+        compare,
+      ),
+      locale,
+    });
+
+  const byName = async () => {
+    const matches = await cachedFindSchoolsByName({ query: text, limit: NAME_LIMIT });
+    if (matches.length === 0) return null;
+    return (
+      <section className="flex flex-col gap-2">
+        <h2 className="m-0 text-base font-normal text-fg-secondary">
+          {matches.length >= NAME_LIMIT
+            ? t("names.summaryCapped", { count: NAME_LIMIT, query: text })
+            : t("names.summary", { count: matches.length, query: text })}
+        </h2>
+        <p className="m-0 max-w-[var(--content-width)] text-sm text-fg-muted">
+          {matches.length >= NAME_LIMIT ? t("names.limit") : t("names.hint")}
+        </p>
+        <NameResults matches={matches} />
+      </section>
+    );
+  };
+
+  if (p.by === "name") return (await byName()) ?? notFound;
+
+  const place = locatePlace(text);
+  const looksLikeStreetAddress = /^\s*\d/.test(text) && !isZipOnly(text);
+  if (!place && !looksLikeStreetAddress && !isZipOnly(text)) {
+    const names = await byName();
+    if (names) return names;
   }
+
   let found;
   try {
-    found = await geocodeAddress(query.data);
+    found = await geocodeAddress(text);
   } catch (error) {
     if (!(error instanceof GeocodeError)) throw error;
     return <EmptyState titleAs="h2" title={t("error.genericTitle")} body={t("error.generic")} />;
   }
-  if (!found) {
-    return <EmptyState titleAs="h2" title={t("error.geocodeTitle")} body={t("error.geocode")} />;
-  }
-  redirect({
-    href: searchHref(
-      {
-        ...p,
-        lat: found.latitude,
-        lng: found.longitude,
-        loc: found.kind === "address" ? undefined : found.kind,
-        page: 1,
-      },
-      compare,
-    ),
-    locale,
-  });
+  if (!found) return notFound;
+  toLocation(found);
 }
 
 /**
@@ -103,7 +148,7 @@ export async function SearchContent({
 
   const center =
     p.lat !== undefined && p.lng !== undefined ? { latitude: p.lat, longitude: p.lng } : null;
-  if (!center) return geocodeAndRedirect(p, compare, locale, t);
+  if (!center) return resolveQuery(p, compare, locale, t);
 
   const result = await cachedSearchSchools({
     center,
@@ -124,6 +169,12 @@ export async function SearchContent({
     null,
   );
 
+  // A city name can also be a school name ("Lincoln"). Offer the name search when it would find something.
+  const alsoNamed =
+    p.loc === "city" && p.address
+      ? (await cachedFindSchoolsByName({ query: p.address, limit: 1 }).catch(() => [])).length > 0
+      : false;
+
   // Keyed: elements handed to a client component as props are reconciled like array children.
   const header = (
     <div key="header" className="flex flex-col gap-2">
@@ -133,6 +184,18 @@ export async function SearchContent({
           {t("hiddenSpecialized", { count: result.hiddenSpecialized })}{" "}
           <TextLink href={searchHref({ ...p, specialized: true, page: 1 }, compare)}>
             {t("filters.showSpecialized")}
+          </TextLink>
+        </p>
+      ) : null}
+      {alsoNamed ? (
+        <p className="m-0 text-sm text-fg-muted">
+          <TextLink
+            href={searchHref(
+              { ...p, lat: undefined, lng: undefined, loc: undefined, by: "name", page: 1 },
+              compare,
+            )}
+          >
+            {t("names.alsoNamed", { query: p.address ?? "" })}
           </TextLink>
         </p>
       ) : null}

@@ -130,6 +130,19 @@ export const RadiusRows = z
   .strict();
 export type RadiusRows = z.infer<typeof RadiusRows>;
 
+/** Find schools by what they are called, anywhere in the state. */
+export const NameSearchArgs = z
+  .object({
+    query: z.string().trim().min(2).max(80),
+    limit: z.number().int().min(1).max(50),
+  })
+  .strict();
+export type NameSearchArgs = z.infer<typeof NameSearchArgs>;
+
+/** A search row with no distance: a name search has no center to measure from. */
+export const NameMatch = SchoolSummary.omit({ distanceMeters: true }).strict();
+export type NameMatch = z.infer<typeof NameMatch>;
+
 export const GetSchoolArgs = z.object({ cds: CdsCode }).strict();
 export type GetSchoolArgs = z.infer<typeof GetSchoolArgs>;
 

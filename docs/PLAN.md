@@ -201,6 +201,8 @@ Rules:
 
 - The search box accepts a street address, a California city, or a ZIP code. Cities and ZIP codes resolve to their center from a bundled Census Gazetteer table; street addresses still go to the Census geocoder. The URL carries `loc=city|zip` so pages say "Search center" and "From Sacramento" rather than "home".
 
+- The search box also accepts a school's name. Every word typed must begin a word of the school's name, city, or district, so "washington elementary sacramento" narrows 40 namesakes to one. Results are statewide, need no location, and show no map or distance. Text is interpreted in this order: city or ZIP code, street address (starts with a number), school name, then address without a number. `by=name` forces the name search, and a city search links to it when the city is also a school name.
+
 ## Contract amendments
 
 Record each as: date, what changed, which streams were notified.
@@ -210,3 +212,4 @@ Record each as: date, what changed, which streams were notified.
 - 2026-10-11: `SearchSummary` added (the distance-independent part of `SchoolSummary`), stored as an optional `summary` field on the Convex `schools` table. `SearchResult` gained `truncated` (defaults to false). All streams merged before this; no one to notify.
 - 2026-10-11: fifth data-access function `getSchoolsInRadius` (`RadiusArgs` → `RadiusRows`) added for local filtering. Convex `schools` table gained optional `geoRow`, `geoCol` and index `by_geo`.
 - 2026-10-11: `GeocodeResult.kind` (address, city, zip; defaults to address) and URL parameter `loc` (city, zip) added for city and ZIP code search.
+- 2026-10-11: sixth data-access function `findSchoolsByName` (`NameSearchArgs` → `NameMatch[]`). Convex `schools` gained optional `searchText` and search index `search_text`. URL parameter `by=name` added.

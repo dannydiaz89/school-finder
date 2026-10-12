@@ -2,6 +2,8 @@ import "server-only";
 import {
   GetSchoolArgs,
   GetSchoolsByCdsArgs,
+  NameMatch,
+  NameSearchArgs,
   NearbyArgs,
   RadiusArgs,
   RadiusRows,
@@ -29,6 +31,7 @@ export interface SchoolDataSource {
   getNearby(args: NearbyArgs): Promise<SchoolSummary[]>;
   getSchoolsByCds(args: GetSchoolsByCdsArgs): Promise<SchoolDetail[]>;
   getSchoolsInRadius(args: RadiusArgs): Promise<RadiusRows>;
+  findSchoolsByName(args: NameSearchArgs): Promise<NameMatch[]>;
 }
 
 let source: SchoolDataSource | undefined;
@@ -88,4 +91,13 @@ export async function getSchoolsInRadius(input: z.input<typeof RadiusArgs>): Pro
   const args = RadiusArgs.parse(input);
   const result = await (await resolveSource()).getSchoolsInRadius(args);
   return RadiusRows.parse(result);
+}
+
+/** Schools whose name matches every word typed, best match first. Statewide, no location needed. */
+export async function findSchoolsByName(
+  input: z.input<typeof NameSearchArgs>,
+): Promise<NameMatch[]> {
+  const args = NameSearchArgs.parse(input);
+  const result = await (await resolveSource()).findSchoolsByName(args);
+  return z.array(NameMatch).parse(result);
 }
