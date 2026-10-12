@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <title>California School Finder</title>
+  <style>
+    path { fill: #1a73e8; }
+    @media (prefers-color-scheme: dark) {
+      path { fill: #8ab4f8; }
+    }
+  </style>
+  <path d="M15.2 1h1.6v6h-1.6z"/>
+  <path d="M16.8 1l5.7 1.8-5.7 1.8z"/>
+  <path d="M16 6l14 10H2z"/>
+  <path fill-rule="evenodd" d="M5 16h22v13H5zM13.5 21h5v8h-5zM7.5 19H11v3.5H7.5zM21 19h3.5v3.5H21z"/>
+</svg>

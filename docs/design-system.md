@@ -112,3 +112,10 @@ Shared helpers in `src/components/ui`: `cx` joins class names; `Field` (`field.t
 - Do write neutral, factual copy. Don't describe or characterize school types.
 - Do keep one primary button per view. Don't stack filled buttons.
 - Do use the popover shadow token for menus. Don't add shadows anywhere else.
+
+## App icon
+
+A schoolhouse with a flag, in the accent blue.
+
+- `src/app/icon.svg` is the drawing and the icon most browsers use. Its door and windows are openings, and it switches to the lighter accent on a dark tab.
+- `src/app/favicon.ico` (16, 32, 48 px) and `src/app/apple-icon.png` (180 px, on white) are generated from the same shapes for browsers that do not take an SVG icon and for phone home screens. Regenerate them with `node scripts/make-icons.mjs` after changing the drawing; keep the paths in the script and the SVG the same.
