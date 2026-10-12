@@ -45,6 +45,10 @@ Next.js App Router, TypeScript strict, Tailwind v4 with design tokens, next-intl
 
 The compare list lives in the browser's local storage, read through `useCompareList()` (`src/features/compare/`). Do not read it from the URL: only the compare page looks at its `compare` parameter, to load data and to adopt a link opened directly. A link that should set a specific comparison calls `compare.set(list)` on click. Server-rendered HTML cannot know the list, so compare buttons settle after hydration.
 
+## Search state
+
+A search is its page address: location, radius, filters, sort and page are all query parameters, so results can be bookmarked and shared. The header's Search link (`SearchNavLink` in `src/features/search/`) remembers the last address the search page showed, in session storage, and leads back to it from any other page. On the search page itself the link is plain and starts a new search. Do not add a second copy of the search state anywhere else.
+
 ## Design system
 
 Tokens are in `src/styles/tokens.css` and exposed to Tailwind in `src/app/globals.css`. Use token utilities (`bg-bg`, `text-fg-muted`, `border-hairline`, `text-accent`, `rounded-md`); never a raw hex value or an arbitrary color. The look is Google search results: white ground, hairline separators, link-blue titles, gray meta text, text tabs and dropdown-style filters. Specifically:

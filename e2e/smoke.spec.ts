@@ -307,6 +307,38 @@ test("the compare list survives a new search, the header links, and a reload", a
   await expect(page.getByRole("table").locator("thead a")).toHaveCount(2);
 });
 
+test("the header Search link returns to the last results from other pages", async ({ page }) => {
+  // Regression: Compare, then Search, landed on an empty search page.
+  const header = page.getByRole("banner");
+  const rows = page.getByRole("main").locator("ol > li");
+
+  await page.goto("/en");
+  await page.getByLabel("Address, city, ZIP code, or school").fill("Sacramento");
+  await page.getByRole("button", { name: "Find schools" }).click();
+  await expect(page).toHaveURL(/loc=city/);
+  await expect(rows.first()).toBeVisible();
+  const results = page.url();
+
+  await header.getByRole("link", { name: /^Compare/ }).click();
+  await expect(page).toHaveURL(/\/en\/compare/);
+  await header.getByRole("link", { name: "Search" }).click();
+  await expect(page).toHaveURL(results);
+  await expect(rows.first()).toBeVisible();
+
+  // A page whose address carries nothing about the search.
+  await header.getByRole("link", { name: "Data sources" }).click();
+  await expect(page).toHaveURL(/\/en\/about\/data$/);
+  await header.getByRole("link", { name: "Search" }).click();
+  await expect(page).toHaveURL(results);
+
+  // On the search page the link starts over, and that is remembered too.
+  await header.getByRole("link", { name: "Search" }).click();
+  await expect(page).toHaveURL(/\/en$/);
+  await header.getByRole("link", { name: "Data sources" }).click();
+  await header.getByRole("link", { name: "Search" }).click();
+  await expect(page).toHaveURL(/\/en$/);
+});
+
 test("a compare link opened directly shows that comparison and removing a school updates it", async ({
   page,
 }) => {

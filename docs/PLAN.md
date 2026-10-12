@@ -215,6 +215,7 @@ Rules:
 - The compare list moved from the URL to local storage (`src/features/compare/store.ts`). In the URL it was dropped by any navigation that did not carry the parameter, including a new search. Changes read the list at the moment of the click, so quick clicks cannot undo each other.
 
 - A school can hold several years of Dashboard and CAASPP rows. "Current" means the school's newest year, decided only in `src/lib/domain/history.ts`. `SchoolDetail.dashboard` and `.caaspp` carry that year alone, and `SchoolDetail.history` carries every year for the "By year" tables. Search rows and compare never read an older year.
+- The header's Search link returns to the last search this tab showed (`src/features/search/last-search.ts`, session storage). Before, it was a plain link, so Compare then Search landed on an empty page. The address stays the source of truth for a search; the stored value is only where that link points.
 - Imports are written for the free Convex plan: one read per key per batch, no rewrite of unchanged documents, lean earlier years, and no search-row rebuild when only older years are loaded.
 
 ## Contract amendments

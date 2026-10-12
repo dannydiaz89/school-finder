@@ -1,6 +1,7 @@
 import { useTranslations } from "next-intl";
 import { Suspense } from "react";
 import { CompareNavLink } from "@/features/compare";
+import { SearchNavLink } from "@/features/search/search-nav-link";
 import { Link } from "@/i18n/navigation";
 import { LocaleSwitch } from "./locale-switch";
 import { ThemeToggle } from "./theme-toggle";
@@ -23,7 +24,10 @@ export function SiteHeader() {
         {t("appNameRest")}
       </Link>
       <nav aria-label={t("appName")} className="flex items-center gap-5 text-sm">
-        <TextLink href="/">{t("nav.search")}</TextLink>
+        {/* Leads back to the last search (browser state plus the query string, both runtime data). */}
+        <Suspense fallback={<TextLink href="/">{t("nav.search")}</TextLink>}>
+          <SearchNavLink />
+        </Suspense>
         {/* Reads the compare list from the query string (runtime data); the static link is the fallback. */}
         <Suspense fallback={<TextLink href="/compare">{t("nav.compare")}</TextLink>}>
           <CompareNavLink />
