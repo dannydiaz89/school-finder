@@ -150,6 +150,7 @@ export function SearchResults({ result, params, center, header, footer }: Search
             onSelect={selectFromMap}
             pinTitle={pinTitle}
             homeTitle={params.loc ? t("map.center") : t("map.home")}
+            detailsHref={(cds) => `/school/${cds}${compare.query}`}
             className="h-full w-full"
           />
         </div>

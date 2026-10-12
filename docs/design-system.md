@@ -57,7 +57,7 @@ Google Sans Flex (variable) with Roboto and system-ui fallback, loaded with `nex
 - **Stat row.** Up to four numbers, 26px, labels 13px gray, vertical hairlines between.
 - **Bar.** 8px track in `bar-track`, fill in `bar-primary` for the subject and `bar-secondary` for comparisons.
 - **Compare table.** No outer border, hairline rows, bold for the best value, gray "Not rated" for private schools.
-- **Map.** Rounded 12px box with a `border` hairline. Pins are type-colored with white numbers matching the list.
+- **Map.** Rounded 12px box with a `border` hairline. Pins are type-colored with white numbers matching the list. Hovering a pin shows a small card (`PinCard`) with the school's name, type, grades, distance, enrollment, and ELA and Math levels; on a touch screen a tap opens the same card with a Details link and a close button. The card is the only floating surface on the map and uses the popover shadow.
 
 ## Components
 

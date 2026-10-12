@@ -1,5 +1,6 @@
 "use client";
 
+import { PinCard } from "./pin-card";
 import {
   Map as MapLibreMap,
   Marker,
@@ -34,8 +35,27 @@ export interface SearchMapProps {
   /** Tooltip for a pin: "Result 3: Name". */
   pinTitle: (number: number, name: string) => string;
   homeTitle: string;
+  /** Link to a school's page, used by the card a tap opens on a touch screen. */
+  detailsHref?: (cds: CdsCode) => string;
   className?: string;
 }
+
+/** A pin's card: which school, where its pin sits in the map box, and whether a tap pinned it open. */
+interface CardState {
+  cds: CdsCode;
+  pinned: boolean;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
+const CARD_HALF_WIDTH = 120;
+const CARD_GAP = 18;
+/** Room a card needs above its pin before it flips below. */
+const CARD_HEIGHT = 150;
+/** Below this map height (the phone layout) a card docks to the bottom edge instead of floating by its pin. */
+const DOCK_BELOW_HEIGHT = 320;
 
 const STYLE_LIGHT = "https://tiles.openfreemap.org/styles/positron";
 const STYLE_DARK = "https://tiles.openfreemap.org/styles/dark";
@@ -83,6 +103,7 @@ export default function SearchMap({
   onSelect,
   pinTitle,
   homeTitle,
+  detailsHref,
   className,
 }: SearchMapProps) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -90,6 +111,8 @@ export default function SearchMap({
   const markersRef = useRef(new Map<CdsCode, { marker: Marker; pin: HTMLElement }>());
   const homeRef = useRef<Marker | null>(null);
   const [styleReady, setStyleReady] = useState(0);
+  const [card, setCard] = useState<CardState | null>(null);
+  const coordsRef = useRef(new Map<CdsCode, Coordinates>());
   /**
    * Whether the CURRENT map instance has finished loading its style. A ref,
    * not state: when the page is restored from history, React keeps state but
@@ -126,6 +149,16 @@ export default function SearchMap({
     canvas.removeAttribute("role");
     canvas.removeAttribute("aria-label");
     // Fires on first load and after every setStyle, when sources and layers must be re-added.
+    // Keep an open card attached to its pin as the map moves, and close it on a tap elsewhere.
+    map.on("move", () =>
+      setCard((current) => {
+        const coords = current ? coordsRef.current.get(current.cds) : undefined;
+        if (!current || !coords) return current;
+        const at = map.project([coords.longitude, coords.latitude]);
+        return { ...current, x: at.x, y: at.y };
+      }),
+    );
+    map.on("click", () => setCard(null));
     styleLoadedRef.current = false;
     map.on("style.load", () => {
       styleLoadedRef.current = true;
@@ -211,20 +244,47 @@ export default function SearchMap({
     if (!map) return;
     for (const { marker } of markersRef.current.values()) marker.remove();
     markersRef.current.clear();
+    coordsRef.current.clear();
+    const cardAt = (cds: CdsCode, coords: Coordinates, pinned: boolean): CardState => {
+      const at = map.project([coords.longitude, coords.latitude]);
+      const box = map.getContainer();
+      return { cds, pinned, x: at.x, y: at.y, width: box.clientWidth, height: box.clientHeight };
+    };
     schools.forEach((row, index) => {
       const coords = row.school.coordinates;
       if (!coords) return;
       const cds = row.school.cds;
       const el = document.createElement("div");
       el.setAttribute("aria-hidden", "true");
-      el.title = pinTitle(index + 1, row.school.name);
       const pin = document.createElement("span");
       pin.className = `flex size-6 cursor-pointer items-center justify-center rounded-full border-2 border-bg text-xs font-medium text-fg-on-accent shadow-popover transition-transform ${pinClass[row.school.type]}`;
       pin.textContent = String(index + 1);
       el.append(pin);
-      el.addEventListener("mouseenter", () => callbacks.current.onHover(cds));
-      el.addEventListener("mouseleave", () => callbacks.current.onHover(null));
-      el.addEventListener("click", () => callbacks.current.onSelect(cds));
+      coordsRef.current.set(cds, coords);
+      let pointerType = "mouse";
+      el.addEventListener("pointerdown", (event) => {
+        pointerType = event.pointerType;
+      });
+      el.addEventListener("mouseenter", () => {
+        callbacks.current.onHover(cds);
+        // A card pinned open by a tap stays until it is closed.
+        setCard((current) => (current?.pinned ? current : cardAt(cds, coords, false)));
+      });
+      el.addEventListener("mouseleave", () => {
+        callbacks.current.onHover(null);
+        setCard((current) => (current?.pinned ? current : null));
+      });
+      el.addEventListener("click", (event) => {
+        // Do not let the map treat this as a tap on empty space, which closes the card.
+        event.stopPropagation();
+        if (pointerType === "mouse") {
+          // With a mouse the card is already showing; a click finds the school in the list.
+          callbacks.current.onSelect(cds);
+        } else {
+          // No hover on a touch screen: a tap opens the card and keeps it open.
+          setCard(cardAt(cds, coords, true));
+        }
+      });
       const marker = new Marker({ element: el })
         .setLngLat([coords.longitude, coords.latitude])
         .addTo(map);
@@ -241,5 +301,43 @@ export default function SearchMap({
     }
   }, [hoveredCds, schools]);
 
-  return <div ref={containerRef} className={className} />;
+  const cardIndex = card ? schools.findIndex((row) => row.school.cds === card.cds) : -1;
+  const cardRow = cardIndex >= 0 ? schools[cardIndex] : undefined;
+  const docked = card !== null && card.height < DOCK_BELOW_HEIGHT;
+  const below = card !== null && card.y < CARD_HEIGHT + CARD_GAP;
+  const left = card
+    ? card.width < CARD_HALF_WIDTH * 2 + 16
+      ? card.width / 2
+      : Math.min(Math.max(card.x, CARD_HALF_WIDTH + 8), card.width - CARD_HALF_WIDTH - 8)
+    : 0;
+
+  return (
+    <div className={["relative", className].filter(Boolean).join(" ")}>
+      <div ref={containerRef} className="h-full w-full" />
+      {card && cardRow ? (
+        <div
+          className="absolute z-10"
+          style={
+            docked
+              ? { left: "50%", bottom: 8, transform: "translateX(-50%)" }
+              : {
+                  left,
+                  top: card.y,
+                  transform: below
+                    ? `translate(-50%, ${CARD_GAP}px)`
+                    : `translate(-50%, calc(-100% - ${CARD_GAP}px))`,
+                }
+          }
+        >
+          <PinCard
+            summary={cardRow}
+            number={cardIndex + 1}
+            pinned={card.pinned}
+            detailsHref={detailsHref?.(card.cds)}
+            onClose={() => setCard(null)}
+          />
+        </div>
+      ) : null}
+    </div>
+  );
 }

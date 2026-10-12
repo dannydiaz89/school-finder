@@ -203,6 +203,8 @@ Rules:
 
 - The search box also accepts a school's name. Every word typed must begin a word of the school's name, city, or district, so "washington elementary sacramento" narrows 40 namesakes to one. Results are statewide, need no location, and show no map or distance. Text is interpreted in this order: city or ZIP code, street address (starts with a number), school name, then address without a number. `by=name` forces the name search, and a city search links to it when the city is also a school name.
 
+- Hovering a map pin shows a preview card with the school's basic facts; tapping one on a touch screen pins the card open with a Details link. A mouse click still scrolls the list to that school.
+
 ## Contract amendments
 
 Record each as: date, what changed, which streams were notified.

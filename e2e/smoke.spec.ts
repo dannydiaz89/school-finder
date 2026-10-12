@@ -116,7 +116,10 @@ test("search results lead to a school page and the compare list", async ({ page 
   // Add two schools to the compare list; the URL carries the list.
   const toggles = page.getByRole("button", { name: /Add to compare/ });
   await toggles.nth(0).click();
-  await toggles.nth(0).click(); // the first row's button is now "In compare list", so nth(0) is the second row
+  // Wait for the first to register: the first row's button then reads "In compare list",
+  // which makes nth(0) the second row.
+  await expect(page.getByRole("link", { name: /Compare \(1\)/ })).toBeVisible();
+  await toggles.nth(0).click();
   await expect(page).toHaveURL(/compare=\d{14}(%2C|,)\d{14}/);
   await expect(page.getByRole("link", { name: /Compare \(2\)/ })).toBeVisible();
 
@@ -196,6 +199,23 @@ test("an unknown place says so", async ({ page }) => {
   // A ZIP code outside California is answered from the bundled table; no geocoder call.
   await page.goto("/en?address=00000");
   await expect(page.getByRole("heading", { name: "Nothing found" })).toBeVisible();
+});
+
+test("hovering a map pin shows that school's basic facts", async ({ page }) => {
+  await page.goto(SEARCH_URL);
+  const pins = page.locator(".maplibregl-marker span.cursor-pointer");
+  await expect(pins.first()).toBeVisible();
+  const rows = page.getByRole("main").locator("ol > li");
+  const name = (await rows.nth(1).getByRole("link").first().innerText()).trim();
+  await pins.nth(1).hover();
+  const card = page.locator(".maplibregl-map").locator("xpath=..").locator("div.absolute.z-10");
+  await expect(card).toContainText(name);
+  await expect(card).toContainText(/public|Private/);
+  await expect(card).toContainText(/ mi/);
+  // The matching row is highlighted, and leaving the pin removes the card.
+  await expect(rows.nth(1)).toHaveClass(/bg-bg-subtle/);
+  await page.mouse.move(5, 5);
+  await expect(card).toHaveCount(0);
 });
 
 test("type filter narrows results and is reflected in the URL", async ({ page }) => {
