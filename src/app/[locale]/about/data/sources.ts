@@ -21,6 +21,7 @@ export const DataSourceId = z.enum([
   "staff",
   "affidavit",
   "pss",
+  "gazetteer",
   "geocoder",
 ]);
 export type DataSourceId = z.infer<typeof DataSourceId>;
@@ -108,6 +109,15 @@ export const DATA_SOURCES: DataSourceEntry[] = z.array(DataSourceEntry).parse([
     cadence: "biennial",
     landingUrl: "https://nces.ed.gov/surveys/pss/pssdata.asp",
     fileUrl: "https://nces.ed.gov/surveys/pss/zip/pss2324_pu_csv.zip",
+  },
+  {
+    id: "gazetteer",
+    publisher: "census",
+    cadence: "annual",
+    landingUrl:
+      "https://www.census.gov/geographies/reference-files/time-series/geo/gazetteer-files.html",
+    fileUrl:
+      "https://www2.census.gov/geo/docs/maps-data/data/gazetteer/2025_Gazetteer/2025_gaz_place_06.txt",
   },
   {
     id: "geocoder",

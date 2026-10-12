@@ -51,6 +51,8 @@ const flag = z.preprocess((value) => value === "1" || value === "true", z.boolea
 export const SearchParams = z
   .object({
     address: z.string().trim().min(1).max(200).optional(),
+    /** Set when the search location is a city or ZIP code center rather than a street address. */
+    loc: z.enum(["city", "zip"]).optional(),
     lat: z.coerce.number().min(-90).max(90).optional(),
     lng: z.coerce.number().min(-180).max(180).optional(),
     radius: z.coerce.number().min(0.25).max(MAX_RADIUS_MILES).default(DEFAULT_RADIUS_MILES),
@@ -71,6 +73,8 @@ export const CompareParams = z
   .object({
     compare: csv(CdsCode).default([]),
     address: z.string().trim().min(1).max(200).optional(),
+    /** Set when the search location is a city or ZIP code center rather than a street address. */
+    loc: z.enum(["city", "zip"]).optional(),
     lat: z.coerce.number().min(-90).max(90).optional(),
     lng: z.coerce.number().min(-180).max(180).optional(),
   })
@@ -101,7 +105,7 @@ export function parseSearchParams(raw: RawParams): SearchParams {
 }
 
 export function parseCompareParams(raw: RawParams): CompareParams {
-  const picked = pick(raw, ["compare", "address", "lat", "lng"]);
+  const picked = pick(raw, ["compare", "address", "loc", "lat", "lng"]);
   const result = CompareParams.safeParse(picked);
   if (result.success) return result.data;
   // A bad CDS code in the list drops the whole list rather than guessing.
@@ -126,6 +130,7 @@ export function toSearchFilters(p: SearchParams): SearchFilters {
 export function serializeSearchParams(p: Partial<SearchParams>): URLSearchParams {
   const out = new URLSearchParams();
   if (p.address) out.set("address", p.address);
+  if (p.loc) out.set("loc", p.loc);
   if (p.lat !== undefined) out.set("lat", p.lat.toFixed(5));
   if (p.lng !== undefined) out.set("lng", p.lng.toFixed(5));
   if (p.radius !== undefined && p.radius !== DEFAULT_RADIUS_MILES)
@@ -147,6 +152,7 @@ export function serializeCompareParams(p: Partial<CompareParams>): URLSearchPara
   const out = new URLSearchParams();
   if (p.compare?.length) out.set("compare", p.compare.join(","));
   if (p.address) out.set("address", p.address);
+  if (p.loc) out.set("loc", p.loc);
   if (p.lat !== undefined) out.set("lat", p.lat.toFixed(5));
   if (p.lng !== undefined) out.set("lng", p.lng.toFixed(5));
   return out;

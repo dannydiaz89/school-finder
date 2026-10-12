@@ -208,6 +208,17 @@ Found by watching the Dashboard SPA. Open, no key. Fragile, so use only as a cro
 
 Recommendation: Census geocoder server-side for the MVP, with Mapbox autocomplete later if typing full addresses feels clunky.
 
+### City and ZIP code lookup (in use)
+
+A search for a city or ZIP code is resolved locally from the Census Bureau Gazetteer files, with no network call. The Census geocoder only understands street addresses.
+
+- Places (cities, towns, unincorporated communities): https://www2.census.gov/geo/docs/maps-data/data/gazetteer/2025_Gazetteer/2025_gaz_place_06.txt (pipe-delimited; `NAME` ends in "city", "town", or "CDP"; `INTPTLAT`, `INTPTLONG` are the internal point).
+- ZIP Code Tabulation Areas: https://www2.census.gov/geo/docs/maps-data/data/gazetteer/2025_Gazetteer/2025_Gaz_zcta_national.zip (national; California is 90001 to 96162).
+- `pnpm tsx scripts/build-places.ts --places <file> --zcta <file>` writes `src/features/search/places.json` (1,595 names, 1,802 ZIP code areas, 109 KB, server-side only). Rebuild yearly.
+- When two places share a name, an incorporated city wins over a community, then the larger one. Names in parentheses ("San Buenaventura (Ventura)") are findable either way. Accents are optional.
+- A city's point is the center of its legal boundary, which for a sprawling city is not downtown: "Los Angeles" lands near Culver City.
+- Neighborhood names (Midtown, Land Park) are not in the file and are reported as not found.
+
 ## 9. Existing aggregators
 
 - GreatSchools API: open signups, 15k calls/month included, caching not permitted, logo attribution mandatory, pricing unpublished.

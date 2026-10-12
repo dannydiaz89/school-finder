@@ -17,6 +17,8 @@ export interface SchoolDetailViewProps {
   query: Record<string, string>;
   /** The visitor's home when the URL carries lat and lng. */
   home?: Coordinates;
+  /** The city or ZIP code searched, when the location is its center rather than a home address. */
+  place?: string;
 }
 
 /** Which sections a school gets. Private schools have no Dashboard or CAASPP data. */
@@ -31,7 +33,7 @@ export function sectionsFor(type: SchoolType): SectionId[] {
  * named areas: one column on phones (facts after the stat row), content
  * plus a facts column from `lg` up.
  */
-export function SchoolDetailView({ detail, nearby, query, home }: SchoolDetailViewProps) {
+export function SchoolDetailView({ detail, nearby, query, home, place }: SchoolDetailViewProps) {
   const { school } = detail;
   const sections = sectionsFor(school.type);
   const backHref: ComponentProps<typeof Link>["href"] = { pathname: "/", query };
@@ -52,7 +54,7 @@ export function SchoolDetailView({ detail, nearby, query, home }: SchoolDetailVi
         <SchoolStats detail={detail} />
       </div>
       <aside className="lg:[grid-area:facts] lg:pt-2">
-        <FactsList school={school} privateDetail={detail.privateDetail} home={home} />
+        <FactsList school={school} privateDetail={detail.privateDetail} home={home} place={place} />
       </aside>
       <div className="lg:[grid-area:body]">
         {sections.includes("dashboard") ? (

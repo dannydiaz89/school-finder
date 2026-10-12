@@ -1,3 +1,4 @@
+import { isZipOnly, locatePlace } from "./places";
 import { z } from "zod";
 import { CensusGeocodeResponse, GeocodeResult } from "@/lib/schemas";
 
@@ -62,6 +63,22 @@ export async function geocodeAddress(
   options: GeocodeOptions = {},
 ): Promise<GeocodeResult | null> {
   const query = GeocodeQuery.parse(rawQuery);
+  // A city or ZIP code resolves from the bundled table: instant, and the Census
+  // geocoder only understands street addresses anyway.
+  const place = locatePlace(query);
+  if (place) {
+    return {
+      query,
+      matchedAddress: place.label,
+      latitude: place.latitude,
+      longitude: place.longitude,
+      state: "CA",
+      kind: place.kind,
+    };
+  }
+  // A ZIP code that is not in California's table is simply not found; the street
+  // geocoder cannot resolve a bare ZIP code, so do not ask it.
+  if (isZipOnly(query)) return null;
   const key = normalizeQuery(query);
   const useCache = options.cache ?? true;
   if (useCache && cache.has(key)) return cache.get(key) ?? null;

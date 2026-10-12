@@ -26,6 +26,7 @@ export async function AddressForm({ locale, params }: { locale: Locale; params: 
   const hidden = serializeSearchParams({
     ...params,
     address: undefined,
+    loc: undefined,
     lat: undefined,
     lng: undefined,
     radius: undefined,

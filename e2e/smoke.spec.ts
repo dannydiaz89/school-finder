@@ -50,7 +50,7 @@ test("search page renders the header and the search form", async ({ page }) => {
   await expect(header.getByRole("link", { name: "School Finder" })).toBeVisible();
   await expect(header.getByRole("navigation", { name: "School Finder" })).toBeVisible();
   await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
-  await expect(page.getByLabel("Home address")).toBeVisible();
+  await expect(page.getByLabel("Address, city, or ZIP code")).toBeVisible();
   await expect(page.getByRole("button", { name: "Find schools" })).toBeVisible();
 });
 
@@ -87,7 +87,7 @@ test("data sources page lists every source with a link", async ({ page }) => {
   await page.goto("/en/about/data");
   await expect(page.getByRole("heading", { level: 1, name: "Data sources" })).toBeVisible();
   const rows = page.getByRole("table").locator("tbody tr");
-  await expect(rows).toHaveCount(11);
+  await expect(rows).toHaveCount(12);
   await expect(rows.first().getByRole("link")).toHaveAttribute("href", /cde\.ca\.gov/);
 });
 
@@ -151,6 +151,28 @@ test("going back from a school page restores the results and the map", async ({ 
     await expect(page.getByRole("link", { name: "Details" }).first()).toBeVisible();
   }
   expect(errors).toEqual([]);
+});
+
+for (const { query, loc } of [
+  { query: "Sacramento", loc: "city" },
+  { query: "95816", loc: "zip" },
+] as const) {
+  test(`searching by ${loc} lists schools around its center`, async ({ page }) => {
+    // Cities and ZIP codes resolve from the bundled Census table, so this needs no network.
+    await page.goto("/en");
+    await page.getByLabel("Address, city, or ZIP code").fill(query);
+    await page.getByRole("button", { name: "Find schools" }).click();
+    await expect(page).toHaveURL(new RegExp(`loc=${loc}.*lat=|lat=.*loc=${loc}`));
+    const rows = page.getByRole("main").getByRole("list").first().getByRole("listitem");
+    await expect(rows.first()).toBeVisible();
+    await expect(page.getByRole("main").getByText("Search center")).toBeVisible();
+  });
+}
+
+test("an unknown place says so", async ({ page }) => {
+  // A ZIP code outside California is answered from the bundled table; no geocoder call.
+  await page.goto("/en?address=00000");
+  await expect(page.getByRole("heading", { name: "Place not found" })).toBeVisible();
 });
 
 test("type filter narrows results and is reflected in the URL", async ({ page }) => {

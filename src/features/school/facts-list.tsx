@@ -18,6 +18,8 @@ export interface FactsListProps {
   privateDetail: PrivateSchoolDetail | null;
   /** The visitor's home, when the URL carries lat and lng; adds a "From home" row. */
   home?: Coordinates;
+  /** The city or ZIP code searched, when the location is its center rather than a home address. */
+  place?: string;
 }
 
 /**
@@ -25,7 +27,7 @@ export interface FactsListProps {
  * for private schools). Nothing here is interpreted: codes become labels
  * through the label layer and that is all.
  */
-export function FactsList({ school, privateDetail, home }: FactsListProps) {
+export function FactsList({ school, privateDetail, home, place }: FactsListProps) {
   const t = useTranslations("school");
   const common = useTranslations("common");
   const labels = useTranslations("labels");
@@ -41,7 +43,7 @@ export function FactsList({ school, privateDetail, home }: FactsListProps) {
   if (home && school.coordinates) {
     add(
       "fromHome",
-      t("facts.fromHome"),
+      place ? t("facts.fromPlace", { place }) : t("facts.fromHome"),
       common("miles", { count: formatMiles(haversineMeters(home, school.coordinates)) }),
     );
   }

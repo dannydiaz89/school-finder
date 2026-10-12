@@ -40,6 +40,8 @@ export const GeocodeResult = z
     latitude: z.number(),
     longitude: z.number(),
     state: z.string().optional(),
+    /** What the query resolved to. A city or ZIP code resolves to its center point. */
+    kind: z.enum(["address", "city", "zip"]).default("address"),
   })
   .strict();
 export type GeocodeResult = z.infer<typeof GeocodeResult>;

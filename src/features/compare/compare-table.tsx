@@ -41,6 +41,8 @@ export interface CompareTableProps {
   schools: readonly SchoolDetail[];
   /** Home coordinates from the URL; the distance row appears only when present. */
   home?: Coordinates;
+  /** The city or ZIP code searched, when distances are from its center rather than a home address. */
+  place?: string;
   /** Query string appended to school links so the list survives navigation, e.g. `?compare=a,b`. */
   query: string;
   onRemove: (cds: CdsCode) => void;
@@ -56,7 +58,7 @@ const COLUMN_WIDTH = 170;
  * comparison is meaningful (see `best.ts`); private schools show "Not rated"
  * and "Not tested" in gray because they have no Dashboard or CAASPP rows.
  */
-export function CompareTable({ schools, home, query, onRemove }: CompareTableProps) {
+export function CompareTable({ schools, home, place, query, onRemove }: CompareTableProps) {
   const t = useTranslations("compare");
   const common = useTranslations("common");
   const labels = useTranslations("labels");
@@ -158,7 +160,7 @@ export function CompareTable({ schools, home, query, onRemove }: CompareTablePro
         {home
           ? row(
               "distance",
-              t("rows.distance"),
+              place ? t("rows.distanceFrom", { place }) : t("rows.distance"),
               (school) => {
                 const meters = distanceMeters(school, home);
                 return meters === null ? null : common("miles", { count: formatMiles(meters) });

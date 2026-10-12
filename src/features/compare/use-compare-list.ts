@@ -15,7 +15,7 @@ import { MAX_COMPARE, parseCompareParams, type CdsCode } from "@/lib/schemas";
  * because `useSearchParams` is runtime data under Cache Components.
  */
 /** Search context carried on cross-page links alongside the compare list. */
-const HOME_KEYS = ["address", "lat", "lng", "radius"] as const;
+const HOME_KEYS = ["address", "loc", "lat", "lng", "radius"] as const;
 
 export function useCompareList() {
   const searchParams = useSearchParams();

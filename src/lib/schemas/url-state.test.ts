@@ -76,6 +76,16 @@ describe("serializeSearchParams", () => {
   });
 });
 
+describe("search location kind", () => {
+  it("round-trips loc for a city or ZIP search and drops anything else", () => {
+    expect(parseSearchParams({ address: "Sacramento", loc: "city" }).loc).toBe("city");
+    expect(parseSearchParams({ loc: "planet" }).loc).toBeUndefined();
+    const out = serializeSearchParams({ address: "95816", loc: "zip", lat: 38.5, lng: -121.4 });
+    expect(out.get("loc")).toBe("zip");
+    expect(parseCompareParams({ loc: "zip", address: "95816" })).toMatchObject({ loc: "zip" });
+  });
+});
+
 describe("toSearchFilters", () => {
   it("maps URL state onto the data-access filter contract", () => {
     const filters = toSearchFilters(

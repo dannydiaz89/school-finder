@@ -55,8 +55,8 @@
   },
   "search": {
     "title": "Find schools near an address",
-    "addressLabel": "Home address",
-    "addressPlaceholder": "Street address, city, CA",
+    "addressLabel": "Address, city, or ZIP code",
+    "addressPlaceholder": "Street address, city, or ZIP code",
     "radiusLabel": "Radius",
     "radius": "within {miles, number} mi",
     "submit": "Find schools",
@@ -97,7 +97,8 @@
       "largerMap": "Larger map",
       "home": "Home",
       "radiusRing": "Dashed ring = {miles, number} mi",
-      "pin": "Result {number}: {name}"
+      "pin": "Result {number}: {name}",
+      "center": "Search center"
     },
     "about": {
       "title": "About these results",
@@ -109,12 +110,12 @@
       "body": "Try a larger radius or fewer filters."
     },
     "error": {
-      "geocode": "We could not find that address. Check the spelling and include the city.",
+      "geocode": "We could not find that place. Enter a street address with its city, a California city name, or a five-digit ZIP code.",
       "generic": "Something went wrong. Try again.",
-      "geocodeTitle": "Address not found",
+      "geocodeTitle": "Place not found",
       "genericTitle": "Search is unavailable right now"
     },
-    "intro": "Enter a home address to list the schools within a few miles, with distance, grades, school type, and California School Dashboard levels from public files.",
+    "intro": "Enter a street address, a California city, or a ZIP code to list the schools within a few miles, with distance, grades, school type, and California School Dashboard levels from public files.",
     "resultsLabel": "Search results",
     "hiddenSpecialized": "{count, plural, one {# specialized placement is} other {# specialized placements are}} not shown.",
     "showingCount": "Showing {shown, number} of {total, number}",
@@ -213,7 +214,8 @@
       "lastUpdated": "Directory updated",
       "affiliation": "Affiliation",
       "teachers": "Full-time teachers",
-      "partTimeTeachers": "Part-time teachers"
+      "partTimeTeachers": "Part-time teachers",
+      "fromPlace": "From {place}"
     },
     "compare": {
       "thisSchool": "this school",
@@ -261,7 +263,8 @@
       "frpm": "Free / reduced meals",
       "englishLearners": "English learners",
       "programs": "Programs",
-      "magnet": "Magnet"
+      "magnet": "Magnet",
+      "distanceFrom": "Distance from {place}"
     },
     "privateNote": "Private schools file an annual affidavit with the California Department of Education but do not take state tests or appear on the Dashboard, so those rows show \"Not rated\"."
   },
@@ -331,9 +334,13 @@
         "name": "NCES Private School Universe Survey",
         "takes": "Address, coordinates, grade span, and religious affiliation for private schools, matched to the affidavit by name and ZIP code."
       },
+      "gazetteer": {
+        "name": "U.S. Census Gazetteer files",
+        "takes": "The center point of each California city, community, and ZIP code area, used when a search names a city or ZIP code instead of a street address."
+      },
       "geocoder": {
         "name": "U.S. Census Geocoder",
-        "takes": "Turns the address typed into the search box into coordinates for the radius search."
+        "takes": "Turns a street address typed into the search box into coordinates for the radius search."
       }
     }
   },

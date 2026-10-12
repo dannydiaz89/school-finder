@@ -43,7 +43,12 @@ async function CompareContent({
 }: Pick<PageProps<"/[locale]/compare">, "searchParams">) {
   const p = parseCompareParams(await searchParams);
   const schools = p.compare.length ? await loadSchools(p.compare) : [];
-  return <CompareView schools={schools} home={{ address: p.address, lat: p.lat, lng: p.lng }} />;
+  return (
+    <CompareView
+      schools={schools}
+      home={{ address: p.address, loc: p.loc, lat: p.lat, lng: p.lng }}
+    />
+  );
 }
 
 /** School data changes once a year; cache each list of codes for a day. */

@@ -16,7 +16,7 @@ export interface CompareViewProps {
   /** Every school named in the URL that the data source knows, in URL order. */
   schools: readonly SchoolDetail[];
   /** Home address and coordinates from the URL, when the user came from a search. */
-  home: { address?: string; lat?: number; lng?: number };
+  home: { address?: string; loc?: "city" | "zip"; lat?: number; lng?: number };
 }
 
 /**
@@ -78,7 +78,13 @@ export function CompareView({ schools, home }: CompareViewProps) {
           </Button>
         </div>
       </div>
-      <CompareTable schools={shown} home={coordinates} query={query} onRemove={remove} />
+      <CompareTable
+        schools={shown}
+        home={coordinates}
+        place={home.loc ? home.address : undefined}
+        query={query}
+        onRemove={remove}
+      />
       <div className="flex max-w-[860px] flex-col gap-2">
         {overflow ? <p className="text-sm text-fg-muted">{t("max", { max })}</p> : null}
         {shown.some((school) => school.school.type === "private") ? (

@@ -83,7 +83,12 @@ async function SchoolContent({ params, searchParams }: Props) {
   const home =
     lat !== undefined && lng !== undefined ? { latitude: lat, longitude: lng } : undefined;
 
-  return <SchoolDetailView detail={detail} nearby={nearby} query={query} home={home} />;
+  // A city or ZIP code search measures from its center, so say which place rather than "home".
+  const place = query.loc === "city" || query.loc === "zip" ? query.address : undefined;
+
+  return (
+    <SchoolDetailView detail={detail} nearby={nearby} query={query} home={home} place={place} />
+  );
 }
 
 function SchoolSkeleton() {

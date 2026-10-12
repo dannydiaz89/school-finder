@@ -66,7 +66,16 @@ async function geocodeAndRedirect(
     return <EmptyState titleAs="h2" title={t("error.geocodeTitle")} body={t("error.geocode")} />;
   }
   redirect({
-    href: searchHref({ ...p, lat: found.latitude, lng: found.longitude, page: 1 }, compare),
+    href: searchHref(
+      {
+        ...p,
+        lat: found.latitude,
+        lng: found.longitude,
+        loc: found.kind === "address" ? undefined : found.kind,
+        page: 1,
+      },
+      compare,
+    ),
     locale,
   });
 }

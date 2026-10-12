@@ -55,8 +55,8 @@
   },
   "search": {
     "title": "Buscar escuelas cerca de una dirección",
-    "addressLabel": "Dirección de casa",
-    "addressPlaceholder": "Calle y número, ciudad, CA",
+    "addressLabel": "Dirección, ciudad o código postal",
+    "addressPlaceholder": "Dirección, ciudad o código postal",
     "radiusLabel": "Radio",
     "radius": "hasta {miles, number} mi",
     "submit": "Buscar escuelas",
@@ -97,7 +97,8 @@
       "largerMap": "Mapa más grande",
       "home": "Casa",
       "radiusRing": "Anillo punteado = {miles, number} mi",
-      "pin": "Resultado {number}: {name}"
+      "pin": "Resultado {number}: {name}",
+      "center": "Centro de la búsqueda"
     },
     "about": {
       "title": "Sobre estos resultados",
@@ -109,12 +110,12 @@
       "body": "Prueba con un radio mayor o con menos filtros."
     },
     "error": {
-      "geocode": "No encontramos esa dirección. Revisa la ortografía e incluye la ciudad.",
+      "geocode": "No encontramos ese lugar. Escribe una dirección con su ciudad, el nombre de una ciudad de California o un código postal de cinco dígitos.",
       "generic": "Algo salió mal. Inténtalo de nuevo.",
-      "geocodeTitle": "No se encontró la dirección",
+      "geocodeTitle": "Lugar no encontrado",
       "genericTitle": "La búsqueda no está disponible por ahora"
     },
-    "intro": "Escribe una dirección de casa para ver las escuelas a pocas millas, con distancia, grados, tipo de escuela y niveles del California School Dashboard tomados de archivos públicos.",
+    "intro": "Escribe una dirección, una ciudad de California o un código postal para ver las escuelas a pocas millas, con distancia, grados, tipo de escuela y niveles del California School Dashboard tomados de archivos públicos.",
     "resultsLabel": "Resultados de búsqueda",
     "hiddenSpecialized": "{count, plural, one {# escuela especializada no se muestra} other {# escuelas especializadas no se muestran}}.",
     "showingCount": "Mostrando {shown, number} de {total, number}",
@@ -213,7 +214,8 @@
       "lastUpdated": "Directorio actualizado",
       "affiliation": "Afiliación",
       "teachers": "Maestros de tiempo completo",
-      "partTimeTeachers": "Maestros de medio tiempo"
+      "partTimeTeachers": "Maestros de medio tiempo",
+      "fromPlace": "Desde {place}"
     },
     "compare": {
       "thisSchool": "esta escuela",
@@ -261,7 +263,8 @@
       "frpm": "Comidas gratis o a precio reducido",
       "englishLearners": "Aprendices de inglés",
       "programs": "Programas",
-      "magnet": "Magnet"
+      "magnet": "Magnet",
+      "distanceFrom": "Distancia desde {place}"
     },
     "privateNote": "Las escuelas privadas presentan una declaración anual al Departamento de Educación de California, pero no presentan las pruebas estatales ni aparecen en el Dashboard, por eso esas filas muestran \"Sin calificación\"."
   },
@@ -331,9 +334,13 @@
         "name": "Encuesta de escuelas privadas (PSS) del NCES",
         "takes": "Dirección, coordenadas, rango de grados y afiliación religiosa de las escuelas privadas, vinculadas a la declaración anual por nombre y código postal."
       },
+      "gazetteer": {
+        "name": "Archivos Gazetteer del Censo de EE. UU.",
+        "takes": "El punto central de cada ciudad, comunidad y área de código postal de California, que se usa cuando la búsqueda indica una ciudad o un código postal en lugar de una dirección."
+      },
       "geocoder": {
         "name": "Geocodificador de la Oficina del Censo de EE. UU.",
-        "takes": "Convierte la dirección escrita en el cuadro de búsqueda en coordenadas para la búsqueda por radio."
+        "takes": "Convierte una dirección escrita en el cuadro de búsqueda en coordenadas para la búsqueda por radio."
       }
     }
   },

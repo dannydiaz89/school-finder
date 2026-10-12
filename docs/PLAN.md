@@ -199,6 +199,8 @@ Rules:
 - Pages read through cached wrappers in `src/lib/data/cached.ts` (`"use cache"`, hours, tag `schools`). For radii up to 5 miles the schools around an address are fetched once and filters, sorting, and paging are applied in the web process with the same `assembleSearchResult` the backend uses, so a filter change makes no backend call. `scripts/verify-local-filter.ts` proves the two paths agree on live data.
 - Links to data-backed pages use `IntentLink`, which loads the destination on hover, focus, or touch so the click shows the page without a skeleton.
 
+- The search box accepts a street address, a California city, or a ZIP code. Cities and ZIP codes resolve to their center from a bundled Census Gazetteer table; street addresses still go to the Census geocoder. The URL carries `loc=city|zip` so pages say "Search center" and "From Sacramento" rather than "home".
+
 ## Contract amendments
 
 Record each as: date, what changed, which streams were notified.
@@ -207,3 +209,4 @@ Record each as: date, what changed, which streams were notified.
 
 - 2026-10-11: `SearchSummary` added (the distance-independent part of `SchoolSummary`), stored as an optional `summary` field on the Convex `schools` table. `SearchResult` gained `truncated` (defaults to false). All streams merged before this; no one to notify.
 - 2026-10-11: fifth data-access function `getSchoolsInRadius` (`RadiusArgs` → `RadiusRows`) added for local filtering. Convex `schools` table gained optional `geoRow`, `geoCol` and index `by_geo`.
+- 2026-10-11: `GeocodeResult.kind` (address, city, zip; defaults to address) and URL parameter `loc` (city, zip) added for city and ZIP code search.

@@ -149,7 +149,7 @@ export function SearchResults({ result, params, center, header, footer }: Search
             onHover={setHoveredCds}
             onSelect={selectFromMap}
             pinTitle={pinTitle}
-            homeTitle={t("map.home")}
+            homeTitle={params.loc ? t("map.center") : t("map.home")}
             className="h-full w-full"
           />
         </div>
@@ -161,7 +161,7 @@ export function SearchResults({ result, params, center, header, footer }: Search
           ))}
           <li className="inline-flex items-center gap-1.5">
             <Dot size="sm" className="bg-fg" />
-            {t("map.home")}
+            {params.loc ? t("map.center") : t("map.home")}
           </li>
           <li>{t("map.radiusRing", { miles: params.radius })}</li>
         </ul>

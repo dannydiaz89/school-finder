@@ -58,11 +58,41 @@ describe("geocodeAddress", () => {
       latitude: 38.578705339532,
       longitude: -121.487664184898,
       state: "CA",
+      kind: "address",
     });
     expect(fetch).toHaveBeenCalledTimes(1);
     const [url, init] = fetch.mock.calls[0] as unknown as [string, RequestInit];
     expect(url).toContain("address=1420+J+Street");
     expect(init.signal).toBeInstanceOf(AbortSignal);
+  });
+
+  it("resolves a city from the bundled table without calling the geocoder", async () => {
+    const fetch = stubFetch(MATCH_BODY);
+    const result = await geocodeAddress("Sacramento, CA", { fetch });
+    expect(result).toMatchObject({ kind: "city", matchedAddress: "Sacramento, CA", state: "CA" });
+    expect(result?.latitude).toBeCloseTo(38.57, 1);
+    expect(fetch).not.toHaveBeenCalled();
+  });
+
+  it("resolves a ZIP code from the bundled table without calling the geocoder", async () => {
+    const fetch = stubFetch(MATCH_BODY);
+    const result = await geocodeAddress("95816", { fetch });
+    expect(result).toMatchObject({ kind: "zip", matchedAddress: "95816" });
+    expect(fetch).not.toHaveBeenCalled();
+  });
+
+  it("answers not found for a ZIP code outside California without calling the geocoder", async () => {
+    const fetch = stubFetch(MATCH_BODY);
+    expect(await geocodeAddress("10001", { fetch })).toBeNull();
+    expect(await geocodeAddress("00000", { fetch })).toBeNull();
+    expect(fetch).not.toHaveBeenCalled();
+  });
+
+  it("still sends a street address to the geocoder", async () => {
+    const fetch = stubFetch(MATCH_BODY);
+    const result = await geocodeAddress("915 L Street, Sacramento", { fetch, cache: false });
+    expect(result?.kind).toBe("address");
+    expect(fetch).toHaveBeenCalledTimes(1);
   });
 
   it("returns null when there is no match and caches that answer", async () => {
