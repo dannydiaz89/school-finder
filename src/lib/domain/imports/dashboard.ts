@@ -33,10 +33,12 @@ export const DASHBOARD_FILE_NAMES: Record<DashboardIndicatorId, (year: number) =
 /**
  * The row that stands for "all students" at a school. The English Learner
  * Progress Indicator only reports English learners, so its all-students row
- * is the EL group.
+ * is the EL group. The 2023 ELPI file has no group column at all.
  */
 export function isSchoolAllStudentsRow(row: DashboardRow): boolean {
   if (row.rtype !== "S") return false;
+  // A file with no student-group column has a single row per school.
+  if (row.studentgroup === undefined) return true;
   const group = row.indicator === "ELPI" ? "EL" : "ALL";
   return row.studentgroup === group;
 }

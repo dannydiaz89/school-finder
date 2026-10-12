@@ -6,7 +6,7 @@ import {
 } from "@/lib/domain/filters";
 import { milesToMeters } from "@/lib/domain/geo";
 import { rankByName } from "@/lib/domain/names";
-import { buildComparison, summaryOf, toSummary } from "@/lib/domain/records";
+import { summaryOf, toDetail, toSummary } from "@/lib/domain/records";
 import { fixtures } from "@/fixtures";
 import type {
   GetSchoolArgs,
@@ -34,13 +34,7 @@ const byCds = new Map<string, SchoolRecord>(fixtures.schools.map((r) => [r.schoo
 
 function detail(record: SchoolRecord): SchoolDetail {
   const districtRows = fixtures.districtCaaspp[record.school.districtCds ?? ""] ?? [];
-  return {
-    ...record,
-    caasppComparison:
-      record.school.type === "private"
-        ? null
-        : buildComparison(record.caaspp, districtRows, fixtures.stateCaaspp),
-  };
+  return toDetail(record, districtRows, fixtures.stateCaaspp);
 }
 
 export const fixturesDataSource: SchoolDataSource = {

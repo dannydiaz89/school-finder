@@ -184,7 +184,8 @@ Rules:
 - [ ] Address autocomplete
 - [ ] Scheduled re-imports when new annual files post
 - [ ] Sign-in and saved lists
-- [ ] Historical trends per school (prior Dashboard years)
+- [x] Historical trends per school: Dashboard ratings and CAASPP scores for 2023 to 2025, shown as "By year" tables on the school page (2026-10-11)
+- [ ] Earlier history (2018, 2019, 2022): different file layouts and, for 2022, status without colors
 
 ## Decisions made during Stage 1
 
@@ -213,6 +214,9 @@ Rules:
 
 - The compare list moved from the URL to local storage (`src/features/compare/store.ts`). In the URL it was dropped by any navigation that did not carry the parameter, including a new search. Changes read the list at the moment of the click, so quick clicks cannot undo each other.
 
+- A school can hold several years of Dashboard and CAASPP rows. "Current" means the school's newest year, decided only in `src/lib/domain/history.ts`. `SchoolDetail.dashboard` and `.caaspp` carry that year alone, and `SchoolDetail.history` carries every year for the "By year" tables. Search rows and compare never read an older year.
+- Imports are written for the free Convex plan: one read per key per batch, no rewrite of unchanged documents, lean earlier years, and no search-row rebuild when only older years are loaded.
+
 ## Contract amendments
 
 Record each as: date, what changed, which streams were notified.
@@ -224,3 +228,4 @@ Record each as: date, what changed, which streams were notified.
 - 2026-10-11: `GeocodeResult.kind` (address, city, zip; defaults to address) and URL parameter `loc` (city, zip) added for city and ZIP code search.
 - 2026-10-11: sixth data-access function `findSchoolsByName` (`NameSearchArgs` → `NameMatch[]`). Convex `schools` gained optional `searchText` and search index `search_text`. URL parameter `by=name` added.
 - 2026-10-11: `gradesServed` now means grades with enrolled students (directory span trimmed by enrollment). Convex `schools` gained optional `directoryGradesServed`. Env `REVALIDATE_SECRET` added.
+- 2026-10-11: `SchoolDetail.history` (`SchoolHistory`: every year of Dashboard rows and all-grades CAASPP rows; defaults to empty). `SchoolDetail.dashboard` and `.caaspp` now hold the newest year only. `DashboardRow.studentgroup` defaults to `ALL` for the 2023 ELPI file.

@@ -28,13 +28,17 @@ describe("DashboardSection", () => {
       ["Mathematics", "Green", "5.8 pts above standard", "Maintained"],
       ["Chronic absenteeism", "Orange", "19.3% chronically absent", "Increased 1.6"],
       ["Suspension rate", "Green", "0.6% suspended at least once", "Maintained"],
+      ["English learner progress", "No level", "62.5% making progress", "Increased 26.1"],
       ["Science", "Blue", "65.5% met or exceeded standard", "Increased 10.1"],
     ]);
     // K–6: no graduation or College/Career rows, and the note says why.
     expect(
       screen.getByText(/Graduation rate and College\/Career do not apply/),
     ).toBeInTheDocument();
-    expect(screen.queryByText(/fewer than 30 students/)).not.toBeInTheDocument();
+    // English learner progress had 16 students, so it has no level and the note says why.
+    expect(screen.getByText(/fewer than 30 students/)).toBeInTheDocument();
+    // One year of rows and no history: no by-year table.
+    expect(screen.queryByRole("heading", { level: 3 })).not.toBeInTheDocument();
     expect(screen.getByRole("link", { name: /Full report/ })).toHaveAttribute(
       "href",
       "https://www.caschooldashboard.org/reports/34674396034292/2025",

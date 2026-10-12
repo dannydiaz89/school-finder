@@ -5,8 +5,8 @@
  *   pnpm tsx scripts/build-fixtures.ts \
  *     --ccd <ccd_sch_029_*.csv> --edge <EDGE_GEOCODE_PUBLICSCH_*.TXT> \
  *     --cde-directory <pubschls.txt> (optional, may be partial) \
- *     --dashboard <dir with eladownload2025.txt, mathdownload2025.txt, chronicdownload2025.txt, ...> \
- *     --caaspp <sb_ca2025_1_csv_v1.txt> --frpm <frpm2425.xlsx> --staff <strat2324.txt> \
+ *     --dashboard-root .cache/dashboard --caaspp-root .cache/caaspp --years 2023,2024,2025 \
+ *     --frpm <frpm2425.xlsx> --staff <strat2324.txt> \
  *     --enrollment <cdenroll2425.txt> --pss <pss2324_pu.csv> --affidavit <privateschooldata2425.xlsx> \
  *     --center 38.5816,-121.4944 --radius-miles 3.5 --max-public 32 --max-private 8 \
  *     --out src/fixtures/schools.json
@@ -18,7 +18,7 @@
  * plus EDGE geocodes fill in, with FRPM supplying the educational option.
  */
 import { existsSync, writeFileSync } from "node:fs";
-import { basename, join } from "node:path";
+import { join } from "node:path";
 import { parseArgs } from "node:util";
 import {
   Affiliation,
@@ -40,9 +40,14 @@ import {
   type RaceEthnicity,
 } from "../src/lib/schemas";
 import { DirectoryRow } from "../src/lib/schemas/imports/directory";
+import {
+  DASHBOARD_FILE_NAMES,
+  dashboardIndicatorFromRow,
+  isSchoolAllStudentsRow,
+} from "../src/lib/domain/imports/dashboard";
+import { DashboardRow } from "../src/lib/schemas/imports/dashboard";
 import { haversineMeters, milesToMeters } from "../src/lib/domain/geo";
 import { parseGradeSpan } from "../src/lib/domain/grades";
-import { colorCodeToLevel } from "../src/lib/domain/levels";
 import {
   EDGE_PUBLIC_COLUMNS,
   cdsFromParts,
@@ -59,8 +64,11 @@ const { values: args } = parseArgs({
     ccd: { type: "string" },
     edge: { type: "string" },
     "cde-directory": { type: "string" },
-    dashboard: { type: "string" },
-    caaspp: { type: "string" },
+    // Roots of the importer's download cache: <root>/<year>/<file>.
+    "dashboard-root": { type: "string", default: ".cache/dashboard" },
+    "caaspp-root": { type: "string", default: ".cache/caaspp" },
+    // Calendar years the school years end in. The last is the current year; earlier ones are history.
+    years: { type: "string", default: "2023,2024,2025" },
     frpm: { type: "string" },
     staff: { type: "string" },
     enrollment: { type: "string" },
@@ -440,49 +448,37 @@ async function firstSheetName(path: string): Promise<string> {
 // Per-school measures
 // ---------------------------------------------------------------------------
 
-const DASHBOARD_FILES: Record<DashboardIndicatorId, string> = {
-  ela: "eladownload2025.txt",
-  math: "mathdownload2025.txt",
-  chronicAbsenteeism: "chronicdownload2025.txt",
-  suspension: "suspdownload2025.txt",
-  graduation: "graddownload2025.txt",
-  collegeCareer: "ccidownload2025.txt",
-  elpi: "elpidownload2025.txt",
-  science: "sciencedownload2025.txt",
-};
+const YEARS = String(args.years)
+  .split(",")
+  .map((y) => Number(y.trim()))
+  .filter((y) => Number.isInteger(y))
+  .sort((x, y) => x - y);
+const CURRENT_YEAR = YEARS[YEARS.length - 1];
 
 function loadDashboard(cdsSet: Set<string>): Map<string, DashboardIndicator[]> {
-  const dir = need("dashboard");
+  const root = String(args["dashboard-root"]);
   const out = new Map<string, DashboardIndicator[]>();
-  for (const [indicator, file] of Object.entries(DASHBOARD_FILES) as [
-    DashboardIndicatorId,
-    string,
-  ][]) {
-    const candidates = [join(dir, file), join(dir, file.replace(/\.txt$/, ".head"))];
-    const path = candidates.find((p) => existsSync(p));
-    if (!path) {
-      log(`  dashboard: no file for ${indicator}`);
-      continue;
+  for (const year of YEARS) {
+    for (const indicator of Object.keys(DASHBOARD_FILE_NAMES) as DashboardIndicatorId[]) {
+      const path = join(root, String(year), DASHBOARD_FILE_NAMES[indicator](year));
+      if (!existsSync(path)) {
+        log(
+          `  dashboard ${year} ${indicator}: no file (not published that year, or not downloaded)`,
+        );
+        continue;
+      }
+      let n = 0;
+      for (const raw of readDelimited(path, "\t")) {
+        if (!cdsSet.has(raw.cds)) continue;
+        // The importer's own row schema and transform, so the sample data is built exactly as real data is.
+        const row = DashboardRow.safeParse(raw);
+        if (!row.success || !isSchoolAllStudentsRow(row.data)) continue;
+        const ind = dashboardIndicatorFromRow(row.data);
+        out.set(ind.cds, [...(out.get(ind.cds) ?? []), ind]);
+        n += 1;
+      }
+      log(`  dashboard ${year} ${indicator}: ${n} rows`);
     }
-    let n = 0;
-    for (const row of readDelimited(path, "\t")) {
-      if (row.rtype !== "S" || row.studentgroup !== "ALL" || !cdsSet.has(row.cds)) continue;
-      const ind = DashboardIndicator.parse({
-        cds: row.cds,
-        year: Number(row.reportingyear),
-        indicator,
-        level: colorCodeToLevel(row.color),
-        status: numberOrNull(row.currstatus),
-        change: numberOrNull(row.change),
-        statusLevel: numberOrNull(row.statuslevel),
-        changeLevel: numberOrNull(row.changelevel ?? row.changeLevel),
-        denominator: numberOrNull(row.currdenom),
-        nSizeMet: row.currnsizemet === "Y",
-      });
-      out.set(row.cds, [...(out.get(row.cds) ?? []), ind]);
-      n += 1;
-    }
-    log(`  dashboard ${indicator}: ${n} rows from ${basename(path)}`);
   }
   return out;
 }
@@ -499,36 +495,50 @@ const CAASPP_GRADES: Record<string, CaasppResult["grade"]> = {
 };
 
 function loadCaaspp(cdsSet: Set<string>, districtSet: Set<string>) {
+  const root = String(args["caaspp-root"]);
   const bySchool = new Map<string, CaasppResult[]>();
   const byDistrict = new Map<string, CaasppResult[]>();
   const state: CaasppResult[] = [];
-  for (const row of readDelimited(need("caaspp"), "^")) {
-    if (Number(row["Student Group ID"]) !== 1) continue;
-    const subject = row["Test ID"] === "1" ? "ela" : row["Test ID"] === "2" ? "math" : undefined;
-    const grade = CAASPP_GRADES[String(Number(row.Grade))];
-    if (!subject || !grade) continue;
-    const cds = cdsFromParts(row["County Code"], row["District Code"], row["School Code"]);
-    const type = Number(row["Type ID"]);
-    const isState = type === 4;
-    const isDistrict = type === 6 && districtSet.has(cds);
-    const isSchool = [7, 9, 10].includes(type) && cdsSet.has(cds);
-    if (!isState && !isDistrict && !isSchool) continue;
-    const result = CaasppResult.parse({
-      cds,
-      year: "2024-25",
-      subject,
-      grade,
-      studentsTested: numberOrNull(row["Total Students Tested"]),
-      meanScaleScore: numberOrNull(row["Mean Scale Score"]),
-      pctExceeded: numberOrNull(row["Percentage Standard Exceeded"]),
-      pctMet: numberOrNull(row["Percentage Standard Met"]),
-      pctMetAndAbove: numberOrNull(row["Percentage Standard Met and Above"]),
-      pctNearlyMet: numberOrNull(row["Percentage Standard Nearly Met"]),
-      pctNotMet: numberOrNull(row["Percentage Standard Not Met"]),
-    });
-    if (isState) state.push(result);
-    else if (isDistrict) byDistrict.set(cds, [...(byDistrict.get(cds) ?? []), result]);
-    else bySchool.set(cds, [...(bySchool.get(cds) ?? []), result]);
+  for (const year of YEARS) {
+    const path = join(root, String(year), `sb_ca${year}_1_csv_v1.txt`);
+    if (!existsSync(path)) {
+      log(`  caaspp ${year}: no file`);
+      continue;
+    }
+    const schoolYear = `${year - 1}-${String(year % 100).padStart(2, "0")}`;
+    let kept = 0;
+    for (const row of readDelimited(path, "^")) {
+      if (Number(row["Student Group ID"]) !== 1) continue;
+      const subject = row["Test ID"] === "1" ? "ela" : row["Test ID"] === "2" ? "math" : undefined;
+      const grade = CAASPP_GRADES[String(Number(row.Grade))];
+      if (!subject || !grade) continue;
+      // Earlier years feed the trend, which is all grades together.
+      if (year !== CURRENT_YEAR && grade !== "all") continue;
+      const cds = cdsFromParts(row["County Code"], row["District Code"], row["School Code"]);
+      const type = Number(row["Type ID"]);
+      const isState = type === 4;
+      const isDistrict = type === 6 && districtSet.has(cds);
+      const isSchool = [7, 9, 10].includes(type) && cdsSet.has(cds);
+      if (!isState && !isDistrict && !isSchool) continue;
+      const result = CaasppResult.parse({
+        cds,
+        year: schoolYear,
+        subject,
+        grade,
+        studentsTested: numberOrNull(row["Total Students Tested"]),
+        meanScaleScore: numberOrNull(row["Mean Scale Score"]),
+        pctExceeded: numberOrNull(row["Percentage Standard Exceeded"]),
+        pctMet: numberOrNull(row["Percentage Standard Met"]),
+        pctMetAndAbove: numberOrNull(row["Percentage Standard Met and Above"]),
+        pctNearlyMet: numberOrNull(row["Percentage Standard Nearly Met"]),
+        pctNotMet: numberOrNull(row["Percentage Standard Not Met"]),
+      });
+      kept += 1;
+      if (isState) state.push(result);
+      else if (isDistrict) byDistrict.set(cds, [...(byDistrict.get(cds) ?? []), result]);
+      else bySchool.set(cds, [...(bySchool.get(cds) ?? []), result]);
+    }
+    log(`  caaspp ${year}: ${kept} rows`);
   }
   log(
     `  caaspp: ${bySchool.size} schools, ${byDistrict.size} districts, ${state.length} state rows`,

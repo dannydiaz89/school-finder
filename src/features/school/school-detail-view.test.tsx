@@ -24,7 +24,9 @@ describe("SchoolDetailView", () => {
       "h2 Overview",
       "h2 Directory facts",
       "h2 California School Dashboard",
+      "h3 By year",
       "h2 Test scores",
+      "h3 By year",
       "h2 Students",
       "h2 Nearby alternatives",
     ]);

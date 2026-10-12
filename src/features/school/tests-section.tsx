@@ -2,14 +2,22 @@ import { useFormatter, useTranslations } from "next-intl";
 import { Bar } from "@/components/ui/bar";
 import { ExternalLink } from "@/components/ui/external-link";
 import { indicatorShortKey } from "@/lib/labels";
-import { CaasppSubject, type CaasppComparison, type CdsCode } from "@/lib/schemas";
+import {
+  CaasppSubject,
+  type CaasppComparison,
+  type CaasppResult,
+  type CdsCode,
+} from "@/lib/schemas";
 import { percent } from "./format";
 import { caasppReportUrl } from "./links";
 import { Section } from "./section";
+import { TestsTrend } from "./tests-trend";
 
 export interface TestsSectionProps {
   cds: CdsCode;
   comparison: CaasppComparison | null;
+  /** All-grades results for every year on file. Adds the by-year table when there are two or more. */
+  history?: CaasppResult[];
 }
 
 const LABEL_WIDTH = "10rem";
@@ -19,7 +27,7 @@ const LABEL_WIDTH = "10rem";
  * exceeding standard at this school, its district, and California, as
  * three bars on one scale.
  */
-export function TestsSection({ cds, comparison }: TestsSectionProps) {
+export function TestsSection({ cds, comparison, history = [] }: TestsSectionProps) {
   const t = useTranslations("school");
   const common = useTranslations("common");
   const labels = useTranslations("labels");
@@ -65,6 +73,7 @@ export function TestsSection({ cds, comparison }: TestsSectionProps) {
               </div>
             );
           })}
+          <TestsTrend rows={history} />
           <p className="m-0 text-base">
             <ExternalLink href={caasppReportUrl(cds, comparison.year)}>
               {t("tests.link")}

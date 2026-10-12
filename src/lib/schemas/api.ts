@@ -160,8 +160,26 @@ export const SchoolRecord = z
   .strict();
 export type SchoolRecord = z.infer<typeof SchoolRecord>;
 
+/**
+ * Every year on file for the measures that have a history, oldest first.
+ * `caaspp` holds all-grades results only.
+ */
+export const SchoolHistory = z
+  .object({
+    dashboard: z.array(DashboardIndicator),
+    caaspp: z.array(CaasppResult),
+  })
+  .strict();
+export type SchoolHistory = z.infer<typeof SchoolHistory>;
+
+/**
+ * One school as a page needs it. `dashboard` and `caaspp` hold the newest
+ * year only, so nothing can mistake an old year for the current one; earlier
+ * years are in `history`.
+ */
 export const SchoolDetail = SchoolRecord.extend({
   caasppComparison: CaasppComparison.nullable(),
+  history: SchoolHistory.default({ dashboard: [], caaspp: [] }),
 }).strict();
 export type SchoolDetail = z.infer<typeof SchoolDetail>;
 

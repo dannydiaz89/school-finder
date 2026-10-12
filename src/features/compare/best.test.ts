@@ -1,3 +1,4 @@
+import { toDetail } from "@/lib/domain/records";
 import { describe, expect, it } from "vitest";
 import { fixtures } from "@/fixtures";
 import { formatMiles, haversineMeters } from "@/lib/domain/geo";
@@ -18,27 +19,8 @@ const home = { latitude: 38.5781, longitude: -121.4944 };
 function detail(name: string, patch: Partial<SchoolDetail> = {}): SchoolDetail {
   const record = fixtures.schools.find((r) => r.school.name === name);
   if (!record) throw new Error(`fixture missing: ${name}`);
-  const comparison =
-    record.school.type === "private"
-      ? null
-      : {
-          year: record.caaspp[0]?.year ?? "2024-25",
-          ela: {
-            school:
-              record.caaspp.find((c) => c.subject === "ela" && c.grade === "all")?.pctMetAndAbove ??
-              null,
-            district: null,
-            state: null,
-          },
-          math: {
-            school:
-              record.caaspp.find((c) => c.subject === "math" && c.grade === "all")
-                ?.pctMetAndAbove ?? null,
-            district: null,
-            state: null,
-          },
-        };
-  return { ...record, caasppComparison: comparison, ...patch };
+  // Built the way the app builds it, so only the newest year is "current".
+  return { ...toDetail(record, [], []), ...patch };
 }
 
 const judah = detail("Theodore Judah Elementary"); // ELA green, math green, 62.73 / 57.01, ratio 22.4

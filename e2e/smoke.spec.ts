@@ -77,6 +77,17 @@ test("school detail page renders a fixture school", async ({ page }) => {
   await expect(page.getByRole("main")).toContainText(SCHOOL_CDS);
 });
 
+test("school detail page shows ratings and test scores by year", async ({ page }) => {
+  await page.goto(`/en/school/${SCHOOL_CDS}`);
+  const ratings = page.locator("#dashboard").getByRole("table", { name: "By year" });
+  await expect(ratings.getByRole("columnheader")).toHaveText(["Indicator", "2023", "2024", "2025"]);
+  await expect(ratings.getByRole("row", { name: /English Language Arts/ })).toContainText(
+    "+20.2 pts",
+  );
+  const scores = page.locator("#tests").getByRole("table", { name: "By year" });
+  await expect(scores.getByRole("row", { name: /Mathematics/ })).toHaveText(/57%.*56%.*57%/);
+});
+
 test("compare page renders", async ({ page }) => {
   await page.goto("/en/compare");
   await expect(page.getByRole("main")).toBeVisible();

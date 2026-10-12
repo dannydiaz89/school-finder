@@ -186,6 +186,16 @@
       "empty": "No se publican resultados CAASPP para esta escuela.",
       "link": "Resultados por grado y grupo de estudiantes en el sitio de CAASPP"
     },
+    "history": {
+      "heading": "Por año",
+      "dashboardNote": "Nivel y estado en el Dashboard de cada año. Los puntos son la distancia respecto al estándar.",
+      "indicator": "Indicador",
+      "points": "{value} pts",
+      "noLevel": "Sin nivel en un año anterior: menos de 30 estudiantes, o el Dashboard no publicó un color para ese indicador ese año.",
+      "science": "Ciencias no tenía color antes de {year} y se reportaba en puntos respecto al estándar. A partir de {year} es el porcentaje de estudiantes que cumplieron o superaron el estándar. Las dos cifras no son comparables.",
+      "testsNote": "Esta escuela, todos los grados evaluados · estudiantes que cumplen o superan el estándar",
+      "subject": "Materia"
+    },
     "students": {
       "disabilities": "{value, number, percent} estudiantes con discapacidades",
       "englishLearners": "{value, number, percent} aprendices de inglés",

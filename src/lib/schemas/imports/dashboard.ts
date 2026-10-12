@@ -35,7 +35,9 @@ export const DashboardRow = z.preprocess(
       cds: z.string().regex(/^\d{14}$/),
       /** X state, C county, D district, S school. */
       rtype: z.enum(["X", "C", "D", "S"]),
-      studentgroup: z.string().trim().min(1),
+      // The 2023 English Learner Progress file has no student-group column: it holds
+      // one row per school. A missing value means "the only row", whatever the indicator.
+      studentgroup: z.string().trim().min(1).optional(),
       currdenom: NullableCount,
       currstatus: NullableNumber,
       change: NullableNumber,

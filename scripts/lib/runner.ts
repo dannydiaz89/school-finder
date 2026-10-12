@@ -17,6 +17,10 @@ export interface ImportContext {
   /** Two-digit county code to restrict to, or undefined for statewide. */
   county?: string;
   dryRun: boolean;
+  /** Keep only what a history needs (all-grades test rows). Set for earlier years. */
+  lean?: boolean;
+  /** Dashboard only: load this one indicator's file instead of all of them. */
+  indicator?: string;
   batchSize: number;
   log: (message: string) => void;
 }

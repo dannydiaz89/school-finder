@@ -4,11 +4,20 @@ import type {
   Coordinates,
   DashboardSummary,
   School,
+  SchoolDetail,
   SchoolRecord,
   SchoolSummary,
   SearchSummary,
 } from "@/lib/schemas";
 import { haversineMeters } from "./geo";
+import {
+  caasppForYear,
+  caasppHistory,
+  currentCaaspp,
+  currentDashboard,
+  latestCaasppYear,
+  latestDashboardYear,
+} from "./history";
 
 /**
  * Shape a stored SchoolRecord into what list rows and detail pages need.
@@ -17,9 +26,9 @@ import { haversineMeters } from "./geo";
  */
 
 export function summarizeDashboard(record: SchoolRecord): DashboardSummary {
-  const summary: DashboardSummary = { year: null };
-  for (const row of record.dashboard) {
-    summary.year = summary.year === null ? row.year : Math.max(summary.year, row.year);
+  const summary: DashboardSummary = { year: latestDashboardYear(record.dashboard) };
+  // Only the newest year: with several years on file, an older row must never win.
+  for (const row of currentDashboard(record.dashboard)) {
     summary[row.indicator] = { level: row.level, status: row.status, change: row.change };
   }
   return summary;
@@ -63,19 +72,46 @@ export function buildComparison(
   district: CaasppResult[],
   state: CaasppResult[],
 ): CaasppComparison | null {
-  const year = school[0]?.year ?? district[0]?.year ?? state[0]?.year;
+  // Compare like with like: the school's newest year, and the district and state in that same year.
+  const year = latestCaasppYear(school) ?? latestCaasppYear(district) ?? latestCaasppYear(state);
   if (!year) return null;
+  const [s, d, c] = [school, district, state].map((rows) => caasppForYear(rows, year));
   return {
     year,
     ela: {
-      school: allGradesMetAndAbove(school, "ela"),
-      district: allGradesMetAndAbove(district, "ela"),
-      state: allGradesMetAndAbove(state, "ela"),
+      school: allGradesMetAndAbove(s, "ela"),
+      district: allGradesMetAndAbove(d, "ela"),
+      state: allGradesMetAndAbove(c, "ela"),
     },
     math: {
-      school: allGradesMetAndAbove(school, "math"),
-      district: allGradesMetAndAbove(district, "math"),
-      state: allGradesMetAndAbove(state, "math"),
+      school: allGradesMetAndAbove(s, "math"),
+      district: allGradesMetAndAbove(d, "math"),
+      state: allGradesMetAndAbove(c, "math"),
+    },
+  };
+}
+
+/**
+ * A stored record as a page needs it: the newest year in `dashboard` and
+ * `caaspp`, every year in `history`, and the test score comparison. Both
+ * backends build details through here so they cannot disagree.
+ */
+export function toDetail(
+  record: SchoolRecord,
+  district: CaasppResult[],
+  state: CaasppResult[],
+): SchoolDetail {
+  const isPrivate = record.school.type === "private";
+  return {
+    ...record,
+    dashboard: currentDashboard(record.dashboard),
+    caaspp: currentCaaspp(record.caaspp),
+    caasppComparison: isPrivate ? null : buildComparison(record.caaspp, district, state),
+    history: {
+      dashboard: [...record.dashboard].sort(
+        (a, b) => a.year - b.year || a.indicator.localeCompare(b.indicator),
+      ),
+      caaspp: [...caasppHistory(record.caaspp, "ela"), ...caasppHistory(record.caaspp, "math")],
     },
   };
 }

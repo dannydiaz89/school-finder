@@ -186,6 +186,16 @@
       "empty": "No CAASPP results are published for this school.",
       "link": "Results by grade and student group on the CAASPP site"
     },
+    "history": {
+      "heading": "By year",
+      "dashboardNote": "Level and status on each year's Dashboard. Points are distance from standard.",
+      "indicator": "Indicator",
+      "points": "{value} pts",
+      "noLevel": "No level in an earlier year: fewer than 30 students, or the Dashboard published no color for that indicator that year.",
+      "science": "Science had no color before {year} and was reported as points from standard. From {year} on it is the percent of students who met or exceeded standard. The two are not comparable.",
+      "testsNote": "This school, all grades tested · students meeting or exceeding standard",
+      "subject": "Subject"
+    },
     "students": {
       "disabilities": "{value, number, percent} students with disabilities",
       "englishLearners": "{value, number, percent} English learners",

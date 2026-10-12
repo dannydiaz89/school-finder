@@ -33,6 +33,8 @@ export const caaspp: Source = {
         if (entity !== "state" && !inCounty(ctx, caasppCds(row))) continue;
         const result = caasppResultFromRow(row);
         if (!result) continue;
+        // Earlier years feed the trend, which is all grades together; skip the per-grade rows.
+        if (ctx.lean && result.grade !== "all") continue;
         rows.push(result);
         kept[entity] += 1;
       }

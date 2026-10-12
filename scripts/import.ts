@@ -19,7 +19,7 @@ import { existsSync, readFileSync } from "node:fs";
 import { parseArgs } from "node:util";
 import { countyCode } from "../src/lib/domain/imports/counties";
 import { adminClient } from "./lib/convex-admin";
-import { normalizeYearArg, type ImportContext } from "./lib/runner";
+import { endYear, normalizeYearArg, type ImportContext } from "./lib/runner";
 import { caaspp } from "./sources/caaspp";
 import { dashboard } from "./sources/dashboard";
 import { directory } from "./sources/directory";
@@ -47,6 +47,78 @@ function usage(): never {
       `[--year 2024-25] [--cache .cache] [--county Sacramento] [--dry-run] [--batch 500]`,
   );
   process.exit(2);
+}
+
+/** "2024" -> "2023-24": the school year that ends in that calendar year. */
+function schoolYearEnding(endYear: number): string {
+  return `${endYear - 1}-${String(endYear % 100).padStart(2, "0")}`;
+}
+
+/**
+ * Load earlier years of the measures that have a trend: Dashboard ratings and
+ * all-grades test scores. One command, so the search summaries are rebuilt and
+ * the page cache cleared once at the end rather than after every year.
+ *
+ *   pnpm run import history --years 2023,2024
+ */
+async function runHistory(values: {
+  years?: string;
+  cache: string;
+  county?: string;
+  "dry-run": boolean;
+  batch: string;
+  env: string;
+}) {
+  const years = (values.years ?? "")
+    .split(",")
+    .map((y) => Number(y.trim()))
+    .filter((y) => Number.isInteger(y) && y >= 2015 && y <= 2100);
+  if (years.length === 0) {
+    console.error(
+      "Usage: pnpm run import history --years 2023,2024   (years the school year ends in)",
+    );
+    process.exit(2);
+  }
+  const county = values.county ? countyCode(values.county) : undefined;
+  const { client, target } = await adminClient(values.env);
+  const log = (message: string) => console.error(message);
+  log(`Importing history for ${years.join(", ")} into ${target.name} (${target.url})`);
+  const summary: Record<string, { rowsRead: number; rowsRejected: number; rowsWritten: number }> =
+    {};
+  for (const endYear of years) {
+    const ctx: ImportContext = {
+      client,
+      cacheDir: values.cache,
+      year: schoolYearEnding(endYear),
+      county,
+      dryRun: values["dry-run"],
+      lean: true,
+      batchSize: Math.max(1, Number(values.batch) || 500),
+      log,
+    };
+    for (const source of [dashboard, caaspp]) {
+      summary[`${source.name} ${endYear}`] = await source.run(ctx);
+    }
+  }
+  // Search rows read only each school's newest year. Loading years older than the
+  // current one cannot change them, so skip that statewide read unless a year here
+  // is at least as new as the importer's current year.
+  const currentYear = endYear(dashboard.defaultYear);
+  if (years.some((y) => y >= currentYear)) {
+    const last: ImportContext = {
+      client,
+      cacheDir: values.cache,
+      county,
+      dryRun: values["dry-run"],
+      batchSize: 500,
+      log,
+    };
+    summary[searchRows.name] = await searchRows.run(last);
+  } else {
+    log(`   search rows unchanged: every year is before ${currentYear}`);
+  }
+  console.table(summary);
+  if (!values["dry-run"]) await clearPageCache(values.env, log);
 }
 
 /**
@@ -92,12 +164,16 @@ async function main() {
       cache: { type: "string", default: ".cache" },
       county: { type: "string" },
       "dry-run": { type: "boolean", default: false },
+      years: { type: "string" },
+      indicator: { type: "string" },
+      "no-rebuild": { type: "boolean", default: false },
       batch: { type: "string", default: "500" },
       env: { type: "string", default: ".env.local" },
     },
   });
   const [name] = positionals;
   if (!name) usage();
+  if (name === "history") return runHistory(values);
   const selected =
     name === "all" ? [...SOURCES] : [...SOURCES, searchRows].filter((s) => s.name === name);
   if (selected.length === 0) usage();
@@ -107,7 +183,8 @@ async function main() {
   }
 
   // Any data import changes what search rows show, so refresh the stored summaries last.
-  if (selected.some((s) => SOURCES.includes(s))) selected.push(searchRows);
+  // `--no-rebuild` is for loading a year older than the current one, which search rows never read.
+  if (selected.some((s) => SOURCES.includes(s)) && !values["no-rebuild"]) selected.push(searchRows);
 
   const county = values.county ? countyCode(values.county) : undefined;
   if (values.county && !county) {
@@ -121,6 +198,7 @@ async function main() {
     cacheDir: values.cache,
     year: normalizeYearArg(values.year),
     county,
+    indicator: values.indicator,
     dryRun: values["dry-run"],
     batchSize: Math.max(1, Number(values.batch) || 500),
     log: (message) => console.error(message),

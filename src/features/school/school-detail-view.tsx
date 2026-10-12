@@ -58,10 +58,18 @@ export function SchoolDetailView({ detail, nearby, query, home, place }: SchoolD
       </aside>
       <div className="lg:[grid-area:body]">
         {sections.includes("dashboard") ? (
-          <DashboardSection school={school} rows={detail.dashboard} />
+          <DashboardSection
+            school={school}
+            rows={detail.dashboard}
+            history={detail.history.dashboard}
+          />
         ) : null}
         {sections.includes("tests") ? (
-          <TestsSection cds={school.cds} comparison={detail.caasppComparison} />
+          <TestsSection
+            cds={school.cds}
+            comparison={detail.caasppComparison}
+            history={detail.history.caaspp}
+          />
         ) : null}
         <StudentsSection enrollment={detail.enrollment} privateDetail={detail.privateDetail} />
         <NearbySection cds={school.cds} nearby={nearby} query={query} />

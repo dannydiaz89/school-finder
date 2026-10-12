@@ -27,6 +27,8 @@ pnpm run import all --county Sacramento    # one county (by name or two-digit co
 pnpm run import dashboard --year 2025      # one source, one year (2024-25 or 2025 both work)
 pnpm run import caaspp --dry-run           # parse, validate and transform without writing
 pnpm run import geo-index                  # rebuild the spatial index from the schools table
+pnpm run import history --years 2023,2024  # earlier years of Dashboard ratings and CAASPP scores
+pnpm run import dashboard --year 2023 --indicator elpi --no-rebuild   # one indicator file of an earlier year
 ```
 
 `pnpm import` (without `run`) is pnpm's own lockfile command, so always say `pnpm run import`.
@@ -47,6 +49,16 @@ Sources, default years and cache paths:
 | `staff`             | `.cache/staff/strat2324.txt`                          | 2023-24      | `staffRatios`                           |
 | `private-affidavit` | `.cache/private-affidavit/privateschooldata2425.xlsx` | 2024-25      | `privateDetails`                        |
 | `private-pss`       | `.cache/private-pss/pss2324_pu.csv`                   | 2023-24      | `schools` (private, matched)            |
+
+### Earlier years
+
+`pnpm run import history --years 2023,2024` loads the Dashboard and CAASPP files for the school years ending in those years, next to the current year. Loaded so far: 2023, 2024 and 2025.
+
+- It is frugal on purpose, because Convex's free plan counts every byte read and written. Earlier years keep only the all-grades CAASPP row per subject (the current year keeps each grade), unchanged documents are not rewritten, and the statewide search-row rebuild is skipped when every year given is older than the current one, since search rows read only a school's newest year.
+- "Current" is always a school's newest year on file, decided in `src/lib/domain/history.ts`. Search rows, the compare table and the top of the school page use only that year; earlier years appear in the "By year" tables on the school page.
+- The 2023 Dashboard has no science file, and its ELPI file has no student-group column: it holds one row per school, which the import takes as the all-students row. The 2023 College/Career indicator has a status but no color.
+- Science changed unit: the 2024 Dashboard reports distance from standard in points with no color, and 2025 reports the percent of students who met or exceeded standard. `statusUnit(indicator, year)` returns the unit, and the school page says the two are not comparable.
+- 2022 and earlier are not loaded. There was no Dashboard in 2020 or 2021, 2022 reported status without colors, and the 2018 and 2019 files have not been checked against the current row schema.
 
 Notes learned while running them:
 

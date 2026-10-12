@@ -14,6 +14,7 @@ import {
   School,
   StaffRatio,
 } from "../src/lib/schemas";
+import { sameContent } from "../src/lib/domain/equal";
 import { cellOf } from "../src/lib/domain/grid";
 import { trimSpanToEnrollment } from "../src/lib/domain/grades";
 import { searchTextOf } from "../src/lib/domain/names";
@@ -35,10 +36,19 @@ type CdsTable = Extract<
   "dashboard" | "caaspp" | "enrollment" | "frpm" | "staffRatios" | "privateDetails"
 >;
 
+/** Tables that hold one row per school per year and have a `by_cds_year` index. */
+type YearTable = "dashboard" | "caaspp";
+
 /**
  * Replace-or-insert into a table indexed by cds. `sameKey` says which
- * existing document (if any) the incoming row stands for; for one-row-per-
- * school tables it is always the first match.
+ * existing document (if any) the incoming row stands for.
+ *
+ * Written to spend as little database bandwidth as possible, which is the
+ * tight limit on Convex's free plan:
+ * - existing rows are read once per school (and year) per batch, not once per row;
+ * - year tables read only the year being imported, not every year on file;
+ * - a row whose content has not changed is not written at all, so re-running
+ *   an import costs reads only.
  */
 async function upsertByCds<T extends CdsTable>(
   ctx: MutationCtx,
@@ -49,19 +59,44 @@ async function upsertByCds<T extends CdsTable>(
     incoming: WithoutSystemFields<Doc<T>>,
   ) => boolean,
 ): Promise<number> {
+  const byYear = table === "dashboard" || table === "caaspp";
+  const loaded = new Map<string, Doc<T>[]>();
+  const existingFor = async (row: WithoutSystemFields<Doc<T>>): Promise<Doc<T>[]> => {
+    const year = byYear ? (row as unknown as { year: string | number }).year : undefined;
+    const key = `${row.cds}|${year ?? ""}`;
+    let docs = loaded.get(key);
+    if (!docs) {
+      docs = (
+        byYear
+          ? await ctx.db
+              .query(table as YearTable)
+              .withIndex("by_cds_year", (q) => q.eq("cds", row.cds).eq("year", year as never))
+              .collect()
+          : await ctx.db
+              .query(table)
+              .withIndex("by_cds", (q) => q.eq("cds", row.cds))
+              .collect()
+      ) as Doc<T>[];
+      loaded.set(key, docs);
+    }
+    return docs;
+  };
+
   let written = 0;
   for (const row of rows) {
-    const existing = await ctx.db
-      .query(table)
-      .withIndex("by_cds", (q) => q.eq("cds", row.cds))
-      .collect();
+    const existing = await existingFor(row);
     const match = existing.find((doc) =>
       sameKey(doc as unknown as WithoutSystemFields<Doc<T>>, row),
     );
     // The generic table name keeps TypeScript from narrowing the document type; the rows
     // were validated by the Zod arg validator for exactly this table.
-    if (match) await ctx.db.replace(match._id, row as never);
-    else await ctx.db.insert(table, row as never);
+    if (!match) {
+      const id = await ctx.db.insert(table, row as never);
+      existing.push({ ...(row as object), _id: id, _creationTime: 0 } as unknown as Doc<T>);
+    } else if (!sameContent(match, row)) {
+      await ctx.db.replace(match._id, row as never);
+      existing[existing.indexOf(match)] = { ...match, ...(row as object) } as Doc<T>;
+    }
     written += 1;
   }
   return written;
@@ -87,8 +122,8 @@ export const upsertSchools = zInternalMutation({
         // The span as the directory lists it. rebuildSummaries trims `gradesServed` to grades with students.
         directoryGradesServed: school.gradesServed,
       };
-      if (existing) await ctx.db.replace(existing._id, doc);
-      else await ctx.db.insert("schools", doc);
+      if (!existing) await ctx.db.insert("schools", doc);
+      else if (!sameContent(existing, doc)) await ctx.db.replace(existing._id, doc);
       written += 1;
     }
     return written;
@@ -167,14 +202,24 @@ export const rebuildSummaries = internalMutation({
         listed && record.enrollment
           ? trimSpanToEnrollment(listed, record.enrollment.byGrade)
           : listed;
-      await ctx.db.patch(school._id, {
+      const next = {
         summary,
         geoRow: cell?.row,
         geoCol: cell?.col,
         searchText: searchTextOf(school.name, school.address.city, school.district),
         directoryGradesServed: listed,
         gradesServed: served,
-      });
+      };
+      const current = {
+        summary: school.summary,
+        geoRow: school.geoRow,
+        geoCol: school.geoCol,
+        searchText: school.searchText,
+        directoryGradesServed: school.directoryGradesServed,
+        gradesServed: school.gradesServed,
+      };
+      // Most schools are unchanged by any one import; do not rewrite them.
+      if (!sameContent(current, next)) await ctx.db.patch(school._id, next);
     }
     return { updated: page.page.length, cursor: page.isDone ? null : page.continueCursor };
   },

@@ -107,5 +107,7 @@ Both themes are complete sets of the same tokens. `next-themes` sets `data-theme
 - Field names must start with a letter or underscore; that is why per-grade counts are arrays of `{ grade, count }` rather than records.
 - Queries use `zCustomQuery` from `convex-helpers/server/zod4` with `args: Schema.shape`.
 - Radius search uses the grid in `src/lib/domain/grid.ts` and the `by_geo` index on `schools`: one range read per grid row, then an exact distance check. Never a full table scan, and no spatial component.
+- `dashboard` and `caaspp` hold several years per school. Never pick a year yourself: use `currentDashboard`, `currentCaaspp` and `statusUnit` from `src/lib/domain/history.ts`, and read `SchoolDetail.history` for anything by year.
+- The deployment is on Convex's free plan. Keep imports frugal (see "Earlier years" in `docs/data-sources.md`) and do not add statewide reads to a routine path.
 - A search row is one document: the `summary` stored on each school at import time. Do not add per-row lookups to search; extend the summary and `rebuildSummaries` instead.
 - `pnpm convex` must be running (or `pnpm convex:codegen` run) after changing functions so `_generated` is current. Commit `_generated`.

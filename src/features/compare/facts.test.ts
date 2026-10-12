@@ -1,3 +1,4 @@
+import { toDetail } from "@/lib/domain/records";
 import { describe, expect, it } from "vitest";
 import { fixtures } from "@/fixtures";
 import type { SchoolDetail } from "@/lib/schemas";
@@ -19,7 +20,8 @@ import {
 function detail(name: string, patch: Partial<SchoolDetail> = {}): SchoolDetail {
   const record = fixtures.schools.find((r) => r.school.name === name);
   if (!record) throw new Error(`fixture missing: ${name}`);
-  return { ...record, caasppComparison: null, ...patch };
+  // Built the way the app builds it, so only the newest year is "current".
+  return { ...toDetail(record, [], []), ...patch };
 }
 
 const judah = detail("Theodore Judah Elementary");
@@ -50,6 +52,7 @@ describe("Dashboard facts", () => {
       "suspension",
       "graduation",
       "collegeCareer",
+      "elpi",
       "science",
     ]);
     expect(dashboardIndicatorsPresent([stFrancis])).toEqual([]);

@@ -101,13 +101,31 @@ export async function loadRecord(ctx: QueryCtx, school: Doc<"schools">): Promise
 }
 
 /** Only what a list row needs: dashboard levels, enrollment, staff ratio. */
+/**
+ * The newest Dashboard year for a school, read through the (cds, year) index:
+ * one read to find the year, then only that year's rows. A search summary
+ * never needs the earlier years.
+ */
+async function loadCurrentDashboard(ctx: QueryCtx, cds: CdsCode): Promise<Doc<"dashboard">[]> {
+  const newest = await ctx.db
+    .query("dashboard")
+    .withIndex("by_cds_year", (q) => q.eq("cds", cds))
+    .order("desc")
+    .first();
+  if (!newest) return [];
+  return ctx.db
+    .query("dashboard")
+    .withIndex("by_cds_year", (q) => q.eq("cds", cds).eq("year", newest.year))
+    .collect();
+}
+
 export async function loadSummaryRecord(
   ctx: QueryCtx,
   school: Doc<"schools">,
 ): Promise<SchoolRecord> {
   const q = byCds(ctx, school.cds);
   const [dashboard, enrollment, staff, privateDetail] = await Promise.all([
-    school.type === "private" ? Promise.resolve([]) : q.dashboard(),
+    school.type === "private" ? Promise.resolve([]) : loadCurrentDashboard(ctx, school.cds),
     school.type === "private" ? Promise.resolve(null) : q.enrollment(),
     school.type === "private" ? Promise.resolve(null) : q.staff(),
     school.type === "private" ? q.privateDetail() : Promise.resolve(null),

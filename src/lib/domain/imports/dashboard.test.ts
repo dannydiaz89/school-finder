@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { DashboardRow } from "@/lib/schemas/imports/dashboard";
 import { dashboardIndicatorFromRow, isSchoolAllStudentsRow } from "./dashboard";
 
-function raw(overrides: Record<string, string> = {}) {
+function raw(overrides: Record<string, string | undefined> = {}) {
   return DashboardRow.parse({
     cds: "34752830135194",
     rtype: "S",
@@ -92,6 +92,9 @@ describe("dashboardIndicatorFromRow", () => {
     ["ELPI", "EL", "S", true],
     ["ELPI", "ALL", "S", false],
     ["ELPI", "LTEL", "S", false],
+    // The 2023 ELPI file has no student-group column: its one row per school counts.
+    ["ELPI", undefined, "S", true],
+    ["ELPI", undefined, "D", false],
   ])("%s %s %s all-students row: %s", (indicator, studentgroup, rtype, expected) => {
     expect(isSchoolAllStudentsRow(raw({ indicator, studentgroup, rtype }))).toBe(expected);
   });

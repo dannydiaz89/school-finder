@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { fixtures } from "@/fixtures";
+import { currentDashboard } from "./history";
 import { rowFromSummary, summaryOf, toSummary } from "./records";
 
 const home = { latitude: 38.5816, longitude: -121.4944 };
@@ -23,7 +24,8 @@ describe("search summaries", () => {
   it("carries one entry per Dashboard indicator present", () => {
     const rated = fixtures.schools.find((r) => r.dashboard.length >= 4)!;
     const summary = summaryOf(rated);
-    for (const row of rated.dashboard) {
+    // Only the newest year is summarized; earlier years are history.
+    for (const row of currentDashboard(rated.dashboard)) {
       expect(summary.dashboard[row.indicator]).toEqual({
         level: row.level,
         status: row.status,

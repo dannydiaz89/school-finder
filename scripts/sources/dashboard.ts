@@ -14,14 +14,30 @@ import type { Source } from "./types";
 
 export const DASHBOARD_BASE = "https://www3.cde.ca.gov/researchfiles/cadashboard/";
 
-/** All eight indicator files for one Dashboard year, one importRuns record per file. */
+/** Indicators the state started publishing after 2023; earlier years have no file. */
+const INDICATOR_FIRST_YEAR: Partial<Record<(typeof DASHBOARD_INDICATORS)[number], number>> = {
+  science: 2024,
+};
+
+/** Every indicator file for one Dashboard year, one importRuns record per file. */
 export const dashboard: Source = {
   name: "dashboard",
   defaultYear: "2024-25",
   async run(ctx) {
     const year = endYear(ctx.year ?? this.defaultYear);
     const totals = { rowsRead: 0, rowsRejected: 0, rowsWritten: 0 };
+    if (ctx.indicator && !DASHBOARD_INDICATORS.some((id) => id === ctx.indicator)) {
+      throw new Error(
+        `--indicator must be one of ${DASHBOARD_INDICATORS.join(", ")}, got ${ctx.indicator}`,
+      );
+    }
     for (const indicator of DASHBOARD_INDICATORS) {
+      if (ctx.indicator && indicator !== ctx.indicator) continue;
+      const firstYear = INDICATOR_FIRST_YEAR[indicator];
+      if (firstYear !== undefined && year < firstYear) {
+        ctx.log(`== dashboard:${indicator} (${year}) skipped: first published in ${firstYear}`);
+        continue;
+      }
       const file = DASHBOARD_FILE_NAMES[indicator](year);
       const url = DASHBOARD_BASE + file;
       const path = join(ctx.cacheDir, "dashboard", String(year), file);

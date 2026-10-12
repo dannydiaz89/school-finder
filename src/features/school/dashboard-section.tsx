@@ -10,14 +10,19 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { spanIncludes } from "@/lib/domain/grades";
+import { statusUnit } from "@/lib/domain/history";
 import { indicatorKey } from "@/lib/labels";
 import { DASHBOARD_INDICATORS, type DashboardIndicator, type School } from "@/lib/schemas";
+import { DashboardTrend } from "./dashboard-trend";
 import { dashboardReportUrl } from "./links";
 import { Section } from "./section";
 
 export interface DashboardSectionProps {
   school: School;
+  /** The newest year's rows. */
   rows: DashboardIndicator[];
+  /** Every year on file, the newest included. Adds the by-year table when there are two or more. */
+  history?: DashboardIndicator[];
 }
 
 /** Latest reporting year among the rows, or null when there are none. */
@@ -30,7 +35,7 @@ export function dashboardYear(rows: DashboardIndicator[]): number | null {
  * indicator with the level as a dot plus word, the status in the
  * indicator's own unit, and the change from the prior year.
  */
-export function DashboardSection({ school, rows }: DashboardSectionProps) {
+export function DashboardSection({ school, rows, history = [] }: DashboardSectionProps) {
   const t = useTranslations("school");
   const common = useTranslations("common");
   const labels = useTranslations("labels");
@@ -84,6 +89,7 @@ export function DashboardSection({ school, rows }: DashboardSectionProps) {
         <p className="m-0 text-sm text-fg-muted">{t("dashboard.noLevel")}</p>
       ) : null}
       {showNotApplicable ? <p className="m-0 text-sm text-fg-muted">{t("notApplicable")}</p> : null}
+      <DashboardTrend rows={history} />
       {year !== null ? (
         <p className="m-0 text-base">
           <ExternalLink href={dashboardReportUrl(school.cds, year)}>
@@ -95,19 +101,20 @@ export function DashboardSection({ school, rows }: DashboardSectionProps) {
   );
 }
 
-/** ELA and Math are distance from standard in points; everything else is a percent. */
+/** Distance from standard in points, or a percent, depending on the indicator and year. */
 function statusText(
   t: ReturnType<typeof useTranslations<"school">>,
   common: ReturnType<typeof useTranslations<"common">>,
   row: DashboardIndicator,
 ): string {
   if (row.status === null) return common("noData");
-  if (row.indicator === "ela" || row.indicator === "math") {
+  const { indicator } = row;
+  if (indicator === "ela" || indicator === "math" || statusUnit(indicator, row.year) === "points") {
     if (row.status > 0) return t("dashboard.status.distanceAbove", { points: row.status });
     if (row.status < 0) return t("dashboard.status.distanceBelow", { points: -row.status });
     return t("dashboard.status.distanceAt");
   }
-  return t(`dashboard.status.${row.indicator}`, { value: row.status / 100 });
+  return t(`dashboard.status.${indicator}`, { value: row.status / 100 });
 }
 
 /**

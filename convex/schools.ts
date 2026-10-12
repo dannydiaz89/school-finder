@@ -17,7 +17,7 @@ import { isSpecializedPlacement } from "../src/lib/domain/filters";
 import { milesToMeters } from "../src/lib/domain/geo";
 import { rowRanges } from "../src/lib/domain/grid";
 import { normalizeName, rankByName } from "../src/lib/domain/names";
-import { buildComparison, rowFromSummary, summaryOf } from "../src/lib/domain/records";
+import { rowFromSummary, summaryOf, toDetail } from "../src/lib/domain/records";
 import { assembleSearchResult } from "../src/lib/domain/search";
 import {
   loadCaasppByCds,
@@ -79,12 +79,12 @@ async function detail(
   school: Doc<"schools">,
 ): Promise<SchoolDetail> {
   const record = await loadRecord(ctx, school);
-  if (school.type === "private") return { ...record, caasppComparison: null };
+  if (school.type === "private") return toDetail(record, [], []);
   const [district, state] = await Promise.all([
     school.districtCds ? loadCaasppByCds(ctx, school.districtCds) : Promise.resolve([]),
     loadCaasppByCds(ctx, STATE_CDS),
   ]);
-  return { ...record, caasppComparison: buildComparison(record.caaspp, district, state) };
+  return toDetail(record, district, state);
 }
 
 /** Rows within the radius, nearest first when the safety bound is exceeded. */
