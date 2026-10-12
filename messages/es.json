@@ -1,8 +1,9 @@
 {
   "common": {
-    "appName": "Buscador de escuelas",
+    "appName": "Buscador de escuelas de California",
     "appNameAccent": "School",
     "appNameRest": "Finder",
+    "appNameRegion": "California",
     "skipToContent": "Ir al contenido",
     "nav": {
       "search": "Buscar",

@@ -8,7 +8,7 @@ import { ThemeToggle } from "./theme-toggle";
 import { TextLink } from "./ui/text-link";
 
 /**
- * Top bar: wordmark, primary links, language and theme controls.
+ * Top bar: wordmark with the state under it, primary links, language and theme controls.
  * The address search field lives in the page, not here, so each page decides
  * whether to show it.
  */
@@ -18,10 +18,15 @@ export function SiteHeader() {
     <header className="flex flex-wrap items-center gap-x-7 gap-y-3 px-7 pt-4">
       <Link
         href="/"
-        className="flex items-baseline text-2xl font-medium tracking-[-0.3px] text-fg no-underline hover:no-underline whitespace-nowrap"
+        className="flex flex-col gap-1 whitespace-nowrap text-fg no-underline hover:no-underline"
       >
-        <span className="text-accent">{t("appNameAccent")}</span>
-        {t("appNameRest")}
+        <span className="text-2xl font-medium leading-none tracking-[-0.3px]">
+          <span className="text-accent">{t("appNameAccent")}</span>
+          {t("appNameRest")}
+        </span>
+        <span className="text-xs leading-none tracking-[0.6px] text-fg-muted">
+          {t("appNameRegion")}
+        </span>
       </Link>
       <nav aria-label={t("appName")} className="flex items-center gap-5 text-sm">
         {/* Leads back to the last search (browser state plus the query string, both runtime data). */}

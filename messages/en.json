@@ -1,8 +1,9 @@
 {
   "common": {
-    "appName": "School Finder",
+    "appName": "California School Finder",
     "appNameAccent": "School",
     "appNameRest": "Finder",
+    "appNameRegion": "California",
     "skipToContent": "Skip to content",
     "nav": {
       "search": "Search",

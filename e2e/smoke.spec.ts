@@ -47,8 +47,9 @@ async function expectNoSeriousAxeViolations(page: Page) {
 test("search page renders the header and the search form", async ({ page }) => {
   await page.goto("/en");
   const header = page.getByRole("banner");
-  await expect(header.getByRole("link", { name: "School Finder" })).toBeVisible();
-  await expect(header.getByRole("navigation", { name: "School Finder" })).toBeVisible();
+  // The wordmark: "SchoolFinder" with the state under it.
+  await expect(header.getByRole("link", { name: /SchoolFinder\s*California/ })).toBeVisible();
+  await expect(header.getByRole("navigation", { name: "California School Finder" })).toBeVisible();
   await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
   await expect(page.getByLabel("Address, city, ZIP code, or school")).toBeVisible();
   await expect(page.getByRole("button", { name: "Find schools" })).toBeVisible();
@@ -59,8 +60,10 @@ test("language select switches to Spanish and keeps the page", async ({ page }) 
   await page.getByLabel("Language").selectOption("es");
   await expect(page).toHaveURL(/\/es$/);
   await expect(page.locator("html")).toHaveAttribute("lang", "es");
-  await expect(page.getByRole("navigation", { name: "Buscador de escuelas" })).toBeVisible();
-  await expect(page).toHaveTitle(/Buscador de escuelas/);
+  await expect(
+    page.getByRole("navigation", { name: "Buscador de escuelas de California" }),
+  ).toBeVisible();
+  await expect(page).toHaveTitle(/Buscador de escuelas de California/);
 });
 
 test("theme select switches data-theme to dark and back", async ({ page }) => {
