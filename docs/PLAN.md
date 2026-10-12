@@ -207,6 +207,9 @@ Rules:
 
 - Compare highlights the best value in a row with a tinted, bold mark (and a screen-reader label), not bold alone. Dashboard rows compare the state's level first and the measure behind it second, with smaller-is-better for suspension and absenteeism. Values that print identically tie. A city search stores the place as properly written ("Downey, CA").
 
+- Grades shown are the directory's span trimmed to grades that have students on Census Day. The directory alone was wrong at the edges for about 4% of schools. The school page shows both when they differ.
+- Imports clear the page cache through `POST /api/revalidate` (bearer `REVALIDATE_SECRET`).
+
 ## Contract amendments
 
 Record each as: date, what changed, which streams were notified.
@@ -217,3 +220,4 @@ Record each as: date, what changed, which streams were notified.
 - 2026-10-11: fifth data-access function `getSchoolsInRadius` (`RadiusArgs` → `RadiusRows`) added for local filtering. Convex `schools` table gained optional `geoRow`, `geoCol` and index `by_geo`.
 - 2026-10-11: `GeocodeResult.kind` (address, city, zip; defaults to address) and URL parameter `loc` (city, zip) added for city and ZIP code search.
 - 2026-10-11: sixth data-access function `findSchoolsByName` (`NameSearchArgs` → `NameMatch[]`). Convex `schools` gained optional `searchText` and search index `search_text`. URL parameter `by=name` added.
+- 2026-10-11: `gradesServed` now means grades with enrolled students (directory span trimmed by enrollment). Convex `schools` gained optional `directoryGradesServed`. Env `REVALIDATE_SECRET` added.

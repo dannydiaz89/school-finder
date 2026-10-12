@@ -6,6 +6,7 @@ import {
   DashboardIndicator,
   Enrollment,
   Frpm,
+  GradeSpan,
   PrivateSchoolDetail,
   School,
   SearchSummary,
@@ -28,6 +29,8 @@ export default defineSchema({
     geoCol: v.optional(v.float64()),
     /** Normalized name, city, and district for name search (see src/lib/domain/names.ts). */
     searchText: v.optional(v.string()),
+    /** The grade span exactly as the state directory lists it; `gradesServed` is this trimmed to grades with students. */
+    directoryGradesServed: v.optional(zodToConvex(GradeSpan)),
   })
     .index("by_geo", ["geoRow", "geoCol"])
     .searchIndex("search_text", { searchField: "searchText" })

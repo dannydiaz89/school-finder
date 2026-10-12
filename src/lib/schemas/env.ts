@@ -14,6 +14,8 @@ const ServerEnv = z
     DATA_SOURCE: DataSource.default("fixtures"),
     NEXT_PUBLIC_CONVEX_URL: z.url().optional(),
     CONVEX_DEPLOYMENT: z.string().optional(),
+    /** Lets the import script clear cached pages through POST /api/revalidate. */
+    REVALIDATE_SECRET: z.string().min(16).optional(),
   })
   .refine((e) => e.DATA_SOURCE !== "convex" || e.NEXT_PUBLIC_CONVEX_URL, {
     message: "NEXT_PUBLIC_CONVEX_URL is required when DATA_SOURCE=convex",
@@ -31,6 +33,7 @@ export function getEnv(): ServerEnv {
       DATA_SOURCE: process.env.DATA_SOURCE,
       NEXT_PUBLIC_CONVEX_URL: process.env.NEXT_PUBLIC_CONVEX_URL,
       CONVEX_DEPLOYMENT: process.env.CONVEX_DEPLOYMENT,
+      REVALIDATE_SECRET: process.env.REVALIDATE_SECRET || undefined,
     });
   }
   return cached;

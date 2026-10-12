@@ -58,8 +58,8 @@ export function FactsList({ school, privateDetail, home, place }: FactsListProps
       "grades",
       t("facts.grades"),
       joinParts(common, [
-        t("facts.gradesOffered", { span: gradeSpanText(common, labels, offered) }),
         t("facts.gradesServed", { span: gradeSpanText(common, labels, served) }),
+        t("facts.gradesOffered", { span: gradeSpanText(common, labels, offered) }),
       ]),
     );
   } else {

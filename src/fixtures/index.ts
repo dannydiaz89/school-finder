@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { CaasppResult, IsoDate, SchoolRecord } from "@/lib/schemas";
+import { trimSpanToEnrollment } from "@/lib/domain/grades";
 import raw from "./schools.json";
 
 /**
@@ -20,4 +21,20 @@ export const FixtureFile = z
   .strict();
 export type FixtureFile = z.infer<typeof FixtureFile>;
 
-export const fixtures: FixtureFile = FixtureFile.parse(raw);
+const parsed = FixtureFile.parse(raw);
+
+/**
+ * The file holds grade spans as the state directory lists them. Like the
+ * import, show the grades that actually have students (see trimSpanToEnrollment).
+ */
+export const fixtures: FixtureFile = {
+  ...parsed,
+  schools: parsed.schools.map((record) => {
+    const listed = record.school.gradesServed;
+    if (!listed || !record.enrollment) return record;
+    const served = trimSpanToEnrollment(listed, record.enrollment.byGrade);
+    return served === listed
+      ? record
+      : { ...record, school: { ...record.school, gradesServed: served } };
+  }),
+};

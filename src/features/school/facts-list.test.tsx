@@ -55,7 +55,9 @@ describe("FactsList", () => {
   it("shows offered and served spans when they differ", async () => {
     const detail = await loadDetail(CDS.legion);
     renderWithIntl(<FactsList school={detail.school} privateDetail={null} />);
-    expect(facts().Grades).toBe("9–12 offered · 10–12 served");
+    expect(facts().Grades).toBe(
+      "10–12 with students enrolled · 9–12 listed in the state directory",
+    );
     expect(facts().Type).toBe("District · public · Continuation · High school");
   });
 

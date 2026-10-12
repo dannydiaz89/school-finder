@@ -231,6 +231,8 @@ None are needed. The state and federal files above cover everything in the mocku
 
 - **The contract test wipes the deployment it runs against.** `CONVEX_CONTRACT_TESTS=1 pnpm test src/lib/data/convex.contract.test.ts` clears every data table and loads the 40 fixture schools. Run it against a throwaway Convex deployment, or re-run `pnpm run import all` afterwards (about ten minutes with a warm `.cache/`).
 - **Search summaries.** `pnpm run import search-rows` recomputes the summary stored on each school (about a minute for the state). It runs automatically at the end of any other import.
+- **Clearing cached pages.** Pages cache school data for hours. `pnpm run import` calls `POST /api/revalidate` when it finishes, which needs `REVALIDATE_SECRET` in the env file and, when the app is not on localhost:3000, `APP_URL`. Without the secret the import says so and pages catch up when the cache expires.
+- **Grade spans.** The directory's `GSoffered` and `GSserved` are self-reported and list an end grade with no students for about 4% of schools (380 of 9,781): Downey High is listed 8-12 with no 8th graders among 4,051 students, Vacaville High 4-12 with everyone in 9-12. The app shows the listed span trimmed to grades with Census Day students (`trimSpanToEnrollment`), and a school's own page also shows the directory's listing when it differs. The rule only trims; it never adds a grade. A school that added a grade after the enrollment file's year reads one grade short until the next file.
 - **Deploy order.** Deploy Convex functions before the web app. New result fields carry defaults so a brief mismatch does not break pages.
 
 ## Unverified

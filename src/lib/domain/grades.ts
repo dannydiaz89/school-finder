@@ -65,3 +65,49 @@ export function spanOverlapsBand(span: GradeSpan, band: GradeBand): boolean {
 export function spanEndpoints(span: GradeSpan): [Grade, Grade] {
   return [span.low, span.high];
 }
+
+/** Grades the enrollment files count. Preschool and adult programs are not in them. */
+const COUNTED: readonly Grade[] = [
+  "K",
+  "1",
+  "2",
+  "3",
+  "4",
+  "5",
+  "6",
+  "7",
+  "8",
+  "9",
+  "10",
+  "11",
+  "12",
+];
+
+/**
+ * Narrow a listed grade span to the grades that have students.
+ *
+ * The state directory's grade span is self-reported and wrong at the edges
+ * for about 4% of schools: Downey High is listed as 8-12 with no 8th graders
+ * among 4,051 students, Vacaville High as 4-12 with everyone in 9-12. Census
+ * Day enrollment by grade is the better evidence, so grades at either end of
+ * the listed span with no students are dropped.
+ *
+ * It only ever trims. It never widens a span (one stray student in a grade is
+ * not a grade the school offers), never trims preschool or adult ends (the
+ * enrollment files do not count them), and leaves the span alone when the
+ * school has no counted students at all.
+ */
+export function trimSpanToEnrollment(
+  span: GradeSpan,
+  byGrade: readonly { grade: Grade; count: number }[],
+): GradeSpan {
+  const has = new Set(byGrade.filter((g) => g.count > 0).map((g) => g.grade));
+  // Transitional kindergarten is part of kindergarten in a directory span.
+  if (has.has("TK")) has.add("K");
+  const inSpan = COUNTED.filter((g) => spanIncludes(span, g));
+  const withStudents = inSpan.filter((g) => has.has(g));
+  if (withStudents.length === 0) return span;
+  const low = COUNTED.includes(span.low) ? withStudents[0] : span.low;
+  const high = COUNTED.includes(span.high) ? withStudents[withStudents.length - 1] : span.high;
+  return low === span.low && high === span.high ? span : { low, high };
+}

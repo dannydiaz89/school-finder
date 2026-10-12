@@ -15,6 +15,7 @@
  *
  * Credentials: CONVEX_DEPLOY_KEY, or the CLI login from `npx convex login`.
  */
+import { existsSync, readFileSync } from "node:fs";
 import { parseArgs } from "node:util";
 import { countyCode } from "../src/lib/domain/imports/counties";
 import { adminClient } from "./lib/convex-admin";
@@ -46,6 +47,41 @@ function usage(): never {
       `[--year 2024-25] [--cache .cache] [--county Sacramento] [--dry-run] [--batch 500]`,
   );
   process.exit(2);
+}
+
+/**
+ * Pages cache school data for hours. Tell the running app to drop that cache
+ * so an import shows up at once. Needs REVALIDATE_SECRET (and APP_URL when the
+ * app is not on localhost:3000) in the env file; without them this is a hint.
+ */
+async function clearPageCache(envFile: string, log: (message: string) => void) {
+  const env = existsSync(envFile) ? readFileSync(envFile, "utf8") : "";
+  const read = (name: string) =>
+    process.env[name] ?? new RegExp(`^${name}=(\\S+)`, "m").exec(env)?.[1];
+  const secret = read("REVALIDATE_SECRET");
+  const appUrl = read("APP_URL") ?? "http://localhost:3000";
+  if (!secret) {
+    log(
+      "Page cache not cleared: REVALIDATE_SECRET is not set. Pages may show old data for a few hours.",
+    );
+    return;
+  }
+  try {
+    const response = await fetch(`${appUrl}/api/revalidate`, {
+      method: "POST",
+      headers: { authorization: `Bearer ${secret}` },
+      signal: AbortSignal.timeout(5000),
+    });
+    log(
+      response.ok
+        ? `Page cache cleared at ${appUrl}`
+        : `Page cache not cleared: ${appUrl} answered ${response.status}`,
+    );
+  } catch {
+    log(
+      `Page cache not cleared: ${appUrl} is not reachable. Restart the app or wait for the cache to expire.`,
+    );
+  }
 }
 
 async function main() {
@@ -102,6 +138,7 @@ async function main() {
     ctx.log(`   ${source.name} took ${((Date.now() - started) / 1000).toFixed(1)}s`);
   }
   console.table(summary);
+  if (!ctx.dryRun) await clearPageCache(values.env, ctx.log);
 }
 
 main().catch((err) => {

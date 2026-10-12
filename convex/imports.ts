@@ -15,6 +15,7 @@ import {
   StaffRatio,
 } from "../src/lib/schemas";
 import { cellOf } from "../src/lib/domain/grid";
+import { trimSpanToEnrollment } from "../src/lib/domain/grades";
 import { searchTextOf } from "../src/lib/domain/names";
 import { loadSummaryRecord } from "./lib/records";
 import { summaryOf } from "../src/lib/domain/records";
@@ -83,6 +84,8 @@ export const upsertSchools = zInternalMutation({
         geoRow: cell?.row,
         geoCol: cell?.col,
         searchText: searchTextOf(school.name, school.address.city, school.district),
+        // The span as the directory lists it. rebuildSummaries trims `gradesServed` to grades with students.
+        directoryGradesServed: school.gradesServed,
       };
       if (existing) await ctx.db.replace(existing._id, doc);
       else await ctx.db.insert("schools", doc);
@@ -155,13 +158,22 @@ export const rebuildSummaries = internalMutation({
       .query("schools")
       .paginate({ cursor: args.cursor, numItems: args.pageSize ?? 100 });
     for (const school of page.page) {
-      const summary = summaryOf(await loadSummaryRecord(ctx, school));
+      const record = await loadSummaryRecord(ctx, school);
+      const summary = summaryOf(record);
       const cell = school.coordinates ? cellOf(school.coordinates) : undefined;
+      // Always start from the directory's own span, so a later enrollment file can widen it again.
+      const listed = school.directoryGradesServed ?? school.gradesServed;
+      const served =
+        listed && record.enrollment
+          ? trimSpanToEnrollment(listed, record.enrollment.byGrade)
+          : listed;
       await ctx.db.patch(school._id, {
         summary,
         geoRow: cell?.row,
         geoCol: cell?.col,
         searchText: searchTextOf(school.name, school.address.city, school.district),
+        directoryGradesServed: listed,
+        gradesServed: served,
       });
     }
     return { updated: page.page.length, cursor: page.isDone ? null : page.continueCursor };
