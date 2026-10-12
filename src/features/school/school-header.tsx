@@ -7,6 +7,7 @@ import { TypeDot } from "@/components/ui/type-dot";
 import type { Link } from "@/i18n/navigation";
 import { affiliationKey, instructionLevelKey } from "@/lib/labels";
 import type { School } from "@/lib/schemas";
+import { MySchoolsToggle } from "@/features/my-schools/my-schools-toggle";
 import { CompareToggle } from "./compare-toggle";
 import { gradeSpanText, joinParts } from "./format";
 import { dashboardReportUrl, directionsUrl } from "./links";
@@ -53,6 +54,7 @@ export function SchoolHeader({ school, dashboardYear, backHref }: SchoolHeaderPr
         <Suspense fallback={<Skeleton className="h-4 w-28" />}>
           <CompareToggle cds={school.cds} />
         </Suspense>
+        <MySchoolsToggle cds={school.cds} />
         {school.website ? (
           <ExternalLink href={school.website}>{common("actions.website")}</ExternalLink>
         ) : null}

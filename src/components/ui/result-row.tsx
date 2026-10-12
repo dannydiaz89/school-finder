@@ -1,10 +1,11 @@
 "use client";
 
+import { gradeSpanText } from "./grade-span";
 import { useTranslations } from "next-intl";
 import type { ComponentProps, ReactNode } from "react";
 import { Link } from "@/i18n/navigation";
 import { formatMiles } from "@/lib/domain/geo";
-import { affiliationKey, gradeKey } from "@/lib/labels";
+import { affiliationKey } from "@/lib/labels";
 import type { CdsCode, DashboardIndicatorId, SchoolSummary } from "@/lib/schemas";
 import { Button } from "./button";
 import { cx } from "./cx";
@@ -23,6 +24,11 @@ export interface ResultRowProps {
   onToggleCompare: (cds: CdsCode) => void;
   /** Disable "Add to compare" when the list is full; "Remove" stays enabled. */
   compareDisabled?: boolean;
+  /** Whether the school is in My schools. The button appears only when `onToggleMySchools` is given. */
+  inMySchools?: boolean;
+  onToggleMySchools?: (cds: CdsCode) => void;
+  /** Disable "Add to My schools" when that list is full. */
+  mySchoolsDisabled?: boolean;
   /** Which Dashboard indicators to show as level dots, in order. Indicators without data are skipped. */
   indicators?: readonly DashboardIndicatorId[];
   /** Extra gray line under the meta text, e.g. why a hidden school is shown. */
@@ -50,6 +56,9 @@ export function ResultRow({
   inCompare,
   onToggleCompare,
   compareDisabled,
+  inMySchools = false,
+  onToggleMySchools,
+  mySchoolsDisabled,
   indicators = DEFAULT_INDICATORS,
   note,
   className,
@@ -61,9 +70,7 @@ export function ResultRow({
     parts.filter((p): p is string => Boolean(p)).reduce((a, b) => t("join", { a, b }));
 
   const span = school.gradesServed ?? school.gradesOffered;
-  const grades = span
-    ? t("gradeSpan", { low: labels(gradeKey(span.low)), high: labels(gradeKey(span.high)) })
-    : null;
+  const grades = span ? gradeSpanText(t, labels, span) : null;
   const context =
     school.type === "private"
       ? school.affiliation
@@ -115,6 +122,16 @@ export function ResultRow({
         >
           {inCompare ? t("actions.inCompareList") : t("actions.addToCompare")}
         </Button>
+        {onToggleMySchools ? (
+          <Button
+            variant="text"
+            aria-pressed={inMySchools}
+            disabled={mySchoolsDisabled && !inMySchools}
+            onClick={() => onToggleMySchools(school.cds)}
+          >
+            {inMySchools ? t("actions.inMySchools") : t("actions.addToMySchools")}
+          </Button>
+        ) : null}
         <IntentLink href={href}>{t("actions.details")}</IntentLink>
         {school.website ? (
           <ExternalLink href={school.website}>{t("actions.website")}</ExternalLink>

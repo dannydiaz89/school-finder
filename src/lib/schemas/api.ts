@@ -139,9 +139,42 @@ export const NameSearchArgs = z
   .strict();
 export type NameSearchArgs = z.infer<typeof NameSearchArgs>;
 
-/** A search row with no distance: a name search has no center to measure from. */
-export const NameMatch = SchoolSummary.omit({ distanceMeters: true }).strict();
-export type NameMatch = z.infer<typeof NameMatch>;
+/**
+ * A school with its search summary and no distance: what a row needs when
+ * there is no place to measure from. One stored document per school.
+ */
+export const SchoolBrief = SchoolSummary.omit({ distanceMeters: true }).strict();
+export type SchoolBrief = z.infer<typeof SchoolBrief>;
+
+/** A name search has no center to measure from, so its rows are briefs. */
+export const NameMatch = SchoolBrief;
+export type NameMatch = SchoolBrief;
+
+/** How many schools the My schools list holds. */
+export const MAX_SAVED_SCHOOLS = 50;
+
+export const GetSchoolBriefsArgs = z
+  .object({
+    cds: z.array(CdsCode).min(1).max(MAX_SAVED_SCHOOLS),
+  })
+  .strict();
+export type GetSchoolBriefsArgs = z.infer<typeof GetSchoolBriefsArgs>;
+
+/**
+ * One entry of the My schools list. `addedAt` is kept so that a list moved to
+ * an account later can be merged with one made on another device.
+ */
+export const SavedSchool = z.object({ cds: CdsCode, addedAt: z.iso.datetime() }).strict();
+export type SavedSchool = z.infer<typeof SavedSchool>;
+
+/** The My schools list as stored. Versioned so its shape can change without losing lists. */
+export const SavedSchoolList = z
+  .object({
+    version: z.literal(1),
+    schools: z.array(SavedSchool).max(MAX_SAVED_SCHOOLS),
+  })
+  .strict();
+export type SavedSchoolList = z.infer<typeof SavedSchoolList>;
 
 export const GetSchoolArgs = z.object({ cds: CdsCode }).strict();
 export type GetSchoolArgs = z.infer<typeof GetSchoolArgs>;

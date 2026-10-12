@@ -28,3 +28,21 @@ const POINTS_BAND = 3;
 export function maintainedBand(indicator: DashboardIndicatorId, year: number): number {
   return statusUnit(indicator, year) === "points" ? POINTS_BAND : MAINTAINED_BAND[indicator];
 }
+
+export type ChangeKind = "increased" | "declined" | "maintained";
+
+/**
+ * How the Dashboard would name a year-over-year change: "Maintained" inside
+ * the band, otherwise by the sign of the change. Null when there is no change
+ * on file. Lets a row say "Maintained" from the number alone, without the
+ * file's change-level code.
+ */
+export function changeKind(
+  indicator: DashboardIndicatorId,
+  year: number,
+  change: number | null | undefined,
+): ChangeKind | null {
+  if (change === null || change === undefined) return null;
+  if (Math.round(Math.abs(change) * 10) / 10 < maintainedBand(indicator, year)) return "maintained";
+  return change > 0 ? "increased" : "declined";
+}

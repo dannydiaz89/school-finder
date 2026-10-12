@@ -1,6 +1,7 @@
 import { useTranslations } from "next-intl";
 import { Suspense } from "react";
 import { CompareNavLink } from "@/features/compare";
+import { MySchoolsNavLink } from "@/features/my-schools";
 import { SearchNavLink } from "@/features/search/search-nav-link";
 import { Link } from "@/i18n/navigation";
 import { LocaleSwitch } from "./locale-switch";
@@ -37,6 +38,8 @@ export function SiteHeader() {
         <Suspense fallback={<TextLink href="/compare">{t("nav.compare")}</TextLink>}>
           <CompareNavLink />
         </Suspense>
+        {/* The saved list is the browser's, so the count settles after hydration. */}
+        <MySchoolsNavLink />
         <TextLink href="/about/data">{t("nav.data")}</TextLink>
       </nav>
       <div className="ml-auto flex items-center gap-4">

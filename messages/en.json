@@ -10,7 +10,9 @@
       "compare": "Compare",
       "compareWithCount": "Compare ({count})",
       "data": "Data sources",
-      "styleguide": "Style guide"
+      "styleguide": "Style guide",
+      "mySchools": "My schools",
+      "mySchoolsWithCount": "My schools ({count})"
     },
     "theme": {
       "label": "Theme",
@@ -36,7 +38,9 @@
       "clearAll": "Clear all",
       "showMore": "More schools",
       "back": "Back",
-      "close": "Close"
+      "close": "Close",
+      "addToMySchools": "Add to My schools",
+      "inMySchools": "In My schools"
     },
     "notRated": "Not rated",
     "notReported": "Not reported",
@@ -288,6 +292,24 @@
     "privateNote": "Private schools file an annual affidavit with the California Department of Education but do not take state tests or appear on the Dashboard, so those rows show \"Not rated\".",
     "best": "best in this row",
     "noPrograms": "None listed"
+  },
+  "mySchools": {
+    "heading": "My schools",
+    "count": "{count, plural, one {# school} other {# schools}}",
+    "subtitle": "{count, plural, one {# school} other {# schools}} · California School Dashboard {year}: level, result, and change from the year before",
+    "storageNote": "This list is saved in this browser. It does not appear in another browser or on another device, and clearing site data removes it.",
+    "emptyTitle": "No schools saved yet",
+    "empty": "Add a school from search results or from its page. The list holds up to {max, number}.",
+    "find": "Find schools",
+    "columns": {
+      "school": "School",
+      "students": "Students"
+    },
+    "points": "{value} pts",
+    "remove": "Remove {name} from My schools",
+    "full": "The list is full at {max, number} schools.",
+    "missing": "{count, plural, one {# saved school is} other {# saved schools are}} not in the current state data.",
+    "removeMissing": "Remove from the list"
   },
   "data": {
     "title": "Data sources",

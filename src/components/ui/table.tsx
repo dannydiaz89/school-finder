@@ -20,7 +20,9 @@ export interface TableProps extends TableHTMLAttributes<HTMLTableElement> {
  */
 export function Table({ minWidth, wrapperClassName, className, style, ...rest }: TableProps) {
   return (
-    <div className={cx("w-full overflow-x-auto", wrapperClassName)}>
+    // `relative` matters: screen-reader-only text inside a cell is absolutely positioned, and
+    // without a positioned scroll box it escapes the box and makes the whole page scroll sideways.
+    <div className={cx("relative w-full overflow-x-auto", wrapperClassName)}>
       <table
         className={cx("w-full border-collapse text-left text-base text-fg", className)}
         style={minWidth ? { minWidth, ...style } : style}

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   parseCompareParams,
+  parseMySchoolsParams,
   parseSearchParams,
   serializeSearchParams,
   toSearchFilters,
@@ -83,6 +84,26 @@ describe("search location kind", () => {
     const out = serializeSearchParams({ address: "95816", loc: "zip", lat: 38.5, lng: -121.4 });
     expect(out.get("loc")).toBe("zip");
     expect(parseCompareParams({ loc: "zip", address: "95816" })).toMatchObject({ loc: "zip" });
+  });
+});
+
+describe("parseMySchoolsParams", () => {
+  it("reads the list, without duplicates", () => {
+    expect(
+      parseMySchoolsParams(
+        new URLSearchParams("schools=34674396034292,34674390102038,34674396034292"),
+      ).schools,
+    ).toEqual(["34674396034292", "34674390102038"]);
+  });
+
+  it("is empty when the parameter is missing or holds a bad code", () => {
+    expect(parseMySchoolsParams(new URLSearchParams()).schools).toEqual([]);
+    expect(parseMySchoolsParams({ schools: "34674396034292,not-a-code" }).schools).toEqual([]);
+  });
+
+  it("keeps at most fifty", () => {
+    const many = Array.from({ length: 60 }, (_, i) => `34674396${String(i).padStart(6, "0")}`);
+    expect(parseMySchoolsParams({ schools: many.join(",") }).schools).toHaveLength(50);
   });
 });
 

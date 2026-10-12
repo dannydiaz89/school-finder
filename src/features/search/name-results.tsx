@@ -3,6 +3,7 @@
 import { useMemo } from "react";
 import { ResultRow } from "@/components/ui/result-row";
 import { useCompareList } from "@/features/compare/use-compare-list";
+import { useMySchools } from "@/features/my-schools/use-my-schools";
 import type { NameMatch } from "@/lib/schemas";
 
 /**
@@ -12,6 +13,7 @@ import type { NameMatch } from "@/lib/schemas";
  */
 export function NameResults({ matches }: { matches: NameMatch[] }) {
   const compare = useCompareList();
+  const mine = useMySchools();
   // ResultRow hides a distance that is not finite.
   const rows = useMemo(
     () => matches.map((match) => ({ ...match, distanceMeters: Number.POSITIVE_INFINITY })),
@@ -28,6 +30,9 @@ export function NameResults({ matches }: { matches: NameMatch[] }) {
           inCompare={compare.has(summary.school.cds)}
           onToggleCompare={compare.toggle}
           compareDisabled={compare.isFull}
+          inMySchools={mine.has(summary.school.cds)}
+          onToggleMySchools={mine.toggle}
+          mySchoolsDisabled={mine.isFull}
         />
       ))}
     </ol>

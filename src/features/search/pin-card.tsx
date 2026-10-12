@@ -1,11 +1,12 @@
 "use client";
 
+import { gradeSpanText } from "@/components/ui/grade-span";
 import { useTranslations } from "next-intl";
 import { IntentLink } from "@/components/ui/intent-link";
 import { LevelDot } from "@/components/ui/level-dot";
 import { TypeDot } from "@/components/ui/type-dot";
 import { formatMiles } from "@/lib/domain/geo";
-import { affiliationKey, gradeKey } from "@/lib/labels";
+import { affiliationKey } from "@/lib/labels";
 import type { SchoolSummary } from "@/lib/schemas";
 
 export interface PinCardProps {
@@ -39,9 +40,7 @@ export function PinCard({ summary, number, pinned = false, detailsHref, onClose 
   };
 
   const span = school.gradesServed ?? school.gradesOffered;
-  const grades = span
-    ? t("gradeSpan", { low: labels(gradeKey(span.low)), high: labels(gradeKey(span.high)) })
-    : null;
+  const grades = span ? gradeSpanText(t, labels, span) : null;
   const distance = Number.isFinite(distanceMeters)
     ? t("miles", { count: formatMiles(distanceMeters) })
     : null;

@@ -60,6 +60,36 @@ describe("ResultRow", () => {
     expect(onToggleCompare).toHaveBeenCalledWith(judah.school.cds);
   });
 
+  it("offers My schools only when a handler is given", async () => {
+    const onToggleMySchools = vi.fn();
+    const row = (props: Partial<React.ComponentProps<typeof ResultRow>>) => (
+      <ol className="list-none">
+        <ResultRow
+          number={1}
+          summary={judah}
+          href={`/school/${judah.school.cds}`}
+          inCompare={false}
+          onToggleCompare={() => {}}
+          {...props}
+        />
+      </ol>
+    );
+    const { rerender } = renderWithIntl(row({}));
+    expect(screen.queryByRole("button", { name: /My schools/ })).toBeNull();
+
+    rerender(row({ onToggleMySchools }));
+    const add = screen.getByRole("button", { name: "Add to My schools" });
+    expect(add).toHaveAttribute("aria-pressed", "false");
+    await userEvent.click(add);
+    expect(onToggleMySchools).toHaveBeenCalledWith(judah.school.cds);
+
+    rerender(row({ onToggleMySchools, inMySchools: true, mySchoolsDisabled: true }));
+    // Full list: a school already in it can still be taken out.
+    expect(screen.getByRole("button", { name: "In My schools" })).toBeEnabled();
+    rerender(row({ onToggleMySchools, mySchoolsDisabled: true }));
+    expect(screen.getByRole("button", { name: "Add to My schools" })).toBeDisabled();
+  });
+
   it("shows affiliation and Not rated for a private school and keeps Remove enabled when full", async () => {
     const onToggleCompare = vi.fn();
     renderWithIntl(

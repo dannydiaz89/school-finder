@@ -1,12 +1,14 @@
 import "server-only";
 import {
   GetSchoolArgs,
+  GetSchoolBriefsArgs,
   GetSchoolsByCdsArgs,
   NameMatch,
   NameSearchArgs,
   NearbyArgs,
   RadiusArgs,
   RadiusRows,
+  SchoolBrief,
   SchoolDetail,
   SchoolSummary,
   SearchArgs,
@@ -16,7 +18,7 @@ import { getEnv } from "@/lib/schemas/env";
 import { z } from "zod";
 
 /**
- * The data-access boundary. Pages and route handlers call these four
+ * The data-access boundary. Pages and route handlers call these
  * functions and nothing else. Arguments and results are validated against the
  * Zod contracts on the way in and out, so a backend bug surfaces here with a
  * readable error instead of as a broken page.
@@ -32,6 +34,7 @@ export interface SchoolDataSource {
   getSchoolsByCds(args: GetSchoolsByCdsArgs): Promise<SchoolDetail[]>;
   getSchoolsInRadius(args: RadiusArgs): Promise<RadiusRows>;
   findSchoolsByName(args: NameSearchArgs): Promise<NameMatch[]>;
+  getSchoolBriefs(args: GetSchoolBriefsArgs): Promise<SchoolBrief[]>;
 }
 
 let source: SchoolDataSource | undefined;
@@ -100,4 +103,16 @@ export async function findSchoolsByName(
   const args = NameSearchArgs.parse(input);
   const result = await (await resolveSource()).findSchoolsByName(args);
   return z.array(NameMatch).parse(result);
+}
+
+/**
+ * Summary rows for a list of schools, in the order asked, unknown codes
+ * dropped. One stored document per school, so a long saved list stays cheap.
+ */
+export async function getSchoolBriefs(
+  input: z.input<typeof GetSchoolBriefsArgs>,
+): Promise<SchoolBrief[]> {
+  const args = GetSchoolBriefsArgs.parse(input);
+  const result = await (await resolveSource()).getSchoolBriefs(args);
+  return z.array(SchoolBrief).parse(result);
 }

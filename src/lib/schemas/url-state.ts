@@ -4,6 +4,7 @@ import {
   DEFAULT_SEARCH_FILTERS,
   GradeBand,
   MAX_COMPARE,
+  MAX_SAVED_SCHOOLS,
   MAX_RADIUS_MILES,
   Program,
   SearchFilters,
@@ -84,6 +85,13 @@ export const CompareParams = z
   .transform((p) => ({ ...p, compare: p.compare.slice(0, MAX_COMPARE) }));
 export type CompareParams = z.infer<typeof CompareParams>;
 
+/** The My schools page: the saved list, carried in the address so the server can load it. */
+export const MySchoolsParams = z
+  .object({ schools: csv(CdsCode).default([]) })
+  .strict()
+  .transform((p) => ({ schools: p.schools.slice(0, MAX_SAVED_SCHOOLS) }));
+export type MySchoolsParams = z.infer<typeof MySchoolsParams>;
+
 function pick(raw: RawParams, keys: readonly string[]) {
   const out: Record<string, string | undefined> = {};
   for (const key of keys) {
@@ -113,6 +121,12 @@ export function parseCompareParams(raw: RawParams): CompareParams {
   // A bad CDS code in the list drops the whole list rather than guessing.
   delete picked.compare;
   return CompareParams.parse(picked);
+}
+
+export function parseMySchoolsParams(raw: RawParams): MySchoolsParams {
+  const result = MySchoolsParams.safeParse(pick(raw, ["schools"]));
+  // A bad CDS code in the list drops the whole list rather than guessing.
+  return result.success ? result.data : { schools: [] };
 }
 
 /** Turn parsed search state into filters for the data-access API. */

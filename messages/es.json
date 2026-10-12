@@ -10,7 +10,9 @@
       "compare": "Comparar",
       "compareWithCount": "Comparar ({count})",
       "data": "Fuentes de datos",
-      "styleguide": "Guía de estilo"
+      "styleguide": "Guía de estilo",
+      "mySchools": "Mis escuelas",
+      "mySchoolsWithCount": "Mis escuelas ({count})"
     },
     "theme": {
       "label": "Tema",
@@ -36,7 +38,9 @@
       "clearAll": "Borrar todo",
       "showMore": "Más escuelas",
       "back": "Volver",
-      "close": "Cerrar"
+      "close": "Cerrar",
+      "addToMySchools": "Agregar a Mis escuelas",
+      "inMySchools": "En Mis escuelas"
     },
     "notRated": "Sin calificación",
     "notReported": "No reportado",
@@ -288,6 +292,24 @@
     "privateNote": "Las escuelas privadas presentan una declaración anual al Departamento de Educación de California, pero no presentan las pruebas estatales ni aparecen en el Dashboard, por eso esas filas muestran \"Sin calificación\".",
     "best": "el mejor de esta fila",
     "noPrograms": "Ninguno indicado"
+  },
+  "mySchools": {
+    "heading": "Mis escuelas",
+    "count": "{count, plural, one {# escuela} other {# escuelas}}",
+    "subtitle": "{count, plural, one {# escuela} other {# escuelas}} · California School Dashboard {year}: nivel, resultado y cambio respecto al año anterior",
+    "storageNote": "Esta lista se guarda en este navegador. No aparece en otro navegador ni en otro dispositivo, y se elimina al borrar los datos del sitio.",
+    "emptyTitle": "Aún no hay escuelas guardadas",
+    "empty": "Agregue una escuela desde los resultados de búsqueda o desde su página. La lista admite hasta {max, number}.",
+    "find": "Buscar escuelas",
+    "columns": {
+      "school": "Escuela",
+      "students": "Estudiantes"
+    },
+    "points": "{value} pts",
+    "remove": "Quitar {name} de Mis escuelas",
+    "full": "La lista está completa con {max, number} escuelas.",
+    "missing": "{count, plural, one {# escuela guardada no está} other {# escuelas guardadas no están}} en los datos estatales actuales.",
+    "removeMissing": "Quitar de la lista"
   },
   "data": {
     "title": "Fuentes de datos",

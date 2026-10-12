@@ -34,7 +34,7 @@ Next.js App Router, TypeScript strict, Tailwind v4 with design tokens, next-intl
 ## Rules that are not negotiable
 
 1. **Zod is the source of truth.** A type is `z.infer` of a schema in `src/lib/schemas/`. Never write an interface or type alias that describes data; derive it. Untrusted input (query strings, env, source files, external responses) is parsed with a schema before use. Objects we own are `.strict()`.
-2. **Convex is behind the boundary.** UI code imports from `@/lib/data`, never from `convex/` or `convex/react`. No `useQuery` subscriptions in pages. The six functions in `src/lib/data/index.ts` are the whole API; add another only as a contract amendment in `docs/PLAN.md`. Pages call the cached wrappers in `src/lib/data/cached.ts`, never the adapters.
+2. **Convex is behind the boundary.** UI code imports from `@/lib/data`, never from `convex/` or `convex/react`. No `useQuery` subscriptions in pages. The seven functions in `src/lib/data/index.ts` are the whole API; add another only as a contract amendment in `docs/PLAN.md`. Pages call the cached wrappers in `src/lib/data/cached.ts`, never the adapters.
 3. **Convex functions stay thin.** No filtering, sorting, or scoring logic inside `convex/*.ts`. Put it in `src/lib/domain/` with a unit test and call it from the function.
 4. **Copy is factual and neutral.** The app shows what public files say and nothing else. No descriptions of what a school type is like, no claims about how to enroll (lottery, application, boundaries), no tuition, no program descriptions beyond the directory's magnet, multilingual, and virtual flags. If context is needed, link to the source.
 5. **Charter schools are public.** Labels read "District · public", "Charter · public", "Private". Never present charter as not public.
@@ -44,6 +44,10 @@ Next.js App Router, TypeScript strict, Tailwind v4 with design tokens, next-intl
 ## Compare list
 
 The compare list lives in the browser's local storage, read through `useCompareList()` (`src/features/compare/`). Do not read it from the URL: only the compare page looks at its `compare` parameter, to load data and to adopt a link opened directly. A link that should set a specific comparison calls `compare.set(list)` on click. Server-rendered HTML cannot know the list, so compare buttons settle after hydration.
+
+## My schools
+
+A list of up to 50 schools a visitor keeps to follow, shown at `/my-schools` as one row per school with each Dashboard indicator's level, result, and change from the year before. It lives in the browser's local storage. Components reach it only through `useMySchools()` or `MySchoolsToggle` (`src/features/my-schools/`), and the hook reads and writes through the `SavedSchoolsStore` interface in `store.ts`. Moving the list to accounts means a second implementation of that interface; do not read storage anywhere else. The page address carries the list (`?schools=`) only so the server can load the rows: the browser's list always decides what is shown, and a school in the address that is not in the list is ignored. Rows come from `getSchoolBriefs`, one stored document per school.
 
 ## Search state
 
@@ -78,7 +82,7 @@ Both themes are complete sets of the same tokens. `next-themes` sets `data-theme
 ## Internationalization
 
 - Every user-facing string goes through `next-intl`: `useTranslations` in components, `getTranslations` in server code. No literal UI text in JSX, including punctuation like "·" that joins translated pieces (use a message with placeholders).
-- Add keys to `messages/en.json` and `messages/es.json` in the same change, under your workstream's namespace (`search`, `school`, `compare`, `data`, `common`). Codes become labels only through `src/lib/labels.ts` and the `labels` namespace. `src/i18n/messages.test.ts` fails if the two files drift.
+- Add keys to `messages/en.json` and `messages/es.json` in the same change, under your workstream's namespace (`search`, `school`, `compare`, `mySchools`, `data`, `common`). Codes become labels only through `src/lib/labels.ts` and the `labels` namespace. `src/i18n/messages.test.ts` fails if the two files drift.
 - Numbers, dates, and plurals use ICU formatting (`{count, number}`, `{count, plural, ...}`), never string concatenation.
 - Links use `Link` from `@/i18n/navigation`, never `next/link`, so the locale prefix is kept.
 - Source data (school names, districts, addresses) stays in English as published.

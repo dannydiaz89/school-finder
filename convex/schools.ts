@@ -4,6 +4,7 @@ import { query, type QueryCtx } from "./_generated/server";
 import type { Doc } from "./_generated/dataModel";
 import {
   GetSchoolArgs,
+  GetSchoolBriefsArgs,
   GetSchoolsByCdsArgs,
   NameSearchArgs,
   NearbyArgs,
@@ -142,6 +143,22 @@ export const findByName = zQuery({
         school: toSchool(doc),
         ...(doc.summary ?? summaryOf(await loadSummaryRecord(ctx, doc))),
       })),
+    );
+  },
+});
+
+/** Summary rows for a list of schools, in the order asked. One document read per school. */
+export const briefs = zQuery({
+  args: GetSchoolBriefsArgs.shape,
+  handler: async (ctx, args) => {
+    const docs = await Promise.all(args.cds.map((cds) => schoolByCds(ctx, cds)));
+    return Promise.all(
+      docs
+        .filter((doc): doc is Doc<"schools"> => doc !== null)
+        .map(async (doc) => ({
+          school: toSchool(doc),
+          ...(doc.summary ?? summaryOf(await loadSummaryRecord(ctx, doc))),
+        })),
     );
   },
 });

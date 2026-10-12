@@ -7,6 +7,7 @@ import {
   findSchoolsByName,
   getNearby,
   getSchool,
+  getSchoolBriefs,
   getSchoolsByCds,
   getSchoolsInRadius,
   searchSchools,
@@ -88,4 +89,11 @@ export async function cachedFindSchoolsByName(args: Parameters<typeof findSchool
   cacheLife("hours");
   cacheTag(SCHOOLS_CACHE_TAG);
   return findSchoolsByName(args);
+}
+
+export async function cachedGetSchoolBriefs(args: Parameters<typeof getSchoolBriefs>[0]) {
+  "use cache";
+  cacheLife("hours");
+  cacheTag(SCHOOLS_CACHE_TAG);
+  return getSchoolBriefs(args);
 }

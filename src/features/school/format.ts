@@ -1,6 +1,4 @@
 import type { useFormatter, useTranslations } from "next-intl";
-import { gradeKey } from "@/lib/labels";
-import type { GradeSpan } from "@/lib/schemas";
 
 /**
  * Small formatting helpers shared by the detail sections. They take the
@@ -9,15 +7,9 @@ import type { GradeSpan } from "@/lib/schemas";
  */
 
 type Common = ReturnType<typeof useTranslations<"common">>;
-type Labels = ReturnType<typeof useTranslations<"labels">>;
 type Formatter = ReturnType<typeof useFormatter>;
 
-/** "K–6", or just "K" when the span is one grade. */
-export function gradeSpanText(common: Common, labels: Labels, span: GradeSpan): string {
-  const low = labels(gradeKey(span.low));
-  const high = labels(gradeKey(span.high));
-  return span.low === span.high ? low : common("gradeSpan", { low, high });
-}
+export { gradeSpanText } from "@/components/ui/grade-span";
 
 /** Join non-empty parts with the locale's separator ("a · b · c"). */
 export function joinParts(common: Common, parts: Array<string | null | undefined>): string {

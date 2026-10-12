@@ -4,6 +4,7 @@ import { useTranslations } from "next-intl";
 import { ResultRow } from "@/components/ui/result-row";
 import { IntentLink } from "@/components/ui/intent-link";
 import { useCompareList } from "@/features/compare/use-compare-list";
+import { useMySchools } from "@/features/my-schools/use-my-schools";
 import { MAX_COMPARE, type CdsCode, type SchoolSummary } from "@/lib/schemas";
 import { Section } from "./section";
 
@@ -24,6 +25,7 @@ export interface NearbySectionProps {
 export function NearbySection({ cds, nearby, query }: NearbySectionProps) {
   const t = useTranslations("school");
   const compare = useCompareList();
+  const mine = useMySchools();
 
   const withCompare = compare.list.length ? { ...query, compare: compare.list.join(",") } : query;
   const params = new URLSearchParams(withCompare).toString();
@@ -51,6 +53,9 @@ export function NearbySection({ cds, nearby, query }: NearbySectionProps) {
                 inCompare={compare.has(row.school.cds)}
                 onToggleCompare={compare.toggle}
                 compareDisabled={compare.isFull}
+                inMySchools={mine.has(row.school.cds)}
+                onToggleMySchools={mine.toggle}
+                mySchoolsDisabled={mine.isFull}
               />
             ))}
           </ol>

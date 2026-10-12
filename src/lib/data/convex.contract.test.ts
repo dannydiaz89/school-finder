@@ -207,4 +207,16 @@ describe.skipIf(!enabled)("Convex adapter matches the fixtures adapter", () => {
     expect(actual.map(normalizeDetail)).toEqual(expected.map(normalizeDetail));
     expect(actual.map((d) => d.school.cds)).toEqual([cds[3], cds[0], cds[4]]);
   });
+
+  it("getSchoolBriefs returns the same rows in the requested order", async () => {
+    const cds = fixtures.schools.slice(0, 6).map((r) => r.school.cds);
+    const args = { cds: [cds[5], cds[1], "99999999999999" as never, cds[2]] };
+    const strip = <T extends { school: unknown }>(row: T) => ({
+      ...normalizeSummary({ ...row, distanceMeters: 0 } as never),
+      distanceMeters: undefined,
+    });
+    expect((await convex.getSchoolBriefs(args)).map(strip)).toEqual(
+      (await fixturesSource.getSchoolBriefs(args)).map(strip),
+    );
+  });
 });

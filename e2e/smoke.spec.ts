@@ -15,6 +15,7 @@ const PAGES = [
   { name: "search", path: "/en" },
   { name: "school detail", path: `/en/school/${SCHOOL_CDS}` },
   { name: "compare", path: "/en/compare" },
+  { name: "my schools", path: "/en/my-schools" },
   { name: "data sources", path: "/en/about/data" },
 ] as const;
 
@@ -342,6 +343,45 @@ test("the header Search link returns to the last results from other pages", asyn
   await expect(page).toHaveURL(/\/en$/);
 });
 
+test("My schools keeps a list across pages and a reload, and removes from it", async ({ page }) => {
+  const header = page.getByRole("banner");
+  const table = page.getByRole("table", { name: "My schools" });
+
+  // Empty to start with.
+  await page.goto("/en/my-schools");
+  await expect(page.getByText("No schools saved yet")).toBeVisible();
+
+  // Save one from its own page, then a different one from search results.
+  await page.goto(`/en/school/${SCHOOL_CDS}`);
+  await page.getByRole("main").getByRole("button", { name: "Add to My schools" }).first().click();
+  await expect(header.getByRole("link", { name: "My schools (1)" })).toBeVisible();
+  await page.goto(SEARCH_URL);
+  // The school already saved reads "In My schools", so the first "Add" is another school.
+  await page.getByRole("button", { name: "Add to My schools" }).first().click();
+  await expect(header.getByRole("link", { name: "My schools (2)" })).toBeVisible();
+
+  // The header link opens the list with a row per school.
+  await header.getByRole("link", { name: "My schools (2)" }).click();
+  await expect(page).toHaveURL(/\/en\/my-schools\?schools=\d{14},\d{14}/);
+  await expect(table.getByRole("link", { name: SCHOOL_NAME })).toBeVisible();
+  await expect(table.getByRole("row")).toHaveCount(3);
+  await expect(table.getByRole("row", { name: new RegExp(SCHOOL_NAME) })).toContainText(
+    "+31.5 pts",
+  );
+
+  // A bookmark without the list in its address still shows it, as does a reload.
+  await page.goto("/en/my-schools");
+  await expect(table.getByRole("link", { name: SCHOOL_NAME })).toBeVisible();
+  await page.reload();
+  await expect(table.getByRole("link", { name: SCHOOL_NAME })).toBeVisible();
+
+  // Removing is immediate and the header follows.
+  await page.getByRole("button", { name: `Remove ${SCHOOL_NAME} from My schools` }).click();
+  await expect(table.getByRole("link", { name: SCHOOL_NAME })).toHaveCount(0);
+  await expect(header.getByRole("link", { name: "My schools (1)" })).toBeVisible();
+  await expect(table.getByRole("row")).toHaveCount(2);
+});
+
 test("a compare link opened directly shows that comparison and removing a school updates it", async ({
   page,
 }) => {
@@ -361,6 +401,22 @@ test("a compare link opened directly shows that comparison and removing a school
   await expect(
     page.getByRole("banner").getByRole("link", { name: "Compare", exact: true }),
   ).toBeVisible();
+});
+
+test("wide tables scroll inside themselves on a phone, not the page", async ({ page }) => {
+  // Regression: screen-reader text inside a table cell escaped the scrolling box and
+  // made the whole page scroll sideways.
+  await page.setViewportSize({ width: 390, height: 800 });
+  await page.goto(`/en/compare?compare=${SCHOOL_CDS},34674390102038,34674396034326`);
+  await expect(page.getByRole("table")).toBeVisible();
+  const overflows = () =>
+    page.evaluate(
+      () => document.documentElement.scrollWidth > document.documentElement.clientWidth,
+    );
+  expect(await overflows()).toBe(false);
+  await page.goto(`/en/school/${SCHOOL_CDS}`);
+  await expect(page.getByRole("table", { name: "By year" }).first()).toBeVisible();
+  expect(await overflows()).toBe(false);
 });
 
 test("type filter narrows results and is reflected in the URL", async ({ page }) => {

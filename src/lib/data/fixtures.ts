@@ -10,12 +10,14 @@ import { summaryOf, toDetail, toSummary } from "@/lib/domain/records";
 import { fixtures } from "@/fixtures";
 import type {
   GetSchoolArgs,
+  GetSchoolBriefsArgs,
   GetSchoolsByCdsArgs,
   NameMatch,
   NameSearchArgs,
   NearbyArgs,
   RadiusArgs,
   RadiusRows,
+  SchoolBrief,
   SchoolDetail,
   SchoolRecord,
   SchoolSummary,
@@ -105,6 +107,13 @@ export const fixturesDataSource: SchoolDataSource = {
       (r) => `${r.school.address.city} ${r.school.district}`,
     )
       .slice(0, args.limit)
+      .map((r) => ({ school: r.school, ...summaryOf(r) }));
+  },
+
+  async getSchoolBriefs(args: GetSchoolBriefsArgs): Promise<SchoolBrief[]> {
+    return args.cds
+      .map((cds) => byCds.get(cds))
+      .filter((r): r is SchoolRecord => r !== undefined)
       .map((r) => ({ school: r.school, ...summaryOf(r) }));
   },
 };

@@ -1,5 +1,6 @@
 "use client";
 
+import { gradeSpanText } from "@/components/ui/grade-span";
 import { useFormatter, useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 import { Button } from "@/components/ui/button";
@@ -16,7 +17,7 @@ import {
 import { IntentLink } from "@/components/ui/intent-link";
 import { TypeDot } from "@/components/ui/type-dot";
 import { formatMiles } from "@/lib/domain/geo";
-import { affiliationKey, gradeKey, indicatorKey, programKey, yesNoKey } from "@/lib/labels";
+import { affiliationKey, indicatorKey, programKey, yesNoKey } from "@/lib/labels";
 import type { CdsCode, Coordinates, SchoolDetail } from "@/lib/schemas";
 import { bestInRow, distanceMeters, type ComparableRow } from "./best";
 import {
@@ -143,12 +144,7 @@ export function CompareTable({ schools, home, place, query, onRemove }: CompareT
           ? labels(affiliationKey(school.school.affiliation))
           : null
         : school.school.district,
-      span
-        ? common("gradeSpan", {
-            low: labels(gradeKey(span.low)),
-            high: labels(gradeKey(span.high)),
-          })
-        : null,
+      span ? gradeSpanText(common, labels, span) : null,
     ].filter((p): p is string => Boolean(p));
     return parts.length ? parts.reduce((a, b) => common("join", { a, b })) : undefined;
   };
@@ -204,12 +200,7 @@ export function CompareTable({ schools, home, place, query, onRemove }: CompareT
           : null}
         {row("grades", t("rows.grades"), (school) => {
           const span = gradeSpan(school);
-          return span
-            ? common("gradeSpan", {
-                low: labels(gradeKey(span.low)),
-                high: labels(gradeKey(span.high)),
-              })
-            : null;
+          return span ? gradeSpanText(common, labels, span) : null;
         })}
         {row("tk", t("rows.tk"), (school) =>
           hasTransitionalKindergarten(school) ? labels(yesNoKey(true)) : null,

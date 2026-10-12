@@ -9,6 +9,7 @@ import { ResultRow } from "@/components/ui/result-row";
 import { Skeleton } from "@/components/ui/skeleton";
 import { TypeDot } from "@/components/ui/type-dot";
 import { useCompareList } from "@/features/compare/use-compare-list";
+import { useMySchools } from "@/features/my-schools/use-my-schools";
 import { usePathname, useRouter } from "@/i18n/navigation";
 import { useStartNavigation } from "./pending";
 import {
@@ -54,6 +55,7 @@ export function SearchResults({ result, params, center, header, footer }: Search
   const t = useTranslations("search");
   const common = useTranslations("common");
   const compare = useCompareList();
+  const mine = useMySchools();
   const router = useRouter();
   const startNavigation = useStartNavigation();
   const pathname = usePathname();
@@ -121,6 +123,9 @@ export function SearchResults({ result, params, center, header, footer }: Search
               inCompare={compare.has(summary.school.cds)}
               onToggleCompare={compare.toggle}
               compareDisabled={compare.isFull}
+              inMySchools={mine.has(summary.school.cds)}
+              onToggleMySchools={mine.toggle}
+              mySchoolsDisabled={mine.isFull}
               className={[
                 "-mx-3 rounded-sm px-3",
                 hoveredCds === summary.school.cds ? "bg-bg-subtle" : "",

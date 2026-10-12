@@ -5,10 +5,12 @@ import { getEnv } from "@/lib/schemas/env";
 import {
   NameMatch,
   RadiusRows,
+  SchoolBrief,
   SchoolDetail,
   SchoolSummary,
   SearchResult,
   type GetSchoolArgs,
+  type GetSchoolBriefsArgs,
   type GetSchoolsByCdsArgs,
   type NameSearchArgs,
   type NearbyArgs,
@@ -56,5 +58,8 @@ export const convexDataSource: SchoolDataSource = {
   },
   async findSchoolsByName(args: NameSearchArgs) {
     return z.array(NameMatch).parse(await getClient().query(api.schools.findByName, args));
+  },
+  async getSchoolBriefs(args: GetSchoolBriefsArgs) {
+    return z.array(SchoolBrief).parse(await getClient().query(api.schools.briefs, args));
   },
 };

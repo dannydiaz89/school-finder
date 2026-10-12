@@ -183,7 +183,9 @@ Rules:
 - [ ] Revisit importing school demographics (raised by the user 2026-10-11; scope to be defined)
 - [ ] Address autocomplete
 - [ ] Scheduled re-imports when new annual files post
-- [ ] Sign-in and saved lists
+- [x] My schools: a saved list of up to 50 schools, kept in the browser, with a tracking table (2026-10-12)
+- [ ] Sign-in, so My schools follows a person across devices. The storage interface is ready for it (`SavedSchoolsStore`); entries keep `addedAt` so a browser list can be merged into an account list.
+- [ ] Share or export a My schools list (a link another browser can adopt)
 - [x] Historical trends per school: Dashboard ratings and CAASPP scores for 2023 to 2025, shown as "By year" tables on the school page (2026-10-11)
 - [ ] Earlier history (2018, 2019, 2022): different file layouts and, for 2022, status without colors
 
@@ -222,6 +224,9 @@ Rules:
 - Grades shown start at TK when TK students are enrolled (`servedSpan`). The directory cannot list TK, so "TK–5 served, K–5 listed" is not shown as a disagreement.
 - Rows and stats that come from a school year carry it in the label. The staffing file is a year behind enrollment, so the ratio says so. The compare table's separate Magnet row is gone; Programs lists the directory's flags or says "None listed".
 - The compare page had its own untagged day-long cache, so imports never cleared it and it could disagree with a school's own page. It now reads through `cachedGetSchoolsByCds`, and `src/lib/data/boundary.test.ts` fails if any page or feature caches on its own or imports the uncached data API.
+- My schools is a list in the browser's local storage behind a small store interface, not in the address like the first compare list was. The address carries the codes only as transport to the server. Rows use the stored search summary (one document per school), and "Maintained" is decided from the number with the state's bands, which a test checks against the state's own change levels for every fixture row.
+- Table wrappers are `relative`. Screen-reader-only text inside a cell is absolutely positioned, and without a positioned scroll box it made the compare page scroll sideways on phones.
+- One function formats a grade span everywhere (`gradeSpanText`), so a one-grade school reads "K", not "K–K".
 - Imports are written for the free Convex plan: one read per key per batch, no rewrite of unchanged documents, lean earlier years, and no search-row rebuild when only older years are loaded.
 
 ## Contract amendments
@@ -236,3 +241,4 @@ Record each as: date, what changed, which streams were notified.
 - 2026-10-11: sixth data-access function `findSchoolsByName` (`NameSearchArgs` → `NameMatch[]`). Convex `schools` gained optional `searchText` and search index `search_text`. URL parameter `by=name` added.
 - 2026-10-11: `gradesServed` now means grades with enrolled students (directory span trimmed by enrollment). Convex `schools` gained optional `directoryGradesServed`. Env `REVALIDATE_SECRET` added.
 - 2026-10-11: `SchoolDetail.history` (`SchoolHistory`: every year of Dashboard rows and all-grades CAASPP rows; defaults to empty). `SchoolDetail.dashboard` and `.caaspp` now hold the newest year only. `DashboardRow.studentgroup` defaults to `ALL` for the 2023 ELPI file.
+- 2026-10-12: seventh data-access function `getSchoolBriefs` (`GetSchoolBriefsArgs` → `SchoolBrief[]`, at most `MAX_SAVED_SCHOOLS` = 50). `SchoolBrief` is the shape `NameMatch` already had; `NameMatch` is now an alias. New storage schemas `SavedSchool` and `SavedSchoolList` (version 1). URL parameter `schools` on `/my-schools`. Convex query `schools:briefs`.
