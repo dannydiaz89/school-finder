@@ -19,55 +19,67 @@ const INDICATOR_FIRST_YEAR: Partial<Record<(typeof DASHBOARD_INDICATORS)[number]
   science: 2024,
 };
 
-/** Every indicator file for one Dashboard year, one importRuns record per file. */
+/**
+ * Every indicator file for one Dashboard year.
+ *
+ * All files are parsed first and written in one pass ordered by school. A
+ * write starts by reading what is stored for that school and year, so
+ * writing file by file made the eighth file re-read the rows of the seven
+ * before it: twenty-eight row reads per school to store eight. In one pass a
+ * school's rows arrive together and its stored rows are read once.
+ */
 export const dashboard: Source = {
   name: "dashboard",
   defaultYear: "2024-25",
   async run(ctx) {
     const year = endYear(ctx.year ?? this.defaultYear);
-    const totals = { rowsRead: 0, rowsRejected: 0, rowsWritten: 0 };
     if (ctx.indicator && !DASHBOARD_INDICATORS.some((id) => id === ctx.indicator)) {
       throw new Error(
         `--indicator must be one of ${DASHBOARD_INDICATORS.join(", ")}, got ${ctx.indicator}`,
       );
     }
-    for (const indicator of DASHBOARD_INDICATORS) {
-      if (ctx.indicator && indicator !== ctx.indicator) continue;
-      const firstYear = INDICATOR_FIRST_YEAR[indicator];
-      if (firstYear !== undefined && year < firstYear) {
-        ctx.log(`== dashboard:${indicator} (${year}) skipped: first published in ${firstYear}`);
-        continue;
+    const source = ctx.indicator ? `dashboard:${ctx.indicator}` : "dashboard";
+    return recordRun(ctx, { source, url: DASHBOARD_BASE, year: String(year) }, async () => {
+      const rows: DashboardIndicator[] = [];
+      let rowsRead = 0;
+      let rowsRejected = 0;
+      for (const indicator of DASHBOARD_INDICATORS) {
+        if (ctx.indicator && indicator !== ctx.indicator) continue;
+        const firstYear = INDICATOR_FIRST_YEAR[indicator];
+        if (firstYear !== undefined && year < firstYear) {
+          ctx.log(`  ${indicator} (${year}) skipped: first published in ${firstYear}`);
+          continue;
+        }
+        const file = DASHBOARD_FILE_NAMES[indicator](year);
+        const path = join(ctx.cacheDir, "dashboard", String(year), file);
+        await ensureFile(DASHBOARD_BASE + file, path, { log: ctx.log });
+        const raw = readDelimited(path, "\t");
+        const { ok, rejected } = validateRows(raw, DashboardRow, indicator, ctx.log);
+        let kept = 0;
+        for (const row of ok) {
+          if (!isSchoolAllStudentsRow(row) || !inCounty(ctx, row.cds)) continue;
+          rows.push(dashboardIndicatorFromRow(row));
+          kept += 1;
+        }
+        // A file that yields no school rows usually means its layout changed.
+        ctx.log(
+          `  ${indicator}: ${kept} school rows of ${raw.length}${kept === 0 ? "  <-- none" : ""}`,
+        );
+        rowsRead += raw.length;
+        rowsRejected += rejected;
       }
-      const file = DASHBOARD_FILE_NAMES[indicator](year);
-      const url = DASHBOARD_BASE + file;
-      const path = join(ctx.cacheDir, "dashboard", String(year), file);
-      await ensureFile(url, path, { log: ctx.log });
-      const counts = await recordRun(
+      rows.sort((a, b) => (a.cds < b.cds ? -1 : a.cds > b.cds ? 1 : 0));
+      const { rowsWritten, changed } = await upsertInBatches(
         ctx,
-        { source: `dashboard:${indicator}`, url, year: String(year) },
-        async () => {
-          const raw = readDelimited(path, "\t");
-          const { ok, rejected } = validateRows(raw, DashboardRow, indicator, ctx.log);
-          const rows: DashboardIndicator[] = [];
-          for (const row of ok) {
-            if (!isSchoolAllStudentsRow(row) || !inCounty(ctx, row.cds)) continue;
-            rows.push(dashboardIndicatorFromRow(row));
-          }
-          ctx.log(`  ${indicator}: ${rows.length} school rows`);
-          const rowsWritten = await upsertInBatches(
-            ctx,
-            internal.imports.upsertDashboard,
-            "rows",
-            rows,
-            `${indicator} rows`,
-          );
-          return { rowsRead: raw.length, rowsRejected: rejected, rowsWritten };
-        },
+        internal.imports.upsertDashboard,
+        "rows",
+        rows,
+        "dashboard rows",
       );
-      totals.rowsRead += counts.rowsRead;
-      totals.rowsRejected += counts.rowsRejected;
-      totals.rowsWritten += counts.rowsWritten;
-    }
-    return totals;
+      // A search row shows a school's newest year only, so rows for an earlier year
+      // cannot change it and those schools need no refresh.
+      const feedsSearchRows = year >= endYear(this.defaultYear);
+      return { rowsRead, rowsRejected, rowsWritten, changed: feedsSearchRows ? changed : [] };
+    });
   },
 };

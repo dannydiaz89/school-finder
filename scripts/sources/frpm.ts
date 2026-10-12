@@ -30,7 +30,8 @@ export const frpm: Source = {
         else empty += 1;
       }
       ctx.log(`  schools: ${rows.length}; without enrollment or counts: ${empty}`);
-      const rowsWritten = await upsertInBatches(
+      // Search rows do not read meal counts, so there is nothing to refresh.
+      const { rowsWritten } = await upsertInBatches(
         ctx,
         internal.imports.upsertFrpm,
         "rows",

@@ -17,8 +17,6 @@ export interface ImportContext {
   /** Two-digit county code to restrict to, or undefined for statewide. */
   county?: string;
   dryRun: boolean;
-  /** Keep only what a history needs (all-grades test rows). Set for earlier years. */
-  lean?: boolean;
   /** Dashboard only: load this one indicator's file instead of all of them. */
   indicator?: string;
   batchSize: number;
@@ -28,7 +26,21 @@ export interface ImportContext {
 export interface Counts {
   rowsRead: number;
   rowsRejected: number;
+  /** Documents actually inserted or replaced. Zero when a re-run found nothing new. */
   rowsWritten: number;
+  /**
+   * Schools whose search row may now be out of date, for sources that feed it
+   * (directory, Dashboard, enrollment, staff, private details). Left out by
+   * sources search rows never read (meals, test scores).
+   */
+  changed?: string[];
+}
+
+/** What a batch of upserts did. */
+export interface Written {
+  rowsWritten: number;
+  /** CDS codes of the schools whose documents were inserted or replaced. */
+  changed: string[];
 }
 
 export interface Validated<T> {
@@ -65,31 +77,73 @@ export function validateRows<T extends z.ZodType>(
   return { ok, rejected };
 }
 
-/** Call an internal upsert mutation once per batch. Returns documents written. */
+/**
+ * Call an internal upsert mutation once per batch. Returns how many documents
+ * were written and which schools they belong to; unchanged rows are neither.
+ */
 export async function upsertInBatches<
   Args extends Record<string, unknown[]>,
   Name extends keyof Args & string,
 >(
   ctx: ImportContext,
-  mutation: FunctionReference<"mutation", "internal", Args, number>,
+  mutation: FunctionReference<"mutation", "internal", Args, { written: number; changed: string[] }>,
   argName: Name,
   rows: Args[Name],
   label: string,
   batchSize = ctx.batchSize,
-): Promise<number> {
+): Promise<Written> {
   if (ctx.dryRun) {
-    ctx.log(`  dry run: would write ${rows.length} ${label}`);
-    return 0;
+    ctx.log(`  dry run: would send ${rows.length} ${label}`);
+    return { rowsWritten: 0, changed: [] };
   }
-  let written = 0;
+  let rowsWritten = 0;
+  const changed = new Set<string>();
   const batches = chunk(rows as unknown[], batchSize);
   for (let i = 0; i < batches.length; i += 1) {
-    written += await ctx.client.mutation(mutation, { [argName]: batches[i] } as Args);
+    const result = await ctx.client.mutation(mutation, { [argName]: batches[i] } as Args);
+    rowsWritten += result.written;
+    for (const cds of result.changed) changed.add(cds);
     if ((i + 1) % 10 === 0 || i + 1 === batches.length) {
-      ctx.log(`  wrote ${written}/${rows.length} ${label}`);
+      const sent = Math.min((i + 1) * batchSize, rows.length);
+      ctx.log(`  sent ${sent}/${rows.length} ${label}; ${rowsWritten} new or changed`);
     }
   }
-  return written;
+  return { rowsWritten, changed: [...changed] };
+}
+
+/** Schools refreshed per call. Each costs about five reads, so keep the transaction small. */
+const REFRESH_BATCH = 100;
+
+/**
+ * Refresh the stored search row of the schools named, and of no others.
+ * This replaces the statewide rebuild that used to follow every import: a
+ * run that changed two hundred schools now reads two hundred, not twelve
+ * thousand, and a re-run that changed nothing reads none.
+ */
+export async function refreshSearchRows(
+  ctx: ImportContext,
+  cds: Iterable<string>,
+): Promise<number> {
+  const list = [...new Set(cds)].sort();
+  if (list.length === 0) {
+    ctx.log("== search rows: nothing changed, nothing to refresh");
+    return 0;
+  }
+  if (ctx.dryRun) {
+    ctx.log(`== search rows: dry run, would refresh up to ${list.length} schools`);
+    return 0;
+  }
+  let updated = 0;
+  const batches = chunk(list, REFRESH_BATCH);
+  for (let i = 0; i < batches.length; i += 1) {
+    const result = await ctx.client.mutation(internal.imports.rebuildSummariesFor, {
+      cds: batches[i],
+    });
+    updated += result.updated;
+    if ((i + 1) % 20 === 0) ctx.log(`  refreshed ${(i + 1) * REFRESH_BATCH}/${list.length}`);
+  }
+  ctx.log(`== search rows: examined ${list.length} schools, ${updated} changed`);
+  return updated;
 }
 
 /** Run `body` inside an importRuns record, marking it finished or failed. */
@@ -103,10 +157,16 @@ export async function recordRun(
   try {
     const counts = await body();
     if (runId) {
-      await ctx.client.mutation(internal.imports.finishRun, { id: runId, ...counts, error: null });
+      await ctx.client.mutation(internal.imports.finishRun, {
+        id: runId,
+        rowsRead: counts.rowsRead,
+        rowsRejected: counts.rowsRejected,
+        rowsWritten: counts.rowsWritten,
+        error: null,
+      });
     }
     ctx.log(
-      `== ${meta.source}: read ${counts.rowsRead}, rejected ${counts.rowsRejected}, written ${counts.rowsWritten}`,
+      `== ${meta.source}: read ${counts.rowsRead}, rejected ${counts.rowsRejected}, new or changed ${counts.rowsWritten}`,
     );
     return counts;
   } catch (err) {

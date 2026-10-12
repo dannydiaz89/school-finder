@@ -31,6 +31,12 @@ import { summaryOf } from "../src/lib/domain/records";
 const zInternalMutation = zCustomMutation(internalMutation, NoOp);
 const zInternalQuery = zCustomQuery(internalQuery, NoOp);
 
+/** What an upsert did: documents written, and the schools they belong to. */
+interface UpsertResult {
+  written: number;
+  changed: string[];
+}
+
 type CdsTable = Extract<
   TableNames,
   "dashboard" | "caaspp" | "enrollment" | "frpm" | "staffRatios" | "privateDetails"
@@ -49,6 +55,9 @@ type YearTable = "dashboard" | "caaspp";
  * - year tables read only the year being imported, not every year on file;
  * - a row whose content has not changed is not written at all, so re-running
  *   an import costs reads only.
+ *
+ * Returns how many documents it wrote and which schools they belong to, so the
+ * caller can refresh search rows for those schools alone.
  */
 async function upsertByCds<T extends CdsTable>(
   ctx: MutationCtx,
@@ -58,7 +67,7 @@ async function upsertByCds<T extends CdsTable>(
     existing: WithoutSystemFields<Doc<T>>,
     incoming: WithoutSystemFields<Doc<T>>,
   ) => boolean,
-): Promise<number> {
+): Promise<UpsertResult> {
   const byYear = table === "dashboard" || table === "caaspp";
   const loaded = new Map<string, Doc<T>[]>();
   const existingFor = async (row: WithoutSystemFields<Doc<T>>): Promise<Doc<T>[]> => {
@@ -83,6 +92,7 @@ async function upsertByCds<T extends CdsTable>(
   };
 
   let written = 0;
+  const changed = new Set<string>();
   for (const row of rows) {
     const existing = await existingFor(row);
     const match = existing.find((doc) =>
@@ -96,37 +106,53 @@ async function upsertByCds<T extends CdsTable>(
     } else if (!sameContent(match, row)) {
       await ctx.db.replace(match._id, row as never);
       existing[existing.indexOf(match)] = { ...match, ...(row as object) } as Doc<T>;
+    } else {
+      continue;
     }
     written += 1;
+    changed.add(row.cds);
   }
-  return written;
+  return { written, changed: [...changed] };
 }
 
 export const upsertSchools = zInternalMutation({
   args: { schools: z.array(School) },
-  handler: async (ctx, { schools }) => {
+  handler: async (ctx, { schools }): Promise<UpsertResult> => {
     let written = 0;
+    const changed: string[] = [];
     for (const school of schools) {
       const existing = await ctx.db
         .query("schools")
         .withIndex("by_cds", (q) => q.eq("cds", school.cds))
         .first();
       const cell = school.coordinates ? cellOf(school.coordinates) : undefined;
+      // `gradesServed` on a stored school is the directory's span narrowed to grades with
+      // students. While the directory's own span is unchanged, keep the narrowed one, or every
+      // such school would be rewritten here and then rewritten back by the refresh.
+      const sameListing =
+        existing !== null &&
+        sameContent(
+          { span: existing.directoryGradesServed ?? null },
+          { span: school.gradesServed ?? null },
+        );
       const doc = {
         ...school,
-        // Keep the precomputed search summary; it is refreshed by rebuildSummaries.
+        gradesServed: sameListing ? existing.gradesServed : school.gradesServed,
+        // Keep the precomputed search summary; the refresh recomputes it when its inputs change.
         summary: existing?.summary,
         geoRow: cell?.row,
         geoCol: cell?.col,
         searchText: searchTextOf(school.name, school.address.city, school.district),
-        // The span as the directory lists it. rebuildSummaries narrows `gradesServed` to grades with students (see servedSpan).
+        // The span as the directory lists it (see servedSpan for how it is narrowed).
         directoryGradesServed: school.gradesServed,
       };
       if (!existing) await ctx.db.insert("schools", doc);
       else if (!sameContent(existing, doc)) await ctx.db.replace(existing._id, doc);
+      else continue;
       written += 1;
+      changed.push(school.cds);
     }
-    return written;
+    return { written, changed };
   },
 });
 
@@ -181,10 +207,64 @@ export const listPrivateOverrides = zInternalQuery({
  * per call. Returns the cursor for the next page or null when finished.
  */
 /**
- * Recompute the stored search summary and grid cell for a page of schools. Run after any
- * import that changes Dashboard rows, enrollment, staff ratios, or private
- * school details. Each school costs about a dozen reads here, once, so that a
- * search costs one.
+ * Recompute what search reads from one school document: its summary, grid
+ * cell, search text, and the grade span narrowed to grades with students.
+ * Costs about five reads. Writes only when something changed, and says so.
+ */
+async function refreshSearchFields(ctx: MutationCtx, school: Doc<"schools">): Promise<boolean> {
+  const record = await loadSummaryRecord(ctx, school);
+  const summary = summaryOf(record);
+  const cell = school.coordinates ? cellOf(school.coordinates) : undefined;
+  // Always start from the directory's own span, so a later enrollment file can widen it again.
+  const listed = school.directoryGradesServed ?? school.gradesServed;
+  const served =
+    listed && record.enrollment ? servedSpan(listed, record.enrollment.byGrade) : listed;
+  const next = {
+    summary,
+    geoRow: cell?.row,
+    geoCol: cell?.col,
+    searchText: searchTextOf(school.name, school.address.city, school.district),
+    directoryGradesServed: listed,
+    gradesServed: served,
+  };
+  const current = {
+    summary: school.summary,
+    geoRow: school.geoRow,
+    geoCol: school.geoCol,
+    searchText: school.searchText,
+    directoryGradesServed: school.directoryGradesServed,
+    gradesServed: school.gradesServed,
+  };
+  if (sameContent(current, next)) return false;
+  await ctx.db.patch(school._id, next);
+  return true;
+}
+
+/**
+ * Refresh the search fields of the schools named. This is what an import
+ * runs when it finishes, with the schools whose Dashboard rows, enrollment,
+ * staff ratio, private details, or directory entry it actually changed. An
+ * import that changed nothing refreshes nothing.
+ */
+export const rebuildSummariesFor = internalMutation({
+  args: { cds: v.array(v.string()) },
+  handler: async (ctx, { cds }) => {
+    let updated = 0;
+    for (const code of cds) {
+      const school = await ctx.db
+        .query("schools")
+        .withIndex("by_cds", (q) => q.eq("cds", code as Doc<"schools">["cds"]))
+        .first();
+      if (school && (await refreshSearchFields(ctx, school))) updated += 1;
+    }
+    return { examined: cds.length, updated };
+  },
+});
+
+/**
+ * Refresh the search fields of every school, a page at a time. Statewide,
+ * so it reads every school and its tables: run it only after changing how a
+ * summary or a grade span is computed. Imports use `rebuildSummariesFor`.
  */
 export const rebuildSummaries = internalMutation({
   args: { cursor: v.union(v.string(), v.null()), pageSize: v.optional(v.number()) },
@@ -192,34 +272,33 @@ export const rebuildSummaries = internalMutation({
     const page = await ctx.db
       .query("schools")
       .paginate({ cursor: args.cursor, numItems: args.pageSize ?? 100 });
-    for (const school of page.page) {
-      const record = await loadSummaryRecord(ctx, school);
-      const summary = summaryOf(record);
-      const cell = school.coordinates ? cellOf(school.coordinates) : undefined;
-      // Always start from the directory's own span, so a later enrollment file can widen it again.
-      const listed = school.directoryGradesServed ?? school.gradesServed;
-      const served =
-        listed && record.enrollment ? servedSpan(listed, record.enrollment.byGrade) : listed;
-      const next = {
-        summary,
-        geoRow: cell?.row,
-        geoCol: cell?.col,
-        searchText: searchTextOf(school.name, school.address.city, school.district),
-        directoryGradesServed: listed,
-        gradesServed: served,
-      };
-      const current = {
-        summary: school.summary,
-        geoRow: school.geoRow,
-        geoCol: school.geoCol,
-        searchText: school.searchText,
-        directoryGradesServed: school.directoryGradesServed,
-        gradesServed: school.gradesServed,
-      };
-      // Most schools are unchanged by any one import; do not rewrite them.
-      if (!sameContent(current, next)) await ctx.db.patch(school._id, next);
-    }
+    for (const school of page.page) await refreshSearchFields(ctx, school);
     return { updated: page.page.length, cursor: page.isDone ? null : page.continueCursor };
+  },
+});
+
+/**
+ * Delete the per-grade CAASPP rows of the entities named, for one school
+ * year, keeping the all-grades row. No screen shows per-grade results, and
+ * while they are stored every school page reads them. One-time cleanup for
+ * data loaded before the importer stopped storing them.
+ */
+export const pruneCaasppGrades = internalMutation({
+  args: { cds: v.array(v.string()), year: v.string() },
+  handler: async (ctx, { cds, year }) => {
+    let deleted = 0;
+    for (const code of cds) {
+      const rows = await ctx.db
+        .query("caaspp")
+        .withIndex("by_cds_year", (q) => q.eq("cds", code as never).eq("year", year as never))
+        .collect();
+      for (const row of rows) {
+        if (row.grade === "all") continue;
+        await ctx.db.delete(row._id);
+        deleted += 1;
+      }
+    }
+    return deleted;
   },
 });
 

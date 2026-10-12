@@ -2,9 +2,11 @@ import { internal } from "../../convex/_generated/api";
 import type { Source } from "./types";
 
 /**
- * Recompute the search summary stored on every school. Runs automatically at
- * the end of any import, because Dashboard rows, enrollment, staff ratios and
- * private school details all feed it.
+ * Recompute the search row stored on every school, statewide. Imports no
+ * longer do this: they refresh only the schools they changed. Run it by name
+ * after changing how a summary or a grade span is computed. It reads every
+ * school and its tables, which is a large share of a free plan's monthly
+ * allowance.
  */
 export const searchRows: Source = {
   name: "search-rows",

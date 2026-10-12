@@ -187,6 +187,7 @@ Rules:
 - [ ] Sign-in, so My schools follows a person across devices. The storage interface is ready for it (`SavedSchoolsStore`); entries keep `addedAt` so a browser list can be merged into an account list.
 - [ ] Share or export a My schools list (a link another browser can adopt)
 - [x] Historical trends per school: Dashboard ratings and CAASPP scores for 2023 to 2025, shown as "By year" tables on the school page (2026-10-11)
+- [ ] After the Convex usage cycle resets: run `pnpm run import prune-caaspp --year 2025` once to delete the per-grade test rows stored before the importer stopped keeping them
 - [ ] Earlier history (2018, 2019, 2022): different file layouts and, for 2022, status without colors
 
 ## Decisions made during Stage 1
@@ -227,6 +228,7 @@ Rules:
 - My schools is a list in the browser's local storage behind a small store interface, not in the address like the first compare list was. The address carries the codes only as transport to the server. Rows use the stored search summary (one document per school), and "Maintained" is decided from the number with the state's bands, which a test checks against the state's own change levels for every fixture row.
 - Table wrappers are `relative`. Screen-reader-only text inside a cell is absolutely positioned, and without a positioned scroll box it made the compare page scroll sideways on phones.
 - One function formats a grade span everywhere (`gradeSpanText`), so a one-grade school reads "K", not "K–K".
+- Database bandwidth drove a second pass over imports and queries (2026-10-12), after two days of development used about 975 MB of the free plan's 1 GB, 74% of it reads. Imports now refresh only the schools they changed instead of every school, write the Dashboard in one pass per school, store only all-grades test rows, and leave unchanged directory entries alone. The school page reads one year of district and state test rows, and the nearby lookup starts at half a mile. Convex functions are tested in memory with `convex-test`, so none of this needs the live deployment to verify.
 - Imports are written for the free Convex plan: one read per key per batch, no rewrite of unchanged documents, lean earlier years, and no search-row rebuild when only older years are loaded.
 
 ## Contract amendments

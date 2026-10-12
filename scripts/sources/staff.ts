@@ -27,14 +27,14 @@ export const staff: Source = {
         if (out && inCounty(ctx, out.cds)) rows.push(out);
       }
       ctx.log(`  schools: ${rows.length}`);
-      const rowsWritten = await upsertInBatches(
+      const { rowsWritten, changed } = await upsertInBatches(
         ctx,
         internal.imports.upsertStaff,
         "rows",
         rows,
         "staff rows",
       );
-      return { rowsRead: raw.length, rowsRejected: rejected, rowsWritten };
+      return { rowsRead: raw.length, rowsRejected: rejected, rowsWritten, changed };
     });
   },
 };

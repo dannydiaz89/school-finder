@@ -5,7 +5,12 @@
  *                            [--dry-run] [--batch 500] [--env .env.local]
  *
  * Sources: directory, dashboard, caaspp, enrollment, frpm, staff,
- * private-affidavit, private-pss, search-rows, all.
+ * private-affidavit, private-pss, all. `history --years 2026` loads Dashboard
+ * and test scores for whole years. Maintenance: search-rows, prune-caaspp.
+ *
+ * Built to spend little database bandwidth: rows already stored are not
+ * rewritten, and when a run finishes only the schools it changed have their
+ * search row refreshed.
  *
  * Each source downloads its file into the cache (skipped when present),
  * validates every row with the Zod row schema in src/lib/schemas/imports,
@@ -19,13 +24,14 @@ import { existsSync, readFileSync } from "node:fs";
 import { parseArgs } from "node:util";
 import { countyCode } from "../src/lib/domain/imports/counties";
 import { adminClient } from "./lib/convex-admin";
-import { endYear, normalizeYearArg, type ImportContext } from "./lib/runner";
+import { normalizeYearArg, refreshSearchRows, type Counts, type ImportContext } from "./lib/runner";
 import { caaspp } from "./sources/caaspp";
 import { dashboard } from "./sources/dashboard";
 import { directory } from "./sources/directory";
 import { enrollment } from "./sources/enrollment";
 import { frpm } from "./sources/frpm";
 import { privateAffidavit, privatePss } from "./sources/private";
+import { pruneCaaspp } from "./sources/prune-caaspp";
 import { searchRows } from "./sources/search-rows";
 import { staff } from "./sources/staff";
 import type { Source } from "./sources/types";
@@ -41,9 +47,12 @@ const SOURCES: Source[] = [
   privatePss,
 ];
 
+/** Not imports: a deliberate statewide rebuild, and a one-time cleanup. Run by name only. */
+const MAINTENANCE: Source[] = [searchRows, pruneCaaspp];
+
 function usage(): never {
   console.error(
-    `Usage: pnpm run import <${[...SOURCES.map((s) => s.name), searchRows.name, "all"].join("|")}> ` +
+    `Usage: pnpm run import <${[...SOURCES, ...MAINTENANCE].map((s) => s.name).join("|")}|all|history> ` +
       `[--year 2024-25] [--cache .cache] [--county Sacramento] [--dry-run] [--batch 500]`,
   );
   process.exit(2);
@@ -54,18 +63,28 @@ function schoolYearEnding(endYear: number): string {
   return `${endYear - 1}-${String(endYear % 100).padStart(2, "0")}`;
 }
 
+type Summary = Record<string, { rowsRead: number; rowsRejected: number; newOrChanged: number }>;
+
+const tally = (counts: Counts) => ({
+  rowsRead: counts.rowsRead,
+  rowsRejected: counts.rowsRejected,
+  newOrChanged: counts.rowsWritten,
+});
+
 /**
- * Load earlier years of the measures that have a trend: Dashboard ratings and
- * all-grades test scores. One command, so the search summaries are rebuilt and
- * the page cache cleared once at the end rather than after every year.
+ * Load Dashboard ratings and test scores for one or more years: an earlier
+ * year for the trend, or a new year when the state publishes it. One command,
+ * so search rows are refreshed and the page cache cleared once at the end.
  *
  *   pnpm run import history --years 2023,2024
+ *   pnpm run import history --years 2026
  */
 async function runHistory(values: {
   years?: string;
   cache: string;
   county?: string;
   "dry-run": boolean;
+  "no-rebuild": boolean;
   batch: string;
   env: string;
 }) {
@@ -82,41 +101,28 @@ async function runHistory(values: {
   const county = values.county ? countyCode(values.county) : undefined;
   const { client, target } = await adminClient(values.env);
   const log = (message: string) => console.error(message);
-  log(`Importing history for ${years.join(", ")} into ${target.name} (${target.url})`);
-  const summary: Record<string, { rowsRead: number; rowsRejected: number; rowsWritten: number }> =
-    {};
-  for (const endYear of years) {
-    const ctx: ImportContext = {
-      client,
-      cacheDir: values.cache,
-      year: schoolYearEnding(endYear),
-      county,
-      dryRun: values["dry-run"],
-      lean: true,
-      batchSize: Math.max(1, Number(values.batch) || 500),
-      log,
-    };
+  log(`Importing ${years.join(", ")} into ${target.name} (${target.url})`);
+  const summary: Summary = {};
+  const changed = new Set<string>();
+  const base = {
+    client,
+    cacheDir: values.cache,
+    county,
+    dryRun: values["dry-run"],
+    batchSize: Math.max(1, Number(values.batch) || 500),
+    log,
+  };
+  for (const year of years) {
+    const ctx: ImportContext = { ...base, year: schoolYearEnding(year) };
     for (const source of [dashboard, caaspp]) {
-      summary[`${source.name} ${endYear}`] = await source.run(ctx);
+      const counts = await source.run(ctx);
+      summary[`${source.name} ${year}`] = tally(counts);
+      for (const cds of counts.changed ?? []) changed.add(cds);
     }
   }
-  // Search rows read only each school's newest year. Loading years older than the
-  // current one cannot change them, so skip that statewide read unless a year here
-  // is at least as new as the importer's current year.
-  const currentYear = endYear(dashboard.defaultYear);
-  if (years.some((y) => y >= currentYear)) {
-    const last: ImportContext = {
-      client,
-      cacheDir: values.cache,
-      county,
-      dryRun: values["dry-run"],
-      batchSize: 500,
-      log,
-    };
-    summary[searchRows.name] = await searchRows.run(last);
-  } else {
-    log(`   search rows unchanged: every year is before ${currentYear}`);
-  }
+  // Sources report only the schools whose search row could have changed: none for a year
+  // older than the current one, none for test scores, none for rows that were already stored.
+  if (!values["no-rebuild"]) await refreshSearchRows(base, changed);
   console.table(summary);
   if (!values["dry-run"]) await clearPageCache(values.env, log);
 }
@@ -175,16 +181,12 @@ async function main() {
   if (!name) usage();
   if (name === "history") return runHistory(values);
   const selected =
-    name === "all" ? [...SOURCES] : [...SOURCES, searchRows].filter((s) => s.name === name);
+    name === "all" ? [...SOURCES] : [...SOURCES, ...MAINTENANCE].filter((s) => s.name === name);
   if (selected.length === 0) usage();
   if (name === "all" && values.year) {
     console.error("--year applies to one source at a time; each source has its own default year.");
     process.exit(2);
   }
-
-  // Any data import changes what search rows show, so refresh the stored summaries last.
-  // `--no-rebuild` is for loading a year older than the current one, which search rows never read.
-  if (selected.some((s) => SOURCES.includes(s)) && !values["no-rebuild"]) selected.push(searchRows);
 
   const county = values.county ? countyCode(values.county) : undefined;
   if (values.county && !county) {
@@ -208,13 +210,19 @@ async function main() {
       `${county ? ` for county ${county}` : ""}${ctx.dryRun ? " [dry run]" : ""}`,
   );
 
-  const summary: Record<string, { rowsRead: number; rowsRejected: number; rowsWritten: number }> =
-    {};
+  const summary: Summary = {};
+  const changed = new Set<string>();
   for (const source of selected) {
     const started = Date.now();
-    summary[source.name] = await source.run(ctx);
+    const counts = await source.run(ctx);
+    summary[source.name] = tally(counts);
+    for (const cds of counts.changed ?? []) changed.add(cds);
     ctx.log(`   ${source.name} took ${((Date.now() - started) / 1000).toFixed(1)}s`);
   }
+  // Search rows are stored on each school. Refresh them for the schools this run actually
+  // changed, and only those. `search-rows` remains for a deliberate statewide rebuild.
+  const importedData = selected.some((s) => SOURCES.includes(s));
+  if (importedData && !values["no-rebuild"]) await refreshSearchRows(ctx, changed);
   console.table(summary);
   if (!ctx.dryRun) await clearPageCache(values.env, ctx.log);
 }

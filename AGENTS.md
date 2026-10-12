@@ -116,6 +116,7 @@ Both themes are complete sets of the same tokens. `next-themes` sets `data-theme
 - Queries use `zCustomQuery` from `convex-helpers/server/zod4` with `args: Schema.shape`.
 - Radius search uses the grid in `src/lib/domain/grid.ts` and the `by_geo` index on `schools`: one range read per grid row, then an exact distance check. Never a full table scan, and no spatial component.
 - `dashboard` and `caaspp` hold several years per school. Never pick a year yourself: use `currentDashboard`, `currentCaaspp` and `statusUnit` from `src/lib/domain/history.ts`, and read `SchoolDetail.history` for anything by year.
-- The deployment is on Convex's free plan. Keep imports frugal (see "Earlier years" in `docs/data-sources.md`) and do not add statewide reads to a routine path.
+- The deployment is on Convex's free plan, where database bandwidth (bytes read plus bytes written) is the tight limit. Read "What an import costs" in `docs/data-sources.md` before touching imports or queries. Do not add a statewide read to a routine path, do not read rows a screen does not show, and do not verify changes by running imports or repeated searches against the live deployment: use `src/lib/data/convex-functions.test.ts`, which runs the Convex functions in memory.
+- Import mutations return `{ written, changed }`. `changed` is how the script knows which schools to refresh; keep it truthful.
 - A search row is one document: the `summary` stored on each school at import time. Do not add per-row lookups to search; extend the summary and `rebuildSummaries` instead.
 - `pnpm convex` must be running (or `pnpm convex:codegen` run) after changing functions so `_generated` is current. Commit `_generated`.

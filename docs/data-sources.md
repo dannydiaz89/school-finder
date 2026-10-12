@@ -26,14 +26,28 @@ pnpm run import all                        # every source, statewide, default ye
 pnpm run import all --county Sacramento    # one county (by name or two-digit code)
 pnpm run import dashboard --year 2025      # one source, one year (2024-25 or 2025 both work)
 pnpm run import caaspp --dry-run           # parse, validate and transform without writing
-pnpm run import geo-index                  # rebuild the spatial index from the schools table
-pnpm run import history --years 2023,2024  # earlier years of Dashboard ratings and CAASPP scores
-pnpm run import dashboard --year 2023 --indicator elpi --no-rebuild   # one indicator file of an earlier year
+pnpm run import history --years 2026       # Dashboard ratings and CAASPP scores for whole years
+pnpm run import dashboard --year 2023 --indicator elpi   # one indicator file
+pnpm run import search-rows                # maintenance: recompute every school's search row
+pnpm run import prune-caaspp --year 2025   # one-time cleanup of per-grade test rows
 ```
 
 `pnpm import` (without `run`) is pnpm's own lockfile command, so always say `pnpm run import`.
 
-What a run does, per source: download into `.cache/<source>/` (skipped when the file is there), parse with `scripts/lib/parse.ts`, validate every row with the Zod row schema in `src/lib/schemas/imports/<source>.ts` (rejected rows are counted, the first few are logged, nothing is dropped silently), transform with the pure functions in `src/lib/domain/imports/<source>.ts`, and upsert in batches through the internal mutations in `convex/imports.ts`. Each run writes an `importRuns` row with the source, URL, year, rows read/rejected/written, timestamps and any error. Upserts are keyed (`cds`, plus year and indicator, or year, subject and grade), so re-running a source rewrites the same documents. Nothing is deleted: a school that leaves the directory stays until pruned by hand.
+What a run does, per source: download into `.cache/<source>/` (skipped when the file is there), parse with `scripts/lib/parse.ts`, validate every row with the Zod row schema in `src/lib/schemas/imports/<source>.ts` (rejected rows are counted, the first few are logged, nothing is dropped silently), transform with the pure functions in `src/lib/domain/imports/<source>.ts`, and upsert in batches through the internal mutations in `convex/imports.ts`. Each run writes an `importRuns` row with the source, URL, year, rows read/rejected/written, timestamps and any error. Upserts are keyed (`cds`, plus year and indicator, or year, subject and grade). Nothing is deleted: a school that leaves the directory stays until pruned by hand.
+
+### What an import costs, and how it is kept small
+
+Convex bills database bandwidth: every byte read and every byte written, with a monthly allowance (1 GB on the free plan). The first two days of this project used nearly all of it, three quarters of it reads. Imports are written around that:
+
+- **A row already stored is not rewritten.** Each write starts by reading what is stored for that school and year, and skips the write when the content is the same. A re-run costs those reads and no writes, and reports `new or changed 0`.
+- **The Dashboard is written in one pass per school.** Its eight indicator files are all parsed first, then written ordered by school, so a school's stored rows are read once. Written file by file, the eighth file re-read the seven before it.
+- **Only changed schools are refreshed.** Each school document stores its search row (`summary`, grid cell, search text, narrowed grade span). Imports report which schools they actually changed, and when the run ends only those are recomputed (`rebuildSummariesFor`). Meal counts and test scores do not feed a search row and refresh nothing; neither does a Dashboard year older than the current one. `--no-rebuild` skips the refresh entirely.
+- **`search-rows` is maintenance, not part of an import.** It recomputes every school statewide, about five reads each. Run it only after changing how a summary or a grade span is computed.
+- **Test scores are stored as the all-grades row only.** No screen shows per-grade results, and they were five times the rows. Data loaded before this change still holds per-grade rows for 2024-25; `prune-caaspp` deletes them. It lists the affected schools, districts and the state from the cached research file, so it scans nothing.
+- **A directory re-import leaves unchanged schools alone.** The stored grade span is the directory's span narrowed to grades with students; while the directory's own span is unchanged the narrowed one is kept.
+
+Queries follow the same rule. A search and the My schools page read one document per school. A school page reads that school's rows plus one year of district and state test rows. Nearby schools are found by widening a circle that starts at half a mile.
 
 Credentials: `CONVEX_DEPLOY_KEY` (a deploy key from the dashboard) or, when unset, the login that `npx convex login` stored in `~/.convex/config.json`; the script then asks the Convex API for the dev deployment's admin key the same way `npx convex dev` does. The deployment comes from `.env.local`.
 
@@ -54,7 +68,8 @@ Sources, default years and cache paths:
 
 `pnpm run import history --years 2023,2024` loads the Dashboard and CAASPP files for the school years ending in those years, next to the current year. Loaded so far: 2023, 2024 and 2025.
 
-- It is frugal on purpose, because Convex's free plan counts every byte read and written. Earlier years keep only the all-grades CAASPP row per subject (the current year keeps each grade), unchanged documents are not rewritten, and the statewide search-row rebuild is skipped when every year given is older than the current one, since search rows read only a school's newest year.
+- The same command loads a new year when the state publishes it: `pnpm run import history --years 2026`. Run it with `--dry-run` first; a layout change shows up as rejected rows or an indicator with no school rows.
+- Rows for a year older than the current one never change a search row, so loading them refreshes nothing.
 - "Current" is always a school's newest year on file, decided in `src/lib/domain/history.ts`. Search rows, the compare table and the top of the school page use only that year; earlier years appear in the "By year" tables on the school page.
 - The 2023 Dashboard has no science file, and its ELPI file has no student-group column: it holds one row per school, which the import takes as the all-students row. The 2023 College/Career indicator has a status but no color.
 - Science changed unit: the 2024 Dashboard reports distance from standard in points with no color, and 2025 reports the percent of students who met or exceeded standard. `statusUnit(indicator, year)` returns the unit, and the school page says the two are not comparable.
@@ -244,7 +259,8 @@ None are needed. The state and federal files above cover everything in the mocku
 - Convex printed "Your projects are approaching the Free plan limits" on 2026-10-12, after the statewide imports, the history import and one search-row rebuild in the same month. Check https://dashboard.convex.dev/t/dannydiaz89/settings/usage before any import, and do not run `import all` or `search-rows` again this billing month without looking.
 
 - **The contract test wipes the deployment it runs against.** `CONVEX_CONTRACT_TESTS=1 pnpm test src/lib/data/convex.contract.test.ts` clears every data table and loads the 40 fixture schools. Run it against a throwaway Convex deployment, or re-run `pnpm run import all` afterwards (about ten minutes with a warm `.cache/`).
-- **Search summaries.** `pnpm run import search-rows` recomputes the summary stored on each school (about a minute for the state). It runs automatically at the end of any other import.
+- **Search rows.** An import refreshes the stored search row of the schools it changed. `pnpm run import search-rows` recomputes all of them and is for maintenance only (see "What an import costs").
+- **Testing Convex functions.** `src/lib/data/convex-functions.test.ts` runs the queries and import mutations in memory with `convex-test`, as part of `pnpm test`. It checks every query against the fixtures adapter and checks that imports write and refresh only what changed. Use it instead of the contract test unless a real deployment is the thing being tested.
 - **Clearing cached pages.** Pages cache school data for hours. `pnpm run import` calls `POST /api/revalidate` when it finishes, which needs `REVALIDATE_SECRET` in the env file and, when the app is not on localhost:3000, `APP_URL`. Without the secret the import says so and pages catch up when the cache expires.
 - **Grade spans.** The directory's `GSoffered` and `GSserved` are self-reported and list an end grade with no students for about 4% of schools (380 of 9,781): Downey High is listed 8-12 with no 8th graders among 4,051 students, Vacaville High 4-12 with everyone in 9-12. The app shows the listed span trimmed to grades with Census Day students (`trimSpanToEnrollment`), and a school's own page also shows the directory's listing when it differs. The rule only trims; it never adds a grade. A school that added a grade after the enrollment file's year reads one grade short until the next file.
 - **Deploy order.** Deploy Convex functions before the web app. New result fields carry defaults so a brief mismatch does not break pages.

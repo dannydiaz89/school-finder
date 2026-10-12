@@ -17,6 +17,7 @@ import {
 import { isSpecializedPlacement } from "../src/lib/domain/filters";
 import { milesToMeters } from "../src/lib/domain/geo";
 import { rowRanges } from "../src/lib/domain/grid";
+import { latestCaasppYear } from "../src/lib/domain/history";
 import { normalizeName, rankByName } from "../src/lib/domain/names";
 import { rowFromSummary, summaryOf, toDetail } from "../src/lib/domain/records";
 import { assembleSearchResult } from "../src/lib/domain/search";
@@ -24,6 +25,7 @@ import {
   loadCaasppByCds,
   loadRecord,
   loadSummaryRecord,
+  newestCaasppYear,
   schoolByCds,
   toSchool,
 } from "./lib/records";
@@ -81,9 +83,17 @@ async function detail(
 ): Promise<SchoolDetail> {
   const record = await loadRecord(ctx, school);
   if (school.type === "private") return toDetail(record, [], []);
+  // The comparison is for one school year: the school's newest, or when the school has no
+  // results, the newest its district or the state has. Read district and state rows for that
+  // year only, not every year on file.
+  const year =
+    latestCaasppYear(record.caaspp) ??
+    (school.districtCds ? await newestCaasppYear(ctx, school.districtCds) : null) ??
+    (await newestCaasppYear(ctx, STATE_CDS));
+  if (year === null) return toDetail(record, [], []);
   const [district, state] = await Promise.all([
-    school.districtCds ? loadCaasppByCds(ctx, school.districtCds) : Promise.resolve([]),
-    loadCaasppByCds(ctx, STATE_CDS),
+    school.districtCds ? loadCaasppByCds(ctx, school.districtCds, year) : Promise.resolve([]),
+    loadCaasppByCds(ctx, STATE_CDS, year),
   ]);
   return toDetail(record, district, state);
 }
@@ -171,8 +181,13 @@ export const get = zQuery({
   },
 });
 
-/** Radii tried in turn when looking for a school's neighbors, in miles. */
-const NEARBY_RADII = [2, 6, 20, 60];
+/**
+ * Radii tried in turn when looking for a school's neighbors, in miles. The
+ * first circles are small on purpose: a city school finds its five neighbors
+ * within half a mile, and reading a two-mile circle there means a hundred or
+ * more documents to show five rows.
+ */
+const NEARBY_RADII = [0.5, 1, 2, 6, 20, 60];
 
 export const nearby = zQuery({
   args: NearbyArgs.shape,
@@ -181,6 +196,7 @@ export const nearby = zQuery({
     const center = school?.coordinates;
     if (!school || !center) return [];
     // Widen the circle until it holds enough ordinary schools; cities stop at the first try.
+    // The nearest `limit` schools all lie inside the first circle that holds `limit` of them.
     let kept: SchoolSummary[] = [];
     for (const miles of NEARBY_RADII) {
       const rows = await rowsWithin(ctx, center, milesToMeters(miles));

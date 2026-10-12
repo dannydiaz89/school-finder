@@ -65,7 +65,7 @@ export const directory: Source = {
       ctx.log(`  skipped: ${JSON.stringify(skipped)}; schools to write: ${schools.length}`);
       const withoutCoordinates = schools.filter((s) => !s.coordinates).length;
       if (withoutCoordinates) ctx.log(`  ${withoutCoordinates} schools have no coordinates`);
-      const rowsWritten = await upsertInBatches(
+      const { rowsWritten, changed } = await upsertInBatches(
         ctx,
         internal.imports.upsertSchools,
         "schools",
@@ -73,7 +73,7 @@ export const directory: Source = {
         "schools",
         Math.min(ctx.batchSize, 150),
       );
-      return { rowsRead: raw.length, rowsRejected: rejected, rowsWritten };
+      return { rowsRead: raw.length, rowsRejected: rejected, rowsWritten, changed };
     });
   },
 };

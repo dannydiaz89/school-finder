@@ -74,14 +74,14 @@ export const privateAffidavit: Source = {
         const { schools, rowsRead, rowsRejected } = await loadAffidavit(ctx, year);
         const rows: PrivateSchoolDetail[] = schools.map((s) => s.detail);
         ctx.log(`  affidavit schools: ${rows.length}`);
-        const rowsWritten = await upsertInBatches(
+        const { rowsWritten, changed } = await upsertInBatches(
           ctx,
           internal.imports.upsertPrivateDetails,
           "rows",
           rows,
           "private details",
         );
-        return { rowsRead, rowsRejected, rowsWritten };
+        return { rowsRead, rowsRejected, rowsWritten, changed };
       },
     );
   },
@@ -150,7 +150,7 @@ export const privatePss: Source = {
       writeFileSync(reportPath, report.join("\n") + "\n");
       ctx.log(`  match summary: ${JSON.stringify(summary)} (details in ${reportPath})`);
 
-      const rowsWritten = await upsertInBatches(
+      const { rowsWritten, changed } = await upsertInBatches(
         ctx,
         internal.imports.upsertSchools,
         "schools",
@@ -162,6 +162,7 @@ export const privatePss: Source = {
         rowsRead: raw.length + affidavit.rowsRead,
         rowsRejected: rejected + affidavit.rowsRejected,
         rowsWritten,
+        changed,
       };
     });
   },

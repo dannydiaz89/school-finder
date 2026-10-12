@@ -453,7 +453,6 @@ const YEARS = String(args.years)
   .map((y) => Number(y.trim()))
   .filter((y) => Number.isInteger(y))
   .sort((x, y) => x - y);
-const CURRENT_YEAR = YEARS[YEARS.length - 1];
 
 function loadDashboard(cdsSet: Set<string>): Map<string, DashboardIndicator[]> {
   const root = String(args["dashboard-root"]);
@@ -512,8 +511,8 @@ function loadCaaspp(cdsSet: Set<string>, districtSet: Set<string>) {
       const subject = row["Test ID"] === "1" ? "ela" : row["Test ID"] === "2" ? "math" : undefined;
       const grade = CAASPP_GRADES[String(Number(row.Grade))];
       if (!subject || !grade) continue;
-      // Earlier years feed the trend, which is all grades together.
-      if (year !== CURRENT_YEAR && grade !== "all") continue;
+      // Every screen shows all grades together, and the importer stores nothing else.
+      if (grade !== "all") continue;
       const cds = cdsFromParts(row["County Code"], row["District Code"], row["School Code"]);
       const type = Number(row["Type ID"]);
       const isState = type === 4;

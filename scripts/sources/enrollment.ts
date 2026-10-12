@@ -47,14 +47,14 @@ export const enrollment: Source = {
         else withoutTotal += 1;
       }
       ctx.log(`  schools: ${rows.length}; without an all-students total: ${withoutTotal}`);
-      const rowsWritten = await upsertInBatches(
+      const { rowsWritten, changed } = await upsertInBatches(
         ctx,
         internal.imports.upsertEnrollment,
         "rows",
         rows,
         "enrollment rows",
       );
-      return { rowsRead: raw.length, rowsRejected: rejected, rowsWritten };
+      return { rowsRead: raw.length, rowsRejected: rejected, rowsWritten, changed };
     });
   },
 };

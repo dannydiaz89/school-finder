@@ -73,9 +73,37 @@ export function toSchool(doc: Doc<"schools">): School {
   return copy as School;
 }
 
-export async function loadCaasppByCds(ctx: QueryCtx, cds: CdsCode): Promise<CaasppResult[]> {
-  const rows = await byCds(ctx, cds).caaspp();
+/**
+ * CAASPP rows for one entity (a school, a district, or the state). Pass the
+ * school year to read only that year through the (cds, year) index: a
+ * comparison needs one year of district and state rows, not every year on file.
+ */
+export async function loadCaasppByCds(
+  ctx: QueryCtx,
+  cds: CdsCode,
+  year?: CaasppResult["year"],
+): Promise<CaasppResult[]> {
+  const rows =
+    year === undefined
+      ? await byCds(ctx, cds).caaspp()
+      : await ctx.db
+          .query("caaspp")
+          .withIndex("by_cds_year", (q) => q.eq("cds", cds).eq("year", year))
+          .collect();
   return rows.map((r) => stripSystem(r) as CaasppResult);
+}
+
+/** The newest CAASPP school year on file for an entity, found with a single read. */
+export async function newestCaasppYear(
+  ctx: QueryCtx,
+  cds: CdsCode,
+): Promise<CaasppResult["year"] | null> {
+  const newest = await ctx.db
+    .query("caaspp")
+    .withIndex("by_cds_year", (q) => q.eq("cds", cds))
+    .order("desc")
+    .first();
+  return newest?.year ?? null;
 }
 
 /** The whole record: every table for one school. */

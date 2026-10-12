@@ -33,13 +33,15 @@ export const caaspp: Source = {
         if (entity !== "state" && !inCounty(ctx, caasppCds(row))) continue;
         const result = caasppResultFromRow(row);
         if (!result) continue;
-        // Earlier years feed the trend, which is all grades together; skip the per-grade rows.
-        if (ctx.lean && result.grade !== "all") continue;
+        // Every screen shows all grades together. Per-grade rows were five times the data
+        // and were read on every school page without being shown, so they are not stored.
+        if (result.grade !== "all") continue;
         rows.push(result);
         kept[entity] += 1;
       }
       ctx.log(`  caaspp rows kept: ${JSON.stringify(kept)}`);
-      const rowsWritten = await upsertInBatches(
+      // Search rows do not read test scores, so there is nothing to refresh.
+      const { rowsWritten } = await upsertInBatches(
         ctx,
         internal.imports.upsertCaaspp,
         "rows",
