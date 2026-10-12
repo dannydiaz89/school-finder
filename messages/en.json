@@ -245,8 +245,8 @@
   "compare": {
     "title": "Comparing {count, plural, one {# school} other {# schools}}",
     "heading": "Compare schools",
-    "subtitle": "Distances from {address}. Bold marks the best value in a row where a comparison is meaningful.",
-    "subtitleNoAddress": "Bold marks the best value in a row where a comparison is meaningful.",
+    "subtitle": "Distances from {address}. The best value in each row is highlighted, where a comparison is meaningful.",
+    "subtitleNoAddress": "The best value in each row is highlighted, where a comparison is meaningful.",
     "emptyTitle": "Your compare list is empty",
     "empty": "Add up to {max, number} schools from search results or a school's page.",
     "backToSearch": "Find schools",
@@ -273,7 +273,8 @@
       "magnet": "Magnet",
       "distanceFrom": "Distance from {place}"
     },
-    "privateNote": "Private schools file an annual affidavit with the California Department of Education but do not take state tests or appear on the Dashboard, so those rows show \"Not rated\"."
+    "privateNote": "Private schools file an annual affidavit with the California Department of Education but do not take state tests or appear on the Dashboard, so those rows show \"Not rated\".",
+    "best": "best in this row"
   },
   "data": {
     "title": "Data sources",

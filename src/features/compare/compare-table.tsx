@@ -92,6 +92,7 @@ export function CompareTable({ schools, home, place, query, onRemove }: CompareT
           <TableCell
             key={cds}
             emphasis={emphasized?.has(cds)}
+            emphasisLabel={t("best")}
             muted={content === null || muted?.(school)}
           >
             {content === null ? common("noData") : content}

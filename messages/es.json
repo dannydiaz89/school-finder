@@ -245,8 +245,8 @@
   "compare": {
     "title": "Comparando {count, plural, one {# escuela} other {# escuelas}}",
     "heading": "Comparar escuelas",
-    "subtitle": "Distancias desde {address}. La negrita marca el mejor valor de cada fila donde la comparación tiene sentido.",
-    "subtitleNoAddress": "La negrita marca el mejor valor de cada fila donde la comparación tiene sentido.",
+    "subtitle": "Distancias desde {address}. Se resalta el mejor valor de cada fila, donde la comparación tiene sentido.",
+    "subtitleNoAddress": "Se resalta el mejor valor de cada fila, donde la comparación tiene sentido.",
     "emptyTitle": "Tu lista de comparación está vacía",
     "empty": "Agrega hasta {max, number} escuelas desde los resultados de búsqueda o la página de una escuela.",
     "backToSearch": "Buscar escuelas",
@@ -273,7 +273,8 @@
       "magnet": "Magnet",
       "distanceFrom": "Distancia desde {place}"
     },
-    "privateNote": "Las escuelas privadas presentan una declaración anual al Departamento de Educación de California, pero no presentan las pruebas estatales ni aparecen en el Dashboard, por eso esas filas muestran \"Sin calificación\"."
+    "privateNote": "Las escuelas privadas presentan una declaración anual al Departamento de Educación de California, pero no presentan las pruebas estatales ni aparecen en el Dashboard, por eso esas filas muestran \"Sin calificación\".",
+    "best": "el mejor de esta fila"
   },
   "data": {
     "title": "Fuentes de datos",

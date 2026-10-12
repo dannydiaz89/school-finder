@@ -46,7 +46,9 @@ describe("Table", () => {
       "colspan",
       "3",
     );
-    expect(screen.getByRole("cell", { name: "0.9 mi" })).toHaveClass("font-bold");
+    const best = screen.getByRole("cell", { name: /0\.9 mi/ });
+    // Emphasis is a highlighter mark: tinted and bold, not weight alone.
+    expect(best.querySelector("mark")).toHaveClass("font-bold", "bg-accent-subtle");
     expect(screen.getByRole("cell", { name: "Not rated" })).toHaveClass("text-fg-muted");
     expect(await runAxe(container)).toHaveNoViolations();
   });

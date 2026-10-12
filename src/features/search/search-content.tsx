@@ -76,6 +76,8 @@ async function resolveQuery(
       href: searchHref(
         {
           ...p,
+          // Show the place as it is properly written ("Downey, CA"), not as it was typed.
+          address: found.kind === "city" ? found.matchedAddress : p.address,
           lat: found.latitude,
           lng: found.longitude,
           loc: found.kind === "address" ? undefined : found.kind,

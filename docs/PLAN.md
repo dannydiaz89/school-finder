@@ -205,6 +205,8 @@ Rules:
 
 - Hovering a map pin shows a preview card with the school's basic facts; tapping one on a touch screen pins the card open with a Details link. A mouse click on a pin opens that school's page. A hover card takes no pointer events and is never docked, so it cannot cover the pin under the pointer.
 
+- Compare highlights the best value in a row with a tinted, bold mark (and a screen-reader label), not bold alone. Dashboard rows compare the state's level first and the measure behind it second, with smaller-is-better for suspension and absenteeism. Values that print identically tie. A city search stores the place as properly written ("Downey, CA").
+
 ## Contract amendments
 
 Record each as: date, what changed, which streams were notified.

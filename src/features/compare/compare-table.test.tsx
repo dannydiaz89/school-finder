@@ -78,13 +78,14 @@ describe("CompareTable", () => {
     // Distance: exactly one shortest.
     const distance = cellsOf("Distance from home");
     expect(distance).toHaveLength(3);
-    expect(distance.filter((c) => c.classList.contains("font-bold"))).toHaveLength(1);
+    expect(distance.filter((c) => c.querySelector("mark") !== null)).toHaveLength(1);
 
-    // Dashboard ELA: Judah and Sac High are both Green, a tie; the private school is not rated.
+    // Dashboard ELA: Judah and Sac High are both Green, but Judah is 31.5 points above standard
+    // and Sac High 0.2, so only Judah is highlighted; the private school is not rated.
     const ela = cellsOf("English Language Arts");
-    expect(ela[0]).toHaveClass("font-bold");
-    expect(ela[1]).toHaveClass("font-bold");
-    expect(ela[2]).not.toHaveClass("font-bold");
+    expect(ela[0].querySelector("mark")).not.toBeNull();
+    expect(ela[1].querySelector("mark")).toBeNull();
+    expect(ela[2].querySelector("mark")).toBeNull();
     expect(ela[2]).toHaveTextContent("Not rated");
     expect(ela[2]).toHaveClass("text-fg-muted");
     expect(within(ela[0]).getByText("Green")).toBeInTheDocument();
@@ -92,8 +93,8 @@ describe("CompareTable", () => {
 
     // Dashboard Math: Judah Green beats Sac High Red.
     const math = cellsOf("Mathematics");
-    expect(math[0]).toHaveClass("font-bold");
-    expect(math[1]).not.toHaveClass("font-bold");
+    expect(math[0].querySelector("mark")).not.toBeNull();
+    expect(math[1].querySelector("mark")).toBeNull();
     expect(within(math[1]).getByText("Red")).toBeInTheDocument();
 
     // Percent-style indicator status.
@@ -108,14 +109,14 @@ describe("CompareTable", () => {
     const ratio = cellsOf("Student–teacher ratio");
     expect(ratio[0]).toHaveTextContent("22.4:1");
     expect(ratio[1]).toHaveTextContent("18.7:1");
-    expect(ratio[1]).toHaveClass("font-bold");
-    expect(ratio[0]).not.toHaveClass("font-bold");
+    expect(ratio[1].querySelector("mark")).not.toBeNull();
+    expect(ratio[0].querySelector("mark")).toBeNull();
     expect(ratio[2]).toHaveTextContent("Not reported");
 
     // Enrollment is a fact, never bold.
     const enrollment = cellsOf("Enrollment");
     expect(enrollment.map((c) => c.textContent)).toEqual(["485", "413", "294"]);
-    expect(enrollment.some((c) => c.classList.contains("font-bold"))).toBe(false);
+    expect(enrollment.some((c) => c.querySelector("mark") !== null)).toBe(false);
 
     // Transitional kindergarten: shown only where the data proves it.
     expect(cellsOf("Transitional kindergarten").map((c) => c.textContent)).toEqual([
@@ -136,9 +137,9 @@ describe("CompareTable", () => {
 
     const tests = cellsOf("English Language Arts", 1);
     expect(tests[0]).toHaveTextContent("63%");
-    expect(tests[0]).toHaveClass("font-bold");
+    expect(tests[0].querySelector("mark")).not.toBeNull();
     expect(tests[1]).toHaveTextContent("51%");
-    expect(tests[1]).not.toHaveClass("font-bold");
+    expect(tests[1].querySelector("mark")).toBeNull();
     expect(tests[2]).toHaveTextContent("Not tested");
     expect(tests[2]).toHaveClass("text-fg-muted");
 

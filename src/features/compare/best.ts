@@ -1,4 +1,4 @@
-import { haversineMeters } from "@/lib/domain/geo";
+import { formatMiles, haversineMeters } from "@/lib/domain/geo";
 import { levelRank } from "@/lib/domain/levels";
 import type {
   CaasppSubject,
@@ -16,8 +16,10 @@ import { dashboardIndicator, isPublic, studentTeacherRatio, testScore } from "./
  * Dashboard level (higher), test scores (higher), student-teacher ratio
  * (lower), distance from home (lower). Enrollment, meals, English learners,
  * grades, and programs are facts without a direction and are never
- * emphasized. Ties are all emphasized. A row needs at least two comparable
- * values before anything is "best": one value alone is not a comparison.
+ * emphasized. Dashboard rows compare the level, then the measure behind it.
+ * Values that print the same are a tie, and ties are all emphasized. A row
+ * needs at least two comparable values before anything is "best": one value
+ * alone is not a comparison.
  */
 
 export type ComparableRow =
@@ -53,21 +55,59 @@ export function dashboardLevelRank(
   return levelRank(row.level);
 }
 
-/** The number a row compares for one school, or null when the school has none. */
+/** Indicators where a smaller number is the better one. For the rest, larger is better. */
+export const LOWER_IS_BETTER: ReadonlySet<DashboardIndicatorId> = new Set([
+  "chronicAbsenteeism",
+  "suspension",
+]);
+
+/** Levels are whole steps; the status only ever decides between schools on the same level. */
+const LEVEL_WEIGHT = 1_000_000;
+const oneDecimal = (value: number) => Math.round(value * 10) / 10;
+
+/**
+ * A single number for a Dashboard cell where larger is better: the state's
+ * level first, then the measure behind it. Two Green schools are not equal if
+ * one is 12 points above standard and the other 2; the level alone would call
+ * that a tie and highlight both, which highlights nothing.
+ */
+export function dashboardScore(
+  school: SchoolDetail,
+  indicator: DashboardIndicatorId,
+): number | null {
+  const rank = dashboardLevelRank(school, indicator);
+  if (rank === null) return null;
+  const status = dashboardIndicator(school, indicator)?.status;
+  if (status === null || status === undefined) return rank * LEVEL_WEIGHT;
+  const better = LOWER_IS_BETTER.has(indicator) ? -status : status;
+  return rank * LEVEL_WEIGHT + oneDecimal(better);
+}
+
+/**
+ * The number a row compares for one school, or null when the school has none.
+ * Values are rounded the way the table prints them, so two cells that read the
+ * same are a tie rather than one being picked over a difference nobody can see.
+ */
 export function rowValue(
   school: SchoolDetail,
   row: ComparableRow,
   home?: Coordinates,
 ): number | null {
   switch (row.kind) {
-    case "distance":
-      return distanceMeters(school, home);
+    case "distance": {
+      const meters = distanceMeters(school, home);
+      return meters === null ? null : formatMiles(meters);
+    }
     case "dashboard":
-      return dashboardLevelRank(school, row.indicator);
-    case "test":
-      return isPublic(school) ? testScore(school, row.subject) : null;
-    case "studentTeacher":
-      return studentTeacherRatio(school);
+      return dashboardScore(school, row.indicator);
+    case "test": {
+      const score = isPublic(school) ? testScore(school, row.subject) : null;
+      return score === null ? null : Math.round(score);
+    }
+    case "studentTeacher": {
+      const ratio = studentTeacherRatio(school);
+      return ratio === null ? null : oneDecimal(ratio);
+    }
   }
 }
 

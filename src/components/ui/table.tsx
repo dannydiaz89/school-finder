@@ -78,21 +78,33 @@ export function TableHeaderCell({ scope = "col", className, ...rest }: TableHead
 export interface TableCellProps extends TdHTMLAttributes<HTMLTableCellElement> {
   /** Bold: the best value in the row. */
   emphasis?: boolean;
+  /** What the emphasis means, for screen readers, e.g. "best in this row". */
+  emphasisLabel?: string;
   /** Gray: "Not rated", "Not reported", or no data. */
   muted?: boolean;
 }
 
-export function TableCell({ emphasis, muted, className, ...rest }: TableCellProps) {
+export function TableCell({
+  emphasis,
+  emphasisLabel,
+  muted,
+  className,
+  children,
+  ...rest
+}: TableCellProps) {
   return (
-    <td
-      className={cx(
-        "py-2.5 pr-3 last:pr-0",
-        emphasis && "font-bold",
-        muted && "text-fg-muted",
-        className,
+    <td className={cx("py-2.5 pr-3 last:pr-0", muted && "text-fg-muted", className)} {...rest}>
+      {emphasis ? (
+        // A highlighter mark around the content: tinted, bold, and named for screen readers,
+        // so the emphasis never depends on color or weight alone.
+        <mark className="-mx-1.5 inline-block rounded-sm bg-accent-subtle px-1.5 py-0.5 font-bold text-inherit">
+          {children}
+          {emphasisLabel ? <span className="sr-only"> ({emphasisLabel})</span> : null}
+        </mark>
+      ) : (
+        children
       )}
-      {...rest}
-    />
+    </td>
   );
 }
 

@@ -1,8 +1,16 @@
 import { describe, expect, it } from "vitest";
 import { fixtures } from "@/fixtures";
-import { haversineMeters } from "@/lib/domain/geo";
+import { formatMiles, haversineMeters } from "@/lib/domain/geo";
 import type { SchoolDetail } from "@/lib/schemas";
-import { bestIndexes, bestInRow, dashboardLevelRank, distanceMeters, rowValue } from "./best";
+import {
+  LOWER_IS_BETTER,
+  bestInRow,
+  bestIndexes,
+  dashboardLevelRank,
+  dashboardScore,
+  distanceMeters,
+  rowValue,
+} from "./best";
 
 // Downtown Sacramento, as the search page would put it in the URL.
 const home = { latitude: 38.5781, longitude: -121.4944 };
@@ -77,7 +85,8 @@ describe("rowValue", () => {
   });
 
   it("reads test scores and ratios from the detail", () => {
-    expect(rowValue(judah, { kind: "test", subject: "ela" })).toBeCloseTo(62.73);
+    // Rounded the way the table prints it: 62.73% reads "63%".
+    expect(rowValue(judah, { kind: "test", subject: "ela" })).toBe(63);
     expect(rowValue(judah, { kind: "studentTeacher" })).toBeCloseTo(22.4);
     expect(
       rowValue(detail("Theodore Judah Elementary", { staff: null }), { kind: "studentTeacher" }),
@@ -86,7 +95,8 @@ describe("rowValue", () => {
 
   it("measures distance from the home coordinates", () => {
     const expected = haversineMeters(home, judah.school.coordinates!);
-    expect(rowValue(judah, { kind: "distance" }, home)).toBeCloseTo(expected);
+    // In miles to one decimal, as printed, so two schools that both read "0.5 mi" tie.
+    expect(rowValue(judah, { kind: "distance" }, home)).toBe(formatMiles(expected));
     expect(distanceMeters(judah, undefined)).toBeNull();
     expect(
       distanceMeters(
@@ -100,13 +110,34 @@ describe("rowValue", () => {
 });
 
 describe("bestInRow", () => {
-  it("emphasizes the highest Dashboard level, all of them on a tie", () => {
+  it("emphasizes the highest Dashboard level, then the better measure on the same level", () => {
+    // Crocker and Lubin are both Blue on ELA, 68.9 and 47.2 points above standard.
     expect(bestInRow([judah, crocker, lubin], { kind: "dashboard", indicator: "ela" })).toEqual(
-      new Set([crocker.school.cds, lubin.school.cds]),
+      new Set([crocker.school.cds]),
     );
     expect(bestInRow([judah, crocker, lubin], { kind: "dashboard", indicator: "math" })).toEqual(
       new Set([crocker.school.cds]),
     );
+  });
+
+  it("never lets a better number outrank a better level", () => {
+    // Lubin is Green on math at +19.6; Crocker is Blue. A Green school cannot beat a Blue one.
+    expect(dashboardScore(crocker, "math")!).toBeGreaterThan(dashboardScore(lubin, "math")!);
+    expect(dashboardScore(lubin, "math")!).toBeGreaterThan(dashboardScore(judah, "math")!);
+  });
+
+  it("treats a smaller number as better for suspension and absenteeism", () => {
+    // Both Blue on suspension: Crocker 0.5%, Lubin 1%.
+    expect(bestInRow([crocker, lubin], { kind: "dashboard", indicator: "suspension" })).toEqual(
+      new Set([crocker.school.cds]),
+    );
+    expect(LOWER_IS_BETTER.has("chronicAbsenteeism")).toBe(true);
+    expect(LOWER_IS_BETTER.has("graduation")).toBe(false);
+  });
+
+  it("still ties when level and measure are the same", () => {
+    expect(bestInRow([crocker, crocker], { kind: "dashboard", indicator: "ela" }).size).toBe(1);
+    expect(bestIndexes([5_000_047.2, 5_000_047.2, 4_000_090], "highest")).toEqual([0, 1]);
   });
 
   it("emphasizes the highest test score", () => {
