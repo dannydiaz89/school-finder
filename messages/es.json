@@ -172,9 +172,6 @@
         "change": "Cambio respecto al año anterior"
       },
       "status": {
-        "distanceAbove": "{points, number} puntos por encima del estándar",
-        "distanceBelow": "{points, number} puntos por debajo del estándar",
-        "distanceAt": "En el estándar",
         "chronicAbsenteeism": "{value, number, ::percent .#} con ausentismo crónico",
         "suspension": "{value, number, ::percent .#} suspendidos al menos una vez",
         "graduation": "{value, number, ::percent .#} graduados",
@@ -193,9 +190,8 @@
     },
     "history": {
       "heading": "Por año",
-      "dashboardNote": "Nivel y estado en el Dashboard de cada año. Los puntos son la distancia respecto al estándar.",
+      "dashboardNote": "Nivel y estado en el Dashboard de cada año. Los puntos están por encima o por debajo del estándar estatal.",
       "indicator": "Indicador",
-      "points": "{value} pts",
       "noLevel": "Sin nivel en un año anterior: menos de 30 estudiantes, o el Dashboard no publicó un color para ese indicador ese año.",
       "science": "Ciencias no tenía color antes de {year} y se reportaba en puntos respecto al estándar. A partir de {year} es el porcentaje de estudiantes que cumplieron o superaron el estándar. Las dos cifras no son comparables.",
       "testsNote": "Esta escuela, todos los grados evaluados · estudiantes que cumplen o superan el estándar",
@@ -305,11 +301,15 @@
       "school": "Escuela",
       "students": "Estudiantes"
     },
-    "points": "{value} pts",
     "remove": "Quitar {name} de Mis escuelas",
     "full": "La lista está completa con {max, number} escuelas.",
     "missing": "{count, plural, one {# escuela guardada no está} other {# escuelas guardadas no están}} en los datos estatales actuales.",
-    "removeMissing": "Quitar de la lista"
+    "removeMissing": "Quitar de la lista",
+    "change": {
+      "increased": "Aumentó {points, number} desde {year}",
+      "declined": "Disminuyó {points, number} desde {year}",
+      "maintained": "Se mantuvo desde {year}"
+    }
   },
   "data": {
     "title": "Fuentes de datos",
@@ -511,6 +511,13 @@
       "directly": "Financiamiento directo",
       "locally": "Financiamiento local",
       "notInModel": "Fuera del modelo de financiamiento chárter"
+    },
+    "standard": {
+      "above": "{points, number} puntos por encima del estándar",
+      "below": "{points, number} puntos por debajo del estándar",
+      "at": "En el estándar",
+      "aboveShort": "{points, number} pts por encima",
+      "belowShort": "{points, number} pts por debajo"
     }
   },
   "styleguide": {

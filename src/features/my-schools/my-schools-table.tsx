@@ -1,5 +1,6 @@
 "use client";
 
+import { standardDistanceText } from "@/components/ui/standard-distance";
 import { gradeSpanText } from "@/components/ui/grade-span";
 import { useFormatter, useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
@@ -106,20 +107,14 @@ export function MySchoolsTable({ schools, onRemove }: MySchoolsTableProps) {
       entry.status === null
         ? null
         : statusUnit(indicator, year) === "points"
-          ? t("points", {
-              value: format.number(entry.status, {
-                signDisplay: "exceptZero",
-                maximumFractionDigits: 1,
-              }),
-            })
+          ? standardDistanceText(labels, entry.status)
           : format.number(entry.status / 100, { style: "percent", maximumFractionDigits: 1 });
     const kind = changeKind(indicator, year, entry.change);
     const change =
       kind === null
         ? null
-        : kind === "maintained"
-          ? labels("change.maintained")
-          : labels(`change.${kind}`, { points: Math.abs(entry.change ?? 0) });
+        : // Named with the year it is measured from, so it cannot be read as the result itself.
+          t(`change.${kind}`, { points: Math.abs(entry.change ?? 0), year: String(year - 1) });
     return (
       <TableCell key={key}>
         <span className="flex flex-col gap-0.5">

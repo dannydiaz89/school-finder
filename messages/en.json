@@ -172,9 +172,6 @@
         "change": "Change from prior year"
       },
       "status": {
-        "distanceAbove": "{points, number} pts above standard",
-        "distanceBelow": "{points, number} pts below standard",
-        "distanceAt": "At standard",
         "chronicAbsenteeism": "{value, number, ::percent .#} chronically absent",
         "suspension": "{value, number, ::percent .#} suspended at least once",
         "graduation": "{value, number, ::percent .#} graduated",
@@ -193,9 +190,8 @@
     },
     "history": {
       "heading": "By year",
-      "dashboardNote": "Level and status on each year's Dashboard. Points are distance from standard.",
+      "dashboardNote": "Level and status on each year's Dashboard. Points are above or below the state standard.",
       "indicator": "Indicator",
-      "points": "{value} pts",
       "noLevel": "No level in an earlier year: fewer than 30 students, or the Dashboard published no color for that indicator that year.",
       "science": "Science had no color before {year} and was reported as points from standard. From {year} on it is the percent of students who met or exceeded standard. The two are not comparable.",
       "testsNote": "This school, all grades tested · students meeting or exceeding standard",
@@ -305,11 +301,15 @@
       "school": "School",
       "students": "Students"
     },
-    "points": "{value} pts",
     "remove": "Remove {name} from My schools",
     "full": "The list is full at {max, number} schools.",
     "missing": "{count, plural, one {# saved school is} other {# saved schools are}} not in the current state data.",
-    "removeMissing": "Remove from the list"
+    "removeMissing": "Remove from the list",
+    "change": {
+      "increased": "Increased {points, number} from {year}",
+      "declined": "Declined {points, number} from {year}",
+      "maintained": "Maintained from {year}"
+    }
   },
   "data": {
     "title": "Data sources",
@@ -511,6 +511,13 @@
       "directly": "Directly funded",
       "locally": "Locally funded",
       "notInModel": "Not in the charter funding model"
+    },
+    "standard": {
+      "above": "{points, number} pts above standard",
+      "below": "{points, number} pts below standard",
+      "at": "At standard",
+      "aboveShort": "{points, number} pts above",
+      "belowShort": "{points, number} pts below"
     }
   },
   "styleguide": {

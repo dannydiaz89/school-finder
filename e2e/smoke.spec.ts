@@ -86,7 +86,7 @@ test("school detail page shows ratings and test scores by year", async ({ page }
   const ratings = page.locator("#dashboard").getByRole("table", { name: "By year" });
   await expect(ratings.getByRole("columnheader")).toHaveText(["Indicator", "2023", "2024", "2025"]);
   await expect(ratings.getByRole("row", { name: /English Language Arts/ })).toContainText(
-    "+20.2 pts",
+    "20.2 pts above",
   );
   const scores = page.locator("#tests").getByRole("table", { name: "By year" });
   await expect(scores.getByRole("row", { name: /Mathematics/ })).toHaveText(/57%.*56%.*57%/);
@@ -366,7 +366,7 @@ test("My schools keeps a list across pages and a reload, and removes from it", a
   await expect(table.getByRole("link", { name: SCHOOL_NAME })).toBeVisible();
   await expect(table.getByRole("row")).toHaveCount(3);
   await expect(table.getByRole("row", { name: new RegExp(SCHOOL_NAME) })).toContainText(
-    "+31.5 pts",
+    "31.5 pts above standard",
   );
 
   // A bookmark without the list in its address still shows it, as does a reload.

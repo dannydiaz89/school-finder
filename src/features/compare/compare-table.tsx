@@ -1,5 +1,7 @@
 "use client";
 
+import { statusUnit } from "@/lib/domain/history";
+import { standardDistanceText } from "@/components/ui/standard-distance";
 import { gradeSpanText } from "@/components/ui/grade-span";
 import { useFormatter, useTranslations } from "next-intl";
 import type { ReactNode } from "react";
@@ -31,7 +33,6 @@ import {
   gradeSpan,
   hasTransitionalKindergarten,
   isSuppressed,
-  isPointsIndicator,
   isPublic,
   programs,
   programsKnown,
@@ -224,21 +225,17 @@ export function CompareTable({ schools, home, place, query, onRemove }: CompareT
                   const status =
                     entry.status === null
                       ? null
-                      : isPointsIndicator(indicator)
-                        ? format.number(entry.status, {
-                            signDisplay: "exceptZero",
-                            minimumFractionDigits: 1,
-                            maximumFractionDigits: 1,
-                          })
+                      : statusUnit(indicator, entry.year) === "points"
+                        ? standardDistanceText(labels, entry.status)
                         : format.number(entry.status / 100, {
                             style: "percent",
                             maximumFractionDigits: 1,
                           });
                   return (
-                    <span className="inline-flex flex-wrap items-center gap-x-1.5">
+                    <span className="inline-flex flex-col gap-0.5">
                       <LevelDot level={entry.level} />
                       {status === null ? null : (
-                        <span className="font-normal text-fg-muted">{status}</span>
+                        <span className="text-sm font-normal text-fg-muted">{status}</span>
                       )}
                     </span>
                   );

@@ -1,3 +1,4 @@
+import { standardDistanceText } from "@/components/ui/standard-distance";
 import { useTranslations } from "next-intl";
 import { ExternalLink } from "@/components/ui/external-link";
 import { LevelDot } from "@/components/ui/level-dot";
@@ -78,7 +79,9 @@ export function DashboardSection({ school, rows, history = [] }: DashboardSectio
                 <TableCell>
                   <LevelDot level={row.level} />
                 </TableCell>
-                <TableCell muted={row.status === null}>{statusText(t, common, row)}</TableCell>
+                <TableCell muted={row.status === null}>
+                  {statusText(t, common, labels, row)}
+                </TableCell>
                 <TableCell muted={row.change === null}>{changeText(labels, common, row)}</TableCell>
               </TableRow>
             ))}
@@ -105,15 +108,14 @@ export function DashboardSection({ school, rows, history = [] }: DashboardSectio
 function statusText(
   t: ReturnType<typeof useTranslations<"school">>,
   common: ReturnType<typeof useTranslations<"common">>,
+  labels: ReturnType<typeof useTranslations<"labels">>,
   row: DashboardIndicator,
 ): string {
   // Suppressed by the state for a small count: say so rather than show a dash.
   if (row.status === null) return common("notReported");
   const { indicator } = row;
   if (indicator === "ela" || indicator === "math" || statusUnit(indicator, row.year) === "points") {
-    if (row.status > 0) return t("dashboard.status.distanceAbove", { points: row.status });
-    if (row.status < 0) return t("dashboard.status.distanceBelow", { points: -row.status });
-    return t("dashboard.status.distanceAt");
+    return standardDistanceText(labels, row.status);
   }
   return t(`dashboard.status.${indicator}`, { value: row.status / 100 });
 }

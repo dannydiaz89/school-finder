@@ -61,19 +61,20 @@ describe("MySchoolsTable", () => {
     ]);
     expect(rowOf("Theodore Judah Elementary")).toEqual([
       "Theodore Judah Elementary | District · public · Sacramento City Unified · TK–6 · Sacramento | Remove",
-      "Green | +31.5 pts | Increased 3.6",
-      "Green | +5.8 pts | Maintained",
-      "Orange | 19.3% | Increased 1.6",
-      "Green | 0.6% | Maintained",
+      "Green | 31.5 pts above standard | Increased 3.6 from 2024",
+      "Green | 5.8 pts above standard | Maintained from 2024",
+      "Orange | 19.3% | Increased 1.6 from 2024",
+      "Green | 0.6% | Maintained from 2024",
       "— | Not reported",
       "485",
     ]);
     expect(rowOf("Sacramento Charter High").slice(1, 6)).toEqual([
-      "Green | +0.2 pts | Increased 23.9",
-      "Red | -164.7 pts | Declined 18.8",
+      "Green | 0.2 pts above standard | Increased 23.9 from 2024",
+      // Below standard and falling: the words carry what a minus sign did not.
+      "Red | 164.7 pts below standard | Declined 18.8 from 2024",
       "— | Not reported",
-      "Yellow | 18.7% | Declined 4.9",
-      "Green | 88% | Increased 1.3",
+      "Yellow | 18.7% | Declined 4.9 from 2024",
+      "Green | 88% | Increased 1.3 from 2024",
     ]);
     expect(screen.getByRole("link", { name: "Theodore Judah Elementary" })).toHaveAttribute(
       "href",

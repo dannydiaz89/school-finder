@@ -89,7 +89,7 @@ describe("CompareTable", () => {
     expect(ela[2]).toHaveTextContent("Not rated");
     expect(ela[2]).toHaveClass("text-fg-muted");
     expect(within(ela[0]).getByText("Green")).toBeInTheDocument();
-    expect(within(ela[0]).getByText("+31.5")).toHaveClass("text-fg-muted");
+    expect(within(ela[0]).getByText("31.5 pts above standard")).toHaveClass("text-fg-muted");
 
     // Dashboard Math: Judah Green beats Sac High Red.
     const math = cellsOf("Mathematics");

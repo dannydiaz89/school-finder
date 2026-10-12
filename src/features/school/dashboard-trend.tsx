@@ -1,3 +1,4 @@
+import { standardDistanceText } from "@/components/ui/standard-distance";
 import { useFormatter, useTranslations } from "next-intl";
 import { LevelDot } from "@/components/ui/level-dot";
 import {
@@ -51,12 +52,7 @@ export function DashboardTrend({ rows }: DashboardTrendProps) {
   const statusText = (row: DashboardIndicator): string | null => {
     if (row.status === null) return null;
     return statusUnit(row.indicator, row.year) === "points"
-      ? t("points", {
-          value: format.number(row.status, {
-            signDisplay: "exceptZero",
-            maximumFractionDigits: 1,
-          }),
-        })
+      ? standardDistanceText(labels, row.status, "short")
       : format.number(row.status / 100, { style: "percent", maximumFractionDigits: 1 });
   };
 
