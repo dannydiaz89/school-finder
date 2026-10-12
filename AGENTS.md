@@ -41,6 +41,10 @@ Next.js App Router, TypeScript strict, Tailwind v4 with design tokens, next-intl
 6. **Nothing fetches CDE at request time.** CDE's site rate-limits and CAPTCHAs automated traffic. Source files are downloaded by scripts, cached under `.cache/`, and loaded into Convex in batches.
 7. **Stay in your lane.** Each workstream owns directories listed in `docs/PLAN.md`. Edits outside them go in a separate PR or are called out at the top of the PR description.
 
+## Compare list
+
+The compare list lives in the browser's local storage, read through `useCompareList()` (`src/features/compare/`). Do not read it from the URL: only the compare page looks at its `compare` parameter, to load data and to adopt a link opened directly. A link that should set a specific comparison calls `compare.set(list)` on click. Server-rendered HTML cannot know the list, so compare buttons settle after hydration.
+
 ## Design system
 
 Tokens are in `src/styles/tokens.css` and exposed to Tailwind in `src/app/globals.css`. Use token utilities (`bg-bg`, `text-fg-muted`, `border-hairline`, `text-accent`, `rounded-md`); never a raw hex value or an arbitrary color. The look is Google search results: white ground, hairline separators, link-blue titles, gray meta text, text tabs and dropdown-style filters. Specifically:

@@ -120,7 +120,8 @@ test("search results lead to a school page and the compare list", async ({ page 
   // which makes nth(0) the second row.
   await expect(page.getByRole("link", { name: /Compare \(1\)/ })).toBeVisible();
   await toggles.nth(0).click();
-  await expect(page).toHaveURL(/compare=\d{14}(%2C|,)\d{14}/);
+  // The list lives in the browser, not the address, so the search address is unchanged.
+  await expect(page).not.toHaveURL(/compare=/);
   await expect(page.getByRole("link", { name: /Compare \(2\)/ })).toBeVisible();
 
   // Open the first result's details.
@@ -259,6 +260,61 @@ test("clicking a map pin opens that school's page", async ({ page }) => {
   await expect(page.getByRole("heading", { level: 1, name })).toBeVisible();
   // The search travels with the visitor, so Back and "distance from" keep working.
   await expect(page).toHaveURL(/lat=/);
+});
+
+test("the compare list survives a new search, the header links, and a reload", async ({ page }) => {
+  // Regression: the list lived only in the address, so searching somewhere else emptied it.
+  const header = page.getByRole("banner");
+  const box = page.getByLabel("Address, city, ZIP code, or school");
+  const firstAdd = page.getByRole("main").getByRole("button", { name: "Add to compare" }).first();
+
+  await page.goto("/en");
+  await box.fill("Sacramento");
+  await page.getByRole("button", { name: "Find schools" }).click();
+  await expect(page).toHaveURL(/loc=city/);
+  await firstAdd.click();
+  await expect(header.getByRole("link", { name: "Compare (1)" })).toBeVisible();
+
+  // A different search.
+  await box.fill("95816");
+  await page.getByRole("button", { name: "Find schools" }).click();
+  await expect(page).toHaveURL(/loc=zip/);
+  await expect(header.getByRole("link", { name: "Compare (1)" })).toBeVisible();
+  await firstAdd.click();
+  await expect(header.getByRole("link", { name: "Compare (2)" })).toBeVisible();
+
+  // A link that carries nothing, then a full reload.
+  await header.getByRole("link", { name: "Search" }).click();
+  await expect(page).toHaveURL(/\/en$/);
+  await expect(header.getByRole("link", { name: "Compare (2)" })).toBeVisible();
+  await page.reload();
+  await expect(header.getByRole("link", { name: "Compare (2)" })).toBeVisible();
+
+  // And the compare page shows both, with the list in its address for sharing.
+  await header.getByRole("link", { name: "Compare (2)" }).click();
+  await expect(page).toHaveURL(/\/en\/compare\?compare=\d{14},\d{14}/);
+  await expect(page.getByRole("table").locator("thead a")).toHaveCount(2);
+});
+
+test("a compare link opened directly shows that comparison and removing a school updates it", async ({
+  page,
+}) => {
+  await page.goto("/en/compare?compare=34674396034292,34674390102038,34674393435419");
+  const columns = page.getByRole("table").locator("thead a");
+  await expect(columns).toHaveCount(3);
+  await expect(page.getByRole("banner").getByRole("link", { name: "Compare (3)" })).toBeVisible();
+  await page
+    .getByRole("table")
+    .getByRole("button", { name: /Remove/ })
+    .first()
+    .click();
+  await expect(columns).toHaveCount(2);
+  await expect(page).toHaveURL(/compare=34674390102038,34674393435419/);
+  await page.getByRole("button", { name: "Clear all" }).click();
+  await expect(page).not.toHaveURL(/compare=/);
+  await expect(
+    page.getByRole("banner").getByRole("link", { name: "Compare", exact: true }),
+  ).toBeVisible();
 });
 
 test("type filter narrows results and is reflected in the URL", async ({ page }) => {

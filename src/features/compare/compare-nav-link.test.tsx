@@ -1,8 +1,9 @@
 import { screen } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { renderWithIntl } from "@/components/ui/test-utils";
 import { runAxe } from "@/test/a11y";
 import { CompareNavLink } from "./compare-nav-link";
+import { resetCompareStoreForTests, writeCompareList } from "./store";
 
 let query = "";
 vi.mock("next/navigation", () => ({
@@ -14,6 +15,8 @@ vi.mock("@/i18n/navigation", () => ({
   ),
 }));
 
+beforeEach(() => resetCompareStoreForTests());
+
 describe("CompareNavLink", () => {
   it("is the plain Compare link when the list is empty", async () => {
     query = "";
@@ -24,14 +27,16 @@ describe("CompareNavLink", () => {
   });
 
   it("shows the count and carries the list in the link", () => {
-    query = "compare=34674396034292,34674390102038";
+    query = "";
+    writeCompareList(["34674396034292", "34674390102038"]);
     renderWithIntl(<CompareNavLink />);
     const link = screen.getByRole("link", { name: "Compare (2)" });
     expect(link).toHaveAttribute("href", "/en/compare?compare=34674396034292,34674390102038");
   });
 
   it("carries the home address and coordinates so compare can show distance", () => {
-    query = "compare=34674396034292&address=1420+J+St&lat=38.58&lng=-121.49&radius=5&sort=ela";
+    query = "address=1420+J+St&lat=38.58&lng=-121.49&radius=5&sort=ela";
+    writeCompareList(["34674396034292"]);
     renderWithIntl(<CompareNavLink />);
     const link = screen.getByRole("link", { name: "Compare (1)" });
     expect(link).toHaveAttribute(
@@ -47,7 +52,8 @@ describe("CompareNavLink", () => {
   });
 
   it("ignores a malformed list", () => {
-    query = "compare=not-a-cds";
+    query = "";
+    writeCompareList(["not-a-cds"]);
     renderWithIntl(<CompareNavLink />);
     expect(screen.getByRole("link", { name: "Compare" })).toHaveAttribute("href", "/en/compare");
   });

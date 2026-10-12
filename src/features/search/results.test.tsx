@@ -1,6 +1,7 @@
+import { getCompareSnapshot, resetCompareStoreForTests } from "@/features/compare/store";
 import { screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { fixtures } from "@/fixtures";
 import { toSummary } from "@/lib/domain/records";
 import { parseSearchParams, type SearchResult } from "@/lib/schemas";
@@ -56,6 +57,8 @@ function renderResults() {
   );
 }
 
+beforeEach(() => resetCompareStoreForTests());
+
 describe("SearchResults", () => {
   it("renders numbered rows for the fixture summaries with details links and the map region", async () => {
     search = new URLSearchParams();
@@ -85,27 +88,15 @@ describe("SearchResults", () => {
     expect(await runAxe(container)).toHaveNoViolations();
   });
 
-  it("toggles compare through the URL and carries the list into details links", async () => {
+  it("toggles compare in the browser's list and carries it into details links", async () => {
     search = new URLSearchParams();
-    const replaceState = vi.spyOn(window.history, "replaceState").mockImplementation(() => {});
-    const { rerender } = renderResults();
+    renderResults();
 
     const buttons = screen.getAllByRole("button", { name: "Add to compare" });
     expect(buttons).toHaveLength(3);
     await userEvent.click(buttons[0]);
-    expect(replaceState).toHaveBeenCalledWith(null, "", `/?compare=${rows[0].school.cds}`);
+    expect(getCompareSnapshot()).toEqual([rows[0].school.cds]);
 
-    // Simulate Next syncing useSearchParams with the new URL.
-    search = new URLSearchParams(`compare=${rows[0].school.cds}`);
-    rerender(
-      <SearchResults
-        result={result}
-        params={params}
-        center={home}
-        header={<h2>10 schools within 3 miles</h2>}
-        footer={<p>About these results</p>}
-      />,
-    );
     expect(screen.getByRole("button", { name: "In compare list" })).toHaveAttribute(
       "aria-pressed",
       "true",
@@ -117,8 +108,8 @@ describe("SearchResults", () => {
     );
 
     await userEvent.click(screen.getByRole("button", { name: "In compare list" }));
-    expect(replaceState).toHaveBeenLastCalledWith(null, "", "/");
-    replaceState.mockRestore();
+    expect(getCompareSnapshot()).toEqual([]);
+    expect(screen.getAllByRole("button", { name: "Add to compare" })).toHaveLength(3);
   });
 
   it("shows the empty state content from the header and no More button when everything is shown", () => {

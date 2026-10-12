@@ -1,15 +1,16 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { useSearchParams } from "next/navigation";
-import { useMemo } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useLayoutEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { TextLink } from "@/components/ui/text-link";
-import type { Coordinates, SchoolDetail } from "@/lib/schemas";
+import { parseCompareParams, type Coordinates, type SchoolDetail } from "@/lib/schemas";
 import { CompareTable } from "./compare-table";
 import { CopyLinkButton } from "./copy-link-button";
 import { exceedsMax } from "./facts";
+import { getCompareSnapshot, takeOpenedCompareLink } from "./store";
 import { useCompareList } from "./use-compare-list";
 
 export interface CompareViewProps {
@@ -34,8 +35,38 @@ export interface CompareViewProps {
 export function CompareView({ schools, home }: CompareViewProps) {
   const t = useTranslations("compare");
   const common = useTranslations("common");
-  const { list, remove, clear, max, query } = useCompareList();
+  const { list: stored, ready, remove, clear, set, max, query } = useCompareList();
   const searchParams = useSearchParams();
+  const router = useRouter();
+  const urlList = useMemo(() => parseCompareParams(searchParams).compare, [searchParams]);
+  const hasUrlList = searchParams.has("compare");
+
+  // A compare link opened directly (shared, bookmarked, reloaded) is the comparison to show,
+  // so it becomes the list. Reaching the same address again with Back does not, or it would
+  // undo whatever was added since.
+  useLayoutEffect(() => {
+    if (hasUrlList && takeOpenedCompareLink()) set(urlList);
+    // Once, when the page first shows.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Until the browser's list is readable (server render, hydration) the address is all there is.
+  const list = ready ? stored : urlList;
+
+  // Keep the address in step with the list, so Copy link and a reload give this comparison.
+  // If the list holds a school this render has no data for, ask the server for it.
+  useEffect(() => {
+    const current = getCompareSnapshot();
+    if (current.join(",") === urlList.join(",")) return;
+    const params = new URLSearchParams(searchParams.toString());
+    if (current.length) params.set("compare", current.join(","));
+    else params.delete("compare");
+    const qs = params.toString().replace(/%2C/g, ",");
+    const url = `${window.location.pathname}${qs ? `?${qs}` : ""}`;
+    const missing = current.some((cds) => !schools.some((school) => school.school.cds === cds));
+    if (missing) router.replace(url as never, { scroll: false });
+    else window.history.replaceState(null, "", url);
+  }, [stored, urlList, schools, searchParams, router]);
 
   const shown = useMemo(
     () =>

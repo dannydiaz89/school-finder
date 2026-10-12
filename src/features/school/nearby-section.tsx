@@ -19,7 +19,7 @@ export interface NearbySectionProps {
 /**
  * Nearby alternatives as the same rows the search page uses, numbered,
  * with a link that opens this school and the nearest few in Compare.
- * Client component: the compare list is read from and written to the URL.
+ * Client component: the compare list is read from and written to the browser's store.
  */
 export function NearbySection({ cds, nearby, query }: NearbySectionProps) {
   const t = useTranslations("school");
@@ -57,6 +57,8 @@ export function NearbySection({ cds, nearby, query }: NearbySectionProps) {
           <p className="m-0 text-base">
             <IntentLink
               href={{ pathname: "/compare", query: { ...query, compare: all.join(",") } }}
+              // This link names a specific comparison, so it becomes the list.
+              onClick={() => compare.set(all)}
             >
               {t("nearby.compare", { count: all.length - 1 })}
             </IntentLink>

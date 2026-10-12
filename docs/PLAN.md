@@ -180,6 +180,7 @@ Rules:
 ## Later
 
 - [-] Attendance boundaries. Dropped 2026-10-11: the only statewide dataset is from 2015-16. Revisit if a current source appears.
+- [ ] Revisit importing school demographics (raised by the user 2026-10-11; scope to be defined)
 - [ ] Address autocomplete
 - [ ] Scheduled re-imports when new annual files post
 - [ ] Sign-in and saved lists
@@ -209,6 +210,8 @@ Rules:
 
 - Grades shown are the directory's span trimmed to grades that have students on Census Day. The directory alone was wrong at the edges for about 4% of schools. The school page shows both when they differ.
 - Imports clear the page cache through `POST /api/revalidate` (bearer `REVALIDATE_SECRET`).
+
+- The compare list moved from the URL to local storage (`src/features/compare/store.ts`). In the URL it was dropped by any navigation that did not carry the parameter, including a new search. Changes read the list at the moment of the click, so quick clicks cannot undo each other.
 
 ## Contract amendments
 
