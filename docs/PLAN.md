@@ -2,7 +2,7 @@
 
 Status legend: `[ ]` not started · `[~]` in progress · `[x]` done · `[-]` dropped
 
-Last updated: 2026-10-11 (Stage 1 merged; Stage 2 in progress)
+Last updated: 2026-10-11 (Stage 1 complete; Stage 2: verified locally, deployment deferred)
 
 ## Goal
 
@@ -123,7 +123,7 @@ Rules:
 - [x] Implement `src/lib/data/convex.ts` and the thin Convex functions behind it; pure rules in `src/lib/domain/` with unit tests
 - [x] Radius query contract test passes against the Convex adapter (`CONVEX_CONTRACT_TESTS=1 pnpm test src/lib/data/convex.contract.test.ts`)
 - [x] Spot-check script: fixture schools asserted against the Dashboard site (`pnpm tsx scripts/spot-check.ts`); results in [data-sources.md](data-sources.md#verification)
-- [ ] Statewide import into the dev deployment (Sacramento County is loaded; `pnpm run import all` without `--county` does the state)
+- [x] Statewide import into the dev deployment: 10,537 public schools, 1,574 private schools placed, zero rejected rows (`pnpm run import all`)
 - [ ] Prune schools that left the directory (re-runs upsert but never delete)
 
 ### C. Search
@@ -154,7 +154,7 @@ Rules:
 
 - [x] Compare list in URL, max 5, helpers in `src/features/compare/` (`best.ts` best-in-row rules, `facts.ts` derived values, both pure and unit-tested)
 - [x] `useCompareList` hook in `src/features/compare/use-compare-list.ts` (URL-backed, History API writes); Search and Detail call it. Writes pass a `null` state: Next skips the `useSearchParams` sync when the call carries its own `__NA` state
-- [~] Add and remove from results and detail pages (Remove on the compare page is done; Search and Detail wire their own controls to the hook)
+- [x] Add and remove from results, name results, the map card, detail pages, and the compare page
 - [x] Compare table with grouped rows and best-in-row emphasis (`/[locale]/compare`, `CompareView` filters the server-fetched schools client-side so Remove and Clear all need no round trip)
 - [x] Copy link, clear all (`CopyLinkButton` announces through a live region)
 - [x] Phone layout with horizontal scroll
@@ -163,7 +163,7 @@ Rules:
 ### F. Quality
 
 - [x] CI workflow: typecheck, lint, unit tests on every PR (`.github/workflows/ci.yml`, plus a build and a Playwright job)
-- [~] Playwright smoke test against fixtures: search, open detail, add to compare (`e2e/smoke.spec.ts` covers every page, both controls, and axe in both themes; the search → detail → compare steps are TODOs until C, D, and E land)
+- [x] Playwright smoke test against fixtures: 27 tests covering search by address, city, ZIP code, and school name, filters, the map card and pin click, back navigation, detail, compare, and axe on four pages in both themes
 - [x] Spanish message file kept in sync; missing-key check in CI (`src/i18n/messages.test.ts` runs in `pnpm check`)
 - [~] `/about/data` page listing sources and update dates from `importRuns` (page done; dates read from `fixtures.sources` until B lands `importRuns`, swap in `src/app/[locale]/about/data/updates.ts`)
 - [x] README with setup and import instructions
