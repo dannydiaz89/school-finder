@@ -30,7 +30,7 @@ export interface SearchMapProps {
   schools: SchoolSummary[];
   hoveredCds: CdsCode | null;
   onHover: (cds: CdsCode | null) => void;
-  /** A pin was clicked: scroll the matching row into view. */
+  /** A pin was clicked with a mouse: open that school's page. */
   onSelect: (cds: CdsCode) => void;
   /** Tooltip for a pin: "Result 3: Name". */
   pinTitle: (number: number, name: string) => string;
@@ -48,14 +48,21 @@ interface CardState {
   y: number;
   width: number;
   height: number;
+  /** Where the map box starts in the window, to tell whether a card fits above its pin. */
+  top: number;
 }
 
 const CARD_HALF_WIDTH = 120;
 const CARD_GAP = 18;
 /** Room a card needs above its pin before it flips below. */
 const CARD_HEIGHT = 150;
-/** Below this map height (the phone layout) a card docks to the bottom edge instead of floating by its pin. */
-const DOCK_BELOW_HEIGHT = 320;
+/**
+ * A card opened by a tap docks to the bottom edge of a map shorter than this,
+ * where there is no room to float it beside the pin. Hover cards never dock:
+ * a docked card would sit on top of pins near the bottom, including the one
+ * being hovered, which takes the hover away and makes the card flicker.
+ */
+const DOCK_BELOW_HEIGHT = 340;
 
 const STYLE_LIGHT = "https://tiles.openfreemap.org/styles/positron";
 const STYLE_DARK = "https://tiles.openfreemap.org/styles/dark";
@@ -248,7 +255,15 @@ export default function SearchMap({
     const cardAt = (cds: CdsCode, coords: Coordinates, pinned: boolean): CardState => {
       const at = map.project([coords.longitude, coords.latitude]);
       const box = map.getContainer();
-      return { cds, pinned, x: at.x, y: at.y, width: box.clientWidth, height: box.clientHeight };
+      return {
+        cds,
+        pinned,
+        x: at.x,
+        y: at.y,
+        width: box.clientWidth,
+        height: box.clientHeight,
+        top: box.getBoundingClientRect().top,
+      };
     };
     schools.forEach((row, index) => {
       const coords = row.school.coordinates;
@@ -278,7 +293,7 @@ export default function SearchMap({
         // Do not let the map treat this as a tap on empty space, which closes the card.
         event.stopPropagation();
         if (pointerType === "mouse") {
-          // With a mouse the card is already showing; a click finds the school in the list.
+          // With a mouse the card is already showing; a click opens the school's page.
           callbacks.current.onSelect(cds);
         } else {
           // No hover on a touch screen: a tap opens the card and keeps it open.
@@ -303,8 +318,10 @@ export default function SearchMap({
 
   const cardIndex = card ? schools.findIndex((row) => row.school.cds === card.cds) : -1;
   const cardRow = cardIndex >= 0 ? schools[cardIndex] : undefined;
-  const docked = card !== null && card.height < DOCK_BELOW_HEIGHT;
-  const below = card !== null && card.y < CARD_HEIGHT + CARD_GAP;
+  const docked = card !== null && card.pinned && card.height < DOCK_BELOW_HEIGHT;
+  // Above the pin when the window has room there, otherwise below. The card may extend
+  // past the map box (the box does not clip it), so it never has to cover its own pin.
+  const below = card !== null && card.top + card.y < CARD_HEIGHT + CARD_GAP + 8;
   const left = card
     ? card.width < CARD_HALF_WIDTH * 2 + 16
       ? card.width / 2
@@ -312,11 +329,14 @@ export default function SearchMap({
     : 0;
 
   return (
-    <div className={["relative", className].filter(Boolean).join(" ")}>
-      <div ref={containerRef} className="h-full w-full" />
+    <div className={["relative rounded-[inherit]", className].filter(Boolean).join(" ")}>
+      {/* The map clips itself to the rounded box; the card is a sibling so it is not clipped. */}
+      <div ref={containerRef} className="h-full w-full overflow-hidden rounded-[inherit]" />
       {card && cardRow ? (
         <div
-          className="absolute z-10"
+          // A hover card takes no pointer events at all, wrapper included, so it can never
+          // come between the pointer and a pin.
+          className={card.pinned ? "absolute z-10" : "pointer-events-none absolute z-10"}
           style={
             docked
               ? { left: "50%", bottom: 8, transform: "translateX(-50%)" }

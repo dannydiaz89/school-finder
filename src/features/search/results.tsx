@@ -63,17 +63,25 @@ export function SearchResults({ result, params, center, header, footer }: Search
   const rows = result.schools;
   const cdsAt = (index: number) => rows[index]?.school.cds ?? null;
 
-  const selectFromMap = useCallback(
-    (cds: CdsCode) => {
+  const schoolHref = useCallback(
+    (cds: CdsCode) => `/school/${cds}${compare.query}`,
+    [compare.query],
+  );
+
+  /** A pin was clicked: open that school, as a click on a map pin does everywhere else. */
+  const openFromMap = useCallback(
+    (cds: CdsCode) => router.push(schoolHref(cds) as never),
+    [router, schoolHref],
+  );
+
+  /** Pointing at a pin highlights its row and loads the school, so the click that may follow is instant. */
+  const hoverFromMap = useCallback(
+    (cds: CdsCode | null) => {
       setHoveredCds(cds);
-      const index = rows.findIndex((r) => r.school.cds === cds);
-      const li = listRef.current?.children[index];
-      if (li instanceof HTMLElement) {
-        const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-        li.scrollIntoView({ block: "center", behavior: reduce ? "auto" : "smooth" });
-      }
+      // "full" fetches the page content, not just its shell; the option is not in the public type.
+      if (cds) router.prefetch(schoolHref(cds) as never, { kind: "full" } as never);
     },
-    [rows],
+    [router, schoolHref],
   );
 
   const pinTitle = useCallback(
@@ -140,17 +148,17 @@ export function SearchResults({ result, params, center, header, footer }: Search
         aria-label={t("map.label")}
         className="order-first flex w-full min-w-0 flex-col gap-3 xl:order-none xl:sticky xl:top-5 xl:max-w-[var(--panel-width)] xl:flex-1"
       >
-        <div className={`overflow-hidden border border-border bg-bg-map ${MAP_BOX}`}>
+        <div className={`border border-border bg-bg-map ${MAP_BOX}`}>
           <SearchMap
             center={center}
             radiusMiles={params.radius}
             schools={rows}
             hoveredCds={hoveredCds}
-            onHover={setHoveredCds}
-            onSelect={selectFromMap}
+            onHover={hoverFromMap}
+            onSelect={openFromMap}
             pinTitle={pinTitle}
             homeTitle={params.loc ? t("map.center") : t("map.home")}
-            detailsHref={(cds) => `/school/${cds}${compare.query}`}
+            detailsHref={schoolHref}
             className="h-full w-full"
           />
         </div>

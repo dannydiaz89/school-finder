@@ -218,6 +218,49 @@ test("hovering a map pin shows that school's basic facts", async ({ page }) => {
   await expect(card).toHaveCount(0);
 });
 
+test("the pin card never covers its pin, at any window width", async ({ page }) => {
+  // Regression: on a short map the card docked over the bottom pins, took the hover away
+  // from the pin under the pointer, and flickered.
+  for (const width of [700, 1000, 1440]) {
+    await page.setViewportSize({ width, height: 900 });
+    await page.goto(SEARCH_URL);
+    const pins = page.locator(".maplibregl-marker span.cursor-pointer");
+    await expect(pins.first()).toBeVisible();
+    const card = page.locator(".maplibregl-map").locator("xpath=..").locator("div.absolute.z-10");
+    const count = await pins.count();
+    for (let index = 0; index < count; index += 3) {
+      const pin = await pins.nth(index).boundingBox();
+      if (!pin) continue;
+      const x = pin.x + pin.width / 2;
+      const y = pin.y + pin.height / 2;
+      await page.mouse.move(5, 5);
+      await page.mouse.move(x, y);
+      await expect(card).toHaveCount(1);
+      const box = await card.boundingBox();
+      const covers =
+        box !== null && x > box.x && x < box.x + box.width && y > box.y && y < box.y + box.height;
+      expect(covers, `card covers pin ${index + 1} at width ${width}`).toBe(false);
+      // Still showing after a moment: it did not flicker away.
+      await page.waitForTimeout(150);
+      await expect(card).toHaveCount(1);
+    }
+  }
+});
+
+test("clicking a map pin opens that school's page", async ({ page }) => {
+  await page.goto(SEARCH_URL);
+  const pins = page.locator(".maplibregl-marker span.cursor-pointer");
+  await expect(pins.first()).toBeVisible();
+  const name = (
+    await page.getByRole("main").locator("ol > li").nth(1).getByRole("link").first().innerText()
+  ).trim();
+  await pins.nth(1).click();
+  await expect(page).toHaveURL(/\/en\/school\/\d{14}/);
+  await expect(page.getByRole("heading", { level: 1, name })).toBeVisible();
+  // The search travels with the visitor, so Back and "distance from" keep working.
+  await expect(page).toHaveURL(/lat=/);
+});
+
 test("type filter narrows results and is reflected in the URL", async ({ page }) => {
   await page.goto(SEARCH_URL);
   await page.getByRole("button", { name: /^Type/ }).click();
