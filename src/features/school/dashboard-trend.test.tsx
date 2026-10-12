@@ -66,6 +66,21 @@ describe("DashboardTrend", () => {
     expect(screen.queryByText(/No level in an earlier year/)).not.toBeInTheDocument();
   });
 
+  it("says Not reported where the state published neither a color nor a number", async () => {
+    // Murphy Ranch Elementary: 4 English learners, suppressed every year.
+    const detail = await loadDetail(CDS.judah);
+    const rows = detail.history.dashboard.map((r) =>
+      r.indicator === "elpi" && r.year === 2024 ? { ...r, level: null, status: null } : r,
+    );
+    renderWithIntl(<DashboardTrend rows={rows} />);
+    expect(tableTexts()[5]).toEqual([
+      "English learner progress",
+      "No level | 21.1%",
+      "Not reported",
+      "No level | 62.5%",
+    ]);
+  });
+
   it("renders nothing with a single year or no rows", async () => {
     const detail = await loadDetail(CDS.judah);
     const { container } = renderWithIntl(<DashboardTrend rows={detail.dashboard} />);

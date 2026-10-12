@@ -126,6 +126,7 @@ export default async function StyleguidePage({ params }: PageProps<"/[locale]/st
 
   const records = sampleRecords();
   const summaries: SchoolSummary[] = records.map((r) => toSummary(r, HOME));
+  const nowrap = (chunks: ReactNode) => <span className="whitespace-nowrap">{chunks}</span>;
   const subject = records[0];
   const subjectSummary = summaries[0];
   const districtRows = fixtures.districtCaaspp[subject?.school.districtCds ?? ""] ?? [];
@@ -296,19 +297,25 @@ export default async function StyleguidePage({ params }: PageProps<"/[locale]/st
                 {
                   key: "enrollment",
                   value: format.number(subjectSummary.enrollment ?? 0),
-                  label: t("school.stats.enrollment", { year: subject.enrollment?.year ?? "" }),
+                  label: t.rich("school.stats.enrollment", {
+                    year: subject.enrollment?.year ?? "",
+                    nowrap,
+                  }),
                 },
                 {
                   key: "ratio",
                   value: subjectSummary.studentTeacherRatio
                     ? t("common.ratio", { count: subjectSummary.studentTeacherRatio })
                     : t("common.noData"),
-                  label: t("school.stats.studentTeacher"),
+                  label: t.rich("school.stats.studentTeacher", {
+                    year: subject.staff?.year ?? "",
+                    nowrap,
+                  }),
                 },
                 {
                   key: "frpm",
                   value: pct(subject.frpm?.pctFrpm),
-                  label: t("school.stats.frpm"),
+                  label: t.rich("school.stats.frpm", { year: subject.frpm?.year ?? "", nowrap }),
                 },
                 {
                   key: "el",
@@ -317,7 +324,10 @@ export default async function StyleguidePage({ params }: PageProps<"/[locale]/st
                       ? subject.enrollment.englishLearners / subject.enrollment.total
                       : null,
                   ),
-                  label: t("school.stats.englishLearners"),
+                  label: t.rich("school.stats.englishLearners", {
+                    year: subject.enrollment?.year ?? "",
+                    nowrap,
+                  }),
                 },
               ]}
             />

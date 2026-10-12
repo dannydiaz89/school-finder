@@ -216,6 +216,12 @@ Rules:
 
 - A school can hold several years of Dashboard and CAASPP rows. "Current" means the school's newest year, decided only in `src/lib/domain/history.ts`. `SchoolDetail.dashboard` and `.caaspp` carry that year alone, and `SchoolDetail.history` carries every year for the "By year" tables. Search rows and compare never read an older year.
 - The header's Search link returns to the last search this tab showed (`src/features/search/last-search.ts`, session storage). Before, it was a plain link, so Compare then Search landed on an empty page. The address stays the source of truth for a search; the stored value is only where that link points.
+- Compare marks a value only when it leads by a clear margin, and marks every value within that margin of the best unless that is all of them. Dashboard rows use the state's own "Maintained" bands (`src/lib/domain/bands.ts`: 3 points for ELA and Math, 0.5 for absenteeism, 0.3 for suspension, 1 for graduation, 2 for the rest), test scores use 2 percentage points, the ratio 1 student per teacher, and distance a quarter mile. The last two are this app's choices.
+- A Dashboard row is marked only when color and number agree. The state's color weighs the year's change, so a school can hold the better color with the weaker number (Yellow at 6.7% absent beside Orange at 6%). Such a row is left unmarked, and the group heading says what a color reflects.
+- A suppressed indicator (no color and no number) reads "Not reported", never "No level" alone.
+- Grades shown start at TK when TK students are enrolled (`servedSpan`). The directory cannot list TK, so "TK–5 served, K–5 listed" is not shown as a disagreement.
+- Rows and stats that come from a school year carry it in the label. The staffing file is a year behind enrollment, so the ratio says so. The compare table's separate Magnet row is gone; Programs lists the directory's flags or says "None listed".
+- The compare page had its own untagged day-long cache, so imports never cleared it and it could disagree with a school's own page. It now reads through `cachedGetSchoolsByCds`, and `src/lib/data/boundary.test.ts` fails if any page or feature caches on its own or imports the uncached data API.
 - Imports are written for the free Convex plan: one read per key per batch, no rewrite of unchanged documents, lean earlier years, and no search-row rebuild when only older years are loaded.
 
 ## Contract amendments

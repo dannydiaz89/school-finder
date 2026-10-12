@@ -1,3 +1,4 @@
+import { sameSpanIgnoringTk } from "@/lib/domain/grades";
 import { useFormatter, useTranslations } from "next-intl";
 import { KeyValueList, type KeyValueItem } from "@/components/ui/key-value-list";
 import { TypeDot } from "@/components/ui/type-dot";
@@ -53,7 +54,8 @@ export function FactsList({ school, privateDetail, home, place }: FactsListProps
 
   const offered = school.gradesOffered;
   const served = school.gradesServed;
-  if (offered && served && (offered.low !== served.low || offered.high !== served.high)) {
+  // The directory cannot list TK, so TK-5 served against K-5 listed is not worth a second line.
+  if (offered && served && !sameSpanIgnoringTk(offered, served)) {
     add(
       "grades",
       t("facts.grades"),

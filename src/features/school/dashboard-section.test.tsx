@@ -73,4 +73,18 @@ describe("DashboardSection", () => {
     expect(screen.getByText(/No Dashboard indicators are published/)).toBeInTheDocument();
     expect(screen.queryByRole("table")).not.toBeInTheDocument();
   });
+
+  it("says Not reported for a status the state suppressed", async () => {
+    const detail = await loadDetail(CDS.judah);
+    const rows = detail.dashboard.map((r) =>
+      r.indicator === "elpi" ? { ...r, level: null, status: null, change: null } : r,
+    );
+    renderWithIntl(<DashboardSection school={detail.school} rows={rows} />);
+    expect(rowTexts().find((r) => r[0] === "English learner progress")).toEqual([
+      "English learner progress",
+      "No level",
+      "Not reported",
+      "—",
+    ]);
+  });
 });

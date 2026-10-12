@@ -139,10 +139,10 @@
       "nearby": "Cercanas"
     },
     "stats": {
-      "enrollment": "Estudiantes, {year}",
-      "studentTeacher": "Estudiantes por maestro",
-      "frpm": "Comidas gratis o a precio reducido",
-      "englishLearners": "Aprendices de inglés",
+      "enrollment": "Estudiantes, <nowrap>{year}</nowrap>",
+      "studentTeacher": "Estudiantes por maestro, <nowrap>{year}</nowrap>",
+      "frpm": "Comidas gratis o a precio reducido, <nowrap>{year}</nowrap>",
+      "englishLearners": "Aprendices de inglés, <nowrap>{year}</nowrap>",
       "fullTimeTeachers": "Maestros de tiempo completo",
       "partTimeTeachers": "Maestros de medio tiempo"
     },
@@ -255,8 +255,8 @@
   "compare": {
     "title": "Comparando {count, plural, one {# escuela} other {# escuelas}}",
     "heading": "Comparar escuelas",
-    "subtitle": "Distancias desde {address}. Se resalta el mejor valor de cada fila, donde la comparación tiene sentido.",
-    "subtitleNoAddress": "Se resalta el mejor valor de cada fila, donde la comparación tiene sentido.",
+    "subtitle": "Distancias desde {address}. Un valor se resalta cuando supera a los demás de su fila por un margen claro.",
+    "subtitleNoAddress": "Un valor se resalta cuando supera a los demás de su fila por un margen claro.",
     "emptyTitle": "Tu lista de comparación está vacía",
     "empty": "Agrega hasta {max, number} escuelas desde los resultados de búsqueda o la página de una escuela.",
     "backToSearch": "Buscar escuelas",
@@ -269,7 +269,8 @@
       "dashboard": "California School Dashboard, {year}",
       "tests": "Resultados de pruebas, CAASPP {year}",
       "students": "Escuela y estudiantes",
-      "testsNote": "· estudiantes que cumplen o superan el estándar"
+      "testsNote": "· estudiantes que cumplen o superan el estándar",
+      "dashboardNote": "· el color refleja el resultado de este año y su cambio respecto al año anterior"
     },
     "rows": {
       "distance": "Distancia desde casa",
@@ -280,11 +281,12 @@
       "frpm": "Comidas gratis o a precio reducido",
       "englishLearners": "Aprendices de inglés",
       "programs": "Programas",
-      "magnet": "Magnet",
-      "distanceFrom": "Distancia desde {place}"
+      "distanceFrom": "Distancia desde {place}",
+      "withYear": "{label}, <nowrap>{year}</nowrap>"
     },
     "privateNote": "Las escuelas privadas presentan una declaración anual al Departamento de Educación de California, pero no presentan las pruebas estatales ni aparecen en el Dashboard, por eso esas filas muestran \"Sin calificación\".",
-    "best": "el mejor de esta fila"
+    "best": "el mejor de esta fila",
+    "noPrograms": "Ninguno indicado"
   },
   "data": {
     "title": "Fuentes de datos",

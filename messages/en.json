@@ -139,10 +139,10 @@
       "nearby": "Nearby"
     },
     "stats": {
-      "enrollment": "Students, {year}",
-      "studentTeacher": "Student–teacher",
-      "frpm": "Free / reduced meals",
-      "englishLearners": "English learners",
+      "enrollment": "Students, <nowrap>{year}</nowrap>",
+      "studentTeacher": "Student–teacher, <nowrap>{year}</nowrap>",
+      "frpm": "Free / reduced meals, <nowrap>{year}</nowrap>",
+      "englishLearners": "English learners, <nowrap>{year}</nowrap>",
       "fullTimeTeachers": "Full-time teachers",
       "partTimeTeachers": "Part-time teachers"
     },
@@ -255,8 +255,8 @@
   "compare": {
     "title": "Comparing {count, plural, one {# school} other {# schools}}",
     "heading": "Compare schools",
-    "subtitle": "Distances from {address}. The best value in each row is highlighted, where a comparison is meaningful.",
-    "subtitleNoAddress": "The best value in each row is highlighted, where a comparison is meaningful.",
+    "subtitle": "Distances from {address}. A value is highlighted when it leads its row by a clear margin.",
+    "subtitleNoAddress": "A value is highlighted when it leads its row by a clear margin.",
     "emptyTitle": "Your compare list is empty",
     "empty": "Add up to {max, number} schools from search results or a school's page.",
     "backToSearch": "Find schools",
@@ -269,7 +269,8 @@
       "dashboard": "California School Dashboard, {year}",
       "tests": "Test scores, CAASPP {year}",
       "students": "School and students",
-      "testsNote": "· students meeting or exceeding standard"
+      "testsNote": "· students meeting or exceeding standard",
+      "dashboardNote": "· a color reflects this year's result and its change from the year before"
     },
     "rows": {
       "distance": "Distance from home",
@@ -280,11 +281,12 @@
       "frpm": "Free / reduced meals",
       "englishLearners": "English learners",
       "programs": "Programs",
-      "magnet": "Magnet",
-      "distanceFrom": "Distance from {place}"
+      "distanceFrom": "Distance from {place}",
+      "withYear": "{label}, <nowrap>{year}</nowrap>"
     },
     "privateNote": "Private schools file an annual affidavit with the California Department of Education but do not take state tests or appear on the Dashboard, so those rows show \"Not rated\".",
-    "best": "best in this row"
+    "best": "best in this row",
+    "noPrograms": "None listed"
   },
   "data": {
     "title": "Data sources",

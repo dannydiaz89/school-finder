@@ -85,6 +85,14 @@ export function DashboardTrend({ rows }: DashboardTrendProps) {
               </TableHeaderCell>
               {years.map((year) => {
                 const row = cell(indicator, year);
+                if (row && row.level === null && row.status === null) {
+                  // Suppressed for a small count: there is no result behind "No level".
+                  return (
+                    <TableCell key={year} muted>
+                      {common("notReported")}
+                    </TableCell>
+                  );
+                }
                 if (!row) {
                   return (
                     <TableCell key={year} muted>

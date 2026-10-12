@@ -111,3 +111,29 @@ export function trimSpanToEnrollment(
   const high = COUNTED.includes(span.high) ? withStudents[withStudents.length - 1] : span.high;
   return low === span.low && high === span.high ? span : { low, high };
 }
+
+/**
+ * The span to show for a school: the listed span trimmed to grades with
+ * students, starting at TK when transitional kindergarten students are
+ * enrolled. The state directory never lists TK, so without this a school
+ * with a TK class reads "K-5" beside "Transitional kindergarten: Yes".
+ *
+ * Returns the same object when nothing changes.
+ */
+export function servedSpan(
+  listed: GradeSpan,
+  byGrade: readonly { grade: Grade; count: number }[],
+): GradeSpan {
+  const trimmed = trimSpanToEnrollment(listed, byGrade);
+  const hasTk = byGrade.some((g) => g.grade === "TK" && g.count > 0);
+  return hasTk && trimmed.low === "K" ? { low: "TK", high: trimmed.high } : trimmed;
+}
+
+/**
+ * True when two spans are the same once TK is read as kindergarten. The
+ * directory cannot say TK, so "TK-5 served, K-5 listed" is not a disagreement.
+ */
+export function sameSpanIgnoringTk(a: GradeSpan, b: GradeSpan): boolean {
+  const low = (g: Grade) => (g === "TK" ? "K" : g);
+  return low(a.low) === low(b.low) && a.high === b.high;
+}

@@ -29,9 +29,12 @@ import {
   frpmFraction,
   gradeSpan,
   hasTransitionalKindergarten,
+  isSuppressed,
   isPointsIndicator,
   isPublic,
   programs,
+  programsKnown,
+  sharedYear,
   studentTeacherRatio,
   testScore,
 } from "./facts";
@@ -49,7 +52,7 @@ export interface CompareTableProps {
 }
 
 /** Row label column plus room for each school; below this the wrapper scrolls sideways. */
-const LABEL_WIDTH = 190;
+const LABEL_WIDTH = 230;
 const COLUMN_WIDTH = 170;
 
 /**
@@ -75,10 +78,40 @@ export function CompareTable({ schools, home, place, query, onRemove }: CompareT
 
   const best = (row: ComparableRow) => bestInRow(schools, row, home);
 
+  /**
+   * A row whose fact belongs to a school year. The year goes in the label
+   * when every school shares it, and into each cell when they differ, so a
+   * ratio from one year is never read against an enrollment from another.
+   */
+  const dated = (label: string, yearOf: (school: SchoolDetail) => string | null | undefined) => {
+    const year = sharedYear(schools, yearOf);
+    return {
+      // The year never breaks across lines ("2024-" / "25").
+      label: year
+        ? t.rich("rows.withYear", {
+            label,
+            year,
+            nowrap: (chunks) => <span className="whitespace-nowrap">{chunks}</span>,
+          })
+        : label,
+      cell: (school: SchoolDetail, text: string) => {
+        const own = yearOf(school);
+        return !year && own ? common("join", { a: text, b: own }) : text;
+      },
+    };
+  };
+  const enrollmentRow = dated(
+    t("rows.enrollment"),
+    (s) => s.enrollment?.year ?? s.privateDetail?.year,
+  );
+  const ratioRow = dated(t("rows.studentTeacher"), (s) => s.staff?.year);
+  const frpmRow = dated(t("rows.frpm"), (s) => s.frpm?.year);
+  const learnersRow = dated(t("rows.englishLearners"), (s) => s.enrollment?.year);
+
   /** One data row. `cell` returns the content, or null for a muted "no data" dash. */
   const row = (
     key: string,
-    label: string,
+    label: ReactNode,
     cell: (school: SchoolDetail) => ReactNode | null,
     emphasized?: Set<CdsCode>,
     muted?: (school: SchoolDetail) => boolean,
@@ -126,7 +159,7 @@ export function CompareTable({ schools, home, place, query, onRemove }: CompareT
       <TableHead>
         <TableRow header>
           {/* The corner is a plain cell: an empty header fails axe. */}
-          <TableCell className="w-[190px]" />
+          <TableCell className="w-[230px]" />
           {schools.map((school) => (
             <TableHeaderCell key={school.school.cds} className="pb-3.5">
               <span className="flex flex-col items-start gap-1">
@@ -185,7 +218,8 @@ export function CompareTable({ schools, home, place, query, onRemove }: CompareT
         {anyPublic && dashYear !== null ? (
           <>
             <TableGroupRow colSpan={columns}>
-              {t("groups.dashboard", { year: dashYear })}
+              {t("groups.dashboard", { year: dashYear })}{" "}
+              <span className="text-sm font-normal text-fg-muted">{t("groups.dashboardNote")}</span>
             </TableGroupRow>
             {indicators.map((indicator) =>
               row(
@@ -195,6 +229,7 @@ export function CompareTable({ schools, home, place, query, onRemove }: CompareT
                   if (!isPublic(school)) return common("notRated");
                   const entry = dashboardIndicator(school, indicator);
                   if (!entry) return null;
+                  if (isSuppressed(entry)) return common("notReported");
                   const status =
                     entry.status === null
                       ? null
@@ -218,7 +253,10 @@ export function CompareTable({ schools, home, place, query, onRemove }: CompareT
                   );
                 },
                 best({ kind: "dashboard", indicator }),
-                (school) => !isPublic(school),
+                (school) => {
+                  const entry = dashboardIndicator(school, indicator);
+                  return !isPublic(school) || (entry !== undefined && isSuppressed(entry));
+                },
               ),
             )}
           </>
@@ -247,51 +285,64 @@ export function CompareTable({ schools, home, place, query, onRemove }: CompareT
         ) : null}
 
         <TableGroupRow colSpan={columns}>{t("groups.students")}</TableGroupRow>
-        {row("enrollment", t("rows.enrollment"), (school) => {
+        {row("enrollment", enrollmentRow.label, (school) => {
           const total = enrollmentTotal(school);
-          return total === null ? common("notReported") : format.number(total);
+          return total === null
+            ? common("notReported")
+            : enrollmentRow.cell(school, format.number(total));
         })}
         {row(
           "studentTeacher",
-          t("rows.studentTeacher"),
+          ratioRow.label,
           (school) => {
             const ratio = studentTeacherRatio(school);
-            return ratio === null ? common("notReported") : common("ratio", { count: ratio });
+            return ratio === null
+              ? common("notReported")
+              : ratioRow.cell(school, common("ratio", { count: ratio }));
           },
           best({ kind: "studentTeacher" }),
           (school) => studentTeacherRatio(school) === null,
         )}
         {row(
           "frpm",
-          t("rows.frpm"),
+          frpmRow.label,
           (school) => {
             const fraction = frpmFraction(school);
-            return fraction === null ? common("notReported") : percent(fraction);
+            return fraction === null
+              ? common("notReported")
+              : frpmRow.cell(school, percent(fraction));
           },
           undefined,
           (school) => frpmFraction(school) === null,
         )}
         {row(
           "englishLearners",
-          t("rows.englishLearners"),
+          learnersRow.label,
           (school) => {
             const fraction = englishLearnerFraction(school);
-            return fraction === null ? common("notReported") : percent(fraction);
+            return fraction === null
+              ? common("notReported")
+              : learnersRow.cell(school, percent(fraction));
           },
           undefined,
           (school) => englishLearnerFraction(school) === null,
         )}
-        {row("programs", t("rows.programs"), (school) => {
-          const list = programs(school);
-          return list.length
-            ? format.list(
+        {row(
+          "programs",
+          t("rows.programs"),
+          (school) => {
+            const list = programs(school);
+            if (list.length) {
+              return format.list(
                 list.map((p) => labels(programKey(p))),
                 { type: "unit" },
-              )
-            : null;
-        })}
-        {row("magnet", t("rows.magnet"), (school) =>
-          school.school.magnet === undefined ? null : labels(yesNoKey(school.school.magnet)),
+              );
+            }
+            // The directory reports the flags and none is set, which is different from no data.
+            return programsKnown(school) ? t("noPrograms") : null;
+          },
+          undefined,
+          (school) => !programsKnown(school),
         )}
       </TableBody>
     </Table>

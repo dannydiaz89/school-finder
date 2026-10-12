@@ -1,12 +1,11 @@
 import type { Metadata } from "next";
-import { cacheLife } from "next/cache";
 import { getTranslations } from "next-intl/server";
 import { Suspense } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { CompareView } from "@/features/compare/compare-view";
 import { requireLocale } from "@/i18n/locale";
-import { getSchoolsByCds } from "@/lib/data";
-import { parseCompareParams, type CdsCode } from "@/lib/schemas";
+import { cachedGetSchoolsByCds } from "@/lib/data/cached";
+import { parseCompareParams } from "@/lib/schemas";
 
 export async function generateMetadata({
   params,
@@ -42,20 +41,14 @@ async function CompareContent({
   searchParams,
 }: Pick<PageProps<"/[locale]/compare">, "searchParams">) {
   const p = parseCompareParams(await searchParams);
-  const schools = p.compare.length ? await loadSchools(p.compare) : [];
+  // The shared cached wrapper, so an import's cache clear reaches this page too.
+  const schools = p.compare.length ? await cachedGetSchoolsByCds({ cds: p.compare }) : [];
   return (
     <CompareView
       schools={schools}
       home={{ address: p.address, loc: p.loc, lat: p.lat, lng: p.lng }}
     />
   );
-}
-
-/** School data changes once a year; cache each list of codes for a day. */
-async function loadSchools(cds: CdsCode[]) {
-  "use cache";
-  cacheLife("days");
-  return getSchoolsByCds({ cds });
 }
 
 function CompareSkeleton({ label }: { label: string }) {

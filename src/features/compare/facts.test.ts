@@ -13,7 +13,10 @@ import {
   gradeSpan,
   hasTransitionalKindergarten,
   isPointsIndicator,
+  isSuppressed,
   programs,
+  programsKnown,
+  sharedYear,
   testScore,
 } from "./facts";
 
@@ -121,6 +124,32 @@ describe("school facts", () => {
   it("prefers the served span over the offered span", () => {
     expect(gradeSpan(virtualAcademy)).toEqual({ low: "4", high: "8" });
     expect(gradeSpan(stFrancis)).toEqual({ low: "K", high: "8" });
+  });
+});
+
+describe("suppressed indicators, programs, and years", () => {
+  it("calls an indicator suppressed only when it has neither a color nor a number", () => {
+    const ela = dashboardIndicator(judah, "ela")!;
+    expect(isSuppressed(ela)).toBe(false);
+    // English learner progress at Judah: 16 students, a number but no color.
+    expect(isSuppressed(dashboardIndicator(judah, "elpi")!)).toBe(false);
+    // Murphy Ranch Elementary, 2025: 4 English learners, nothing published.
+    expect(isSuppressed({ ...ela, indicator: "elpi", level: null, status: null })).toBe(true);
+  });
+
+  it("knows program flags for public schools and not for private ones", () => {
+    expect(programsKnown(judah)).toBe(true);
+    expect(programs(judah)).toEqual([]);
+    expect(programsKnown(stFrancis)).toBe(false);
+  });
+
+  it("gives the year a fact shares across schools, or null when they differ", () => {
+    expect(sharedYear([judah, mcclatchy], (s) => s.staff?.year)).toBe("2023-24");
+    expect(sharedYear([judah, stFrancis], (s) => s.staff?.year)).toBe("2023-24");
+    expect(sharedYear([stFrancis], (s) => s.staff?.year)).toBeNull();
+    const older = detail("C. K. McClatchy High");
+    older.staff = { ...older.staff!, year: "2022-23" };
+    expect(sharedYear([judah, older], (s) => s.staff?.year)).toBeNull();
   });
 });
 

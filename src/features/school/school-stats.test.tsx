@@ -12,9 +12,10 @@ describe("SchoolStats", () => {
     expect(screen.getByRole("heading", { level: 2, name: "Overview" })).toBeInTheDocument();
     expect(screen.getAllByRole("term").map((el) => el.textContent)).toEqual([
       "Students, 2024-25",
-      "Student–teacher",
-      "Free / reduced meals",
-      "English learners",
+      // The ratio comes from the staffing file, which is a year behind enrollment.
+      "Student–teacher, 2023-24",
+      "Free / reduced meals, 2024-25",
+      "English learners, 2024-25",
     ]);
     expect(screen.getAllByRole("definition").map((el) => el.textContent)).toEqual([
       "485",

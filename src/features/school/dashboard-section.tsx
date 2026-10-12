@@ -107,7 +107,8 @@ function statusText(
   common: ReturnType<typeof useTranslations<"common">>,
   row: DashboardIndicator,
 ): string {
-  if (row.status === null) return common("noData");
+  // Suppressed by the state for a small count: say so rather than show a dash.
+  if (row.status === null) return common("notReported");
   const { indicator } = row;
   if (indicator === "ela" || indicator === "math" || statusUnit(indicator, row.year) === "points") {
     if (row.status > 0) return t("dashboard.status.distanceAbove", { points: row.status });

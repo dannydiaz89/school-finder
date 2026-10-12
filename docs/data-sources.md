@@ -241,6 +241,8 @@ None are needed. The state and federal files above cover everything in the mocku
 
 ## Operating notes
 
+- Convex printed "Your projects are approaching the Free plan limits" on 2026-10-12, after the statewide imports, the history import and one search-row rebuild in the same month. Check https://dashboard.convex.dev/t/dannydiaz89/settings/usage before any import, and do not run `import all` or `search-rows` again this billing month without looking.
+
 - **The contract test wipes the deployment it runs against.** `CONVEX_CONTRACT_TESTS=1 pnpm test src/lib/data/convex.contract.test.ts` clears every data table and loads the 40 fixture schools. Run it against a throwaway Convex deployment, or re-run `pnpm run import all` afterwards (about ten minutes with a warm `.cache/`).
 - **Search summaries.** `pnpm run import search-rows` recomputes the summary stored on each school (about a minute for the state). It runs automatically at the end of any other import.
 - **Clearing cached pages.** Pages cache school data for hours. `pnpm run import` calls `POST /api/revalidate` when it finishes, which needs `REVALIDATE_SECRET` in the env file and, when the app is not on localhost:3000, `APP_URL`. Without the secret the import says so and pages catch up when the cache expires.

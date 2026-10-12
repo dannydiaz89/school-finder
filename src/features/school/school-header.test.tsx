@@ -30,7 +30,7 @@ describe("SchoolHeader", () => {
       "Theodore Judah Elementary",
     );
     expect(
-      screen.getByText("District · public · Elementary · Sacramento City Unified · K–6"),
+      screen.getByText("District · public · Elementary · Sacramento City Unified · TK–6"),
     ).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Back to results" })).toHaveAttribute(
       "href",

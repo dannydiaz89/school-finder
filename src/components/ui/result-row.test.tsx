@@ -41,7 +41,7 @@ describe("ResultRow", () => {
     const row = screen.getAllByRole("listitem")[0];
     expect(within(row).getByText("1")).toBeInTheDocument();
     expect(
-      within(row).getByText(/^District · public · Sacramento City Unified · K–6 · [\d.]+ mi$/),
+      within(row).getByText(/^District · public · Sacramento City Unified · TK–6 · [\d.]+ mi$/),
     ).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Theodore Judah Elementary" })).toHaveAttribute(
       "href",

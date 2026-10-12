@@ -57,7 +57,7 @@ describe("CompareTable", () => {
       `/en/school/${JUDAH}?compare=${JUDAH}`,
     );
     expect(
-      screen.getByText("District · public · Sacramento City Unified · K–6"),
+      screen.getByText("District · public · Sacramento City Unified · TK–6"),
     ).toBeInTheDocument();
     expect(
       screen.getByText("Charter · public · Sacramento City Unified · 9–12"),
@@ -106,7 +106,7 @@ describe("CompareTable", () => {
     expect(within(graduation[1]).getByText("Green")).toBeInTheDocument();
 
     // Student-teacher ratio: lowest wins.
-    const ratio = cellsOf("Student–teacher ratio");
+    const ratio = cellsOf("Student–teacher ratio, 2023-24");
     expect(ratio[0]).toHaveTextContent("22.4:1");
     expect(ratio[1]).toHaveTextContent("18.7:1");
     expect(ratio[1].querySelector("mark")).not.toBeNull();
@@ -114,7 +114,7 @@ describe("CompareTable", () => {
     expect(ratio[2]).toHaveTextContent("Not reported");
 
     // Enrollment is a fact, never bold.
-    const enrollment = cellsOf("Enrollment");
+    const enrollment = cellsOf("Enrollment, 2024-25");
     expect(enrollment.map((c) => c.textContent)).toEqual(["485", "413", "294"]);
     expect(enrollment.some((c) => c.querySelector("mark") !== null)).toBe(false);
 
@@ -124,9 +124,13 @@ describe("CompareTable", () => {
       "—",
       "—",
     ]);
-    // Programs and magnet.
-    expect(cellsOf("Programs").map((c) => c.textContent)).toEqual(["—", "—", "—"]);
-    expect(cellsOf("Magnet").map((c) => c.textContent)).toEqual(["No", "No", "—"]);
+    // Programs carries the directory's flags. "None listed" is a fact; a dash is no data.
+    expect(cellsOf("Programs").map((c) => c.textContent)).toEqual([
+      "None listed",
+      "None listed",
+      "—",
+    ]);
+    expect(screen.queryByRole("rowheader", { name: "Magnet" })).toBeNull();
   });
 
   it("shows test scores as percentages with the best bold and private as not tested", () => {
@@ -143,8 +147,67 @@ describe("CompareTable", () => {
     expect(tests[2]).toHaveTextContent("Not tested");
     expect(tests[2]).toHaveClass("text-fg-muted");
 
-    expect(within(cellsOf("Free / reduced meals")[0]).getByText("30%")).toBeInTheDocument();
-    expect(within(cellsOf("English learners")[0]).getByText("5%")).toBeInTheDocument();
+    expect(
+      within(cellsOf("Free / reduced meals, 2024-25")[0]).getByText("30%"),
+    ).toBeInTheDocument();
+    expect(within(cellsOf("English learners, 2024-25")[0]).getByText("5%")).toBeInTheDocument();
+  });
+
+  it("marks nothing in a Dashboard row where color and number disagree", () => {
+    // Leffingwell and Murphy Ranch, 2025: Yellow at 6.7% chronically absent beside Orange at 6%.
+    const withAbsenteeism = (
+      school: SchoolDetail,
+      cds: string,
+      level: "yellow" | "orange",
+      status: number,
+    ) => ({
+      ...school,
+      school: { ...school.school, cds: cds as CdsCode },
+      dashboard: school.dashboard.map((r) =>
+        r.indicator === "chronicAbsenteeism" ? { ...r, level, status } : r,
+      ),
+    });
+    renderWithIntl(
+      <CompareTable
+        schools={[
+          withAbsenteeism(schools[0], "19644856089148", "yellow", 6.7),
+          withAbsenteeism(schools[0], "19644856013080", "orange", 6),
+        ]}
+        query=""
+        onRemove={() => {}}
+      />,
+    );
+    const cells = cellsOf("Chronic absenteeism");
+    expect(cells.map((c) => c.textContent)).toEqual(["Yellow6.7%", "Orange6%"]);
+    expect(cells.some((c) => c.querySelector("mark") !== null)).toBe(false);
+    // The same school twice otherwise: every other row is a tie, so nothing is marked at all.
+    expect(document.querySelector("mark")).toBeNull();
+    expect(
+      screen.getByText("· a color reflects this year's result and its change from the year before"),
+    ).toBeInTheDocument();
+  });
+
+  it("says Not reported for a suppressed indicator and dates each cell when years differ", () => {
+    const suppressed: SchoolDetail = {
+      ...schools[1],
+      dashboard: schools[1].dashboard.map((r) =>
+        r.indicator === "elpi" ? { ...r, level: null, status: null, change: null } : r,
+      ),
+      staff: { ...schools[1].staff!, year: "2022-23" },
+    };
+    renderWithIntl(
+      <CompareTable schools={[schools[0], suppressed]} query="" onRemove={() => {}} />,
+    );
+    const progress = cellsOf("English learner progress");
+    expect(progress[0]).toHaveTextContent("No level62.5%");
+    expect(progress[1]).toHaveTextContent("Not reported");
+    expect(progress[1]).toHaveClass("text-fg-muted");
+    // Ratios from two different years: no year in the label, one in each cell.
+    const ratio = cellsOf("Student–teacher ratio");
+    expect(ratio.map((c) => c.textContent)).toEqual([
+      "22.4:1 · 2023-24",
+      "18.7:1 · 2022-23 (best in this row)",
+    ]);
   });
 
   it("scrolls sideways inside the table instead of breaking the page", () => {
@@ -152,6 +215,6 @@ describe("CompareTable", () => {
       <CompareTable schools={schools} query="" onRemove={() => {}} />,
     );
     expect(container.firstElementChild).toHaveClass("overflow-x-auto");
-    expect(screen.getByRole("table")).toHaveStyle({ minWidth: `${190 + 170 * 3}px` });
+    expect(screen.getByRole("table")).toHaveStyle({ minWidth: `${230 + 170 * 3}px` });
   });
 });

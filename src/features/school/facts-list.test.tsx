@@ -26,7 +26,7 @@ describe("FactsList", () => {
       Address: "3919 McKinley Boulevard, Sacramento, CA 95819",
       "From home": "2.4 mi",
       Phone: "(916) 395-4790",
-      Grades: "K–6",
+      Grades: "TK–6",
       Type: "District · public · Traditional · Elementary",
       Magnet: "No",
       "Virtual instruction": "Not virtual",

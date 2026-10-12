@@ -89,6 +89,34 @@ export function hasTransitionalKindergarten(school: SchoolDetail): boolean {
   return span?.low === "TK";
 }
 
+/**
+ * True when the state suppressed the indicator: no color and no number,
+ * because too few students were counted. "No level" alone would suggest
+ * there is a result behind it.
+ */
+export function isSuppressed(row: DashboardIndicator): boolean {
+  return row.level === null && row.status === null;
+}
+
+/** True when the directory reports program flags for the school. Private schools have none. */
+export function programsKnown(school: SchoolDetail): boolean {
+  const { magnet, multilingual, virtual } = school.school;
+  return magnet !== undefined || multilingual !== undefined || virtual !== undefined;
+}
+
+/**
+ * The one year a fact carries across the list, or null when schools differ
+ * or none has it. Rows put it in their label so a ratio from one school year
+ * is never read against an enrollment from another.
+ */
+export function sharedYear(
+  schools: readonly SchoolDetail[],
+  yearOf: (school: SchoolDetail) => string | null | undefined,
+): string | null {
+  const years = new Set(schools.map(yearOf).filter((y): y is string => Boolean(y)));
+  return years.size === 1 ? [...years][0] : null;
+}
+
 /** Directory program flags that are true. Private schools have none. */
 export function programs(school: SchoolDetail): Program[] {
   const out: Program[] = [];
