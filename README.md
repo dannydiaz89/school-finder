@@ -95,6 +95,49 @@ The entry point is `scripts/import.ts`. Every source, its URL, layout, refresh c
 
 The app lists every source at `/en/about/data`.
 
+### Loading a new year on the live site
+
+The state publishes test scores each fall and the Dashboard some weeks later. This is the routine for getting a new year onto a deployed site. It runs from a checkout of this repository on your own machine.
+
+**Once: tell the script about the live site.** Create `.env.production.local` beside `.env.local` (Git ignores both) with four values:
+
+```bash
+CONVEX_DEPLOYMENT=...            # the Convex deployment the live site reads, as in .env.local
+NEXT_PUBLIC_CONVEX_URL=...       # its address, as in .env.local
+APP_URL=https://<your-site>      # where the site is deployed
+REVALIDATE_SECRET=...            # the same value the deployed site has
+```
+
+A separate production Convex deployment also needs `CONVEX_DEPLOY_KEY`, a deploy key from the Convex dashboard, set in your shell.
+
+**Each year, two commands.** Use the year the school year ends in.
+
+1. Check the new files. This downloads and validates them and writes nothing, so it costs no Convex usage:
+
+   ```bash
+   pnpm run import history --years 2026 --dry-run
+   ```
+
+   In the summary, `rowsRejected` should be 0 and no indicator should be marked `<-- none`. If either is off, the state changed a file's layout: stop and fix the importer first. Each of the first three years loaded had one such quirk.
+
+2. Load it. This writes to Convex, refreshes the search rows of the schools that changed, and clears the live site's page cache:
+
+   ```bash
+   pnpm run import history --years 2026 --env .env.production.local
+   ```
+
+   It should end with `Page cache cleared at https://<your-site>`.
+
+Things to know:
+
+- **Check Convex usage before step 2.** A new year costs a few hundred MB of database bandwidth, a large share of the free plan's monthly 1 GB.
+- **Running step 2 again is safe.** Rows already stored are not written again, and the summary then reads `new or changed 0`.
+- **If it ends with "Page cache not cleared"**, the secret in the file does not match the deployed site's, or `APP_URL` is wrong. The data is loaded all the same, and pages catch up on their own within a few hours.
+- **Visitors see the load in progress** for the ten minutes or so it takes: a school page can show the new year for some indicators before others.
+- **If the importer needs a code change**, deploy that first (Convex functions, then the web app), then load.
+- The Dashboard files may not be posted yet when test scores are. `pnpm run import caaspp --year 2026 --env .env.production.local` loads test scores alone.
+- Enrollment, meals, staffing, and the private school list are separate yearly files with their own commands; see [docs/data-sources.md](docs/data-sources.md). The public school directory has to be downloaded by hand.
+
 ## Tests
 
 ```bash
