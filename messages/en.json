@@ -162,7 +162,7 @@
       "affidavitNote": "Private School Affidavit, {year}",
       "facts": "Directory facts",
       "nearby": "Nearby alternatives",
-      "nearbyNote": "Distances from this school"
+      "nearbyNote": "Schools serving the same grades · distances from this school"
     },
     "dashboard": {
       "columns": {
@@ -246,7 +246,7 @@
     },
     "nearby": {
       "compare": "Compare with the {count, number} nearest",
-      "empty": "No other schools in the data have coordinates near this one."
+      "empty": "No nearby schools serving the same grades were found."
     },
     "links": {
       "dashboard": "CA School Dashboard",

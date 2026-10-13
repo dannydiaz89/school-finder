@@ -74,3 +74,32 @@ export function rowRanges(center: Coordinates, exactRadiusMeters: number): RowRa
   }
   return ranges;
 }
+
+/**
+ * The cells a search of `outerRadiusMeters` must read beyond those a search
+ * of `innerRadiusMeters` already read: the ring between two circles around
+ * the same center. A lookup that widens its circle step by step reads each
+ * cell once this way, instead of reading the inner circle again at every step.
+ */
+export function ringRanges(
+  center: Coordinates,
+  innerRadiusMeters: number,
+  outerRadiusMeters: number,
+): RowRange[] {
+  const inner = new Map(rowRanges(center, innerRadiusMeters).map((r) => [r.row, r]));
+  const ring: RowRange[] = [];
+  for (const outer of rowRanges(center, outerRadiusMeters)) {
+    const done = inner.get(outer.row);
+    if (!done) {
+      ring.push(outer);
+      continue;
+    }
+    if (outer.colMin < done.colMin) {
+      ring.push({ row: outer.row, colMin: outer.colMin, colMax: done.colMin - 1 });
+    }
+    if (outer.colMax > done.colMax) {
+      ring.push({ row: outer.row, colMin: done.colMax + 1, colMax: outer.colMax });
+    }
+  }
+  return ring;
+}

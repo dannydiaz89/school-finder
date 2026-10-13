@@ -162,7 +162,7 @@
       "affidavitNote": "Declaración jurada de escuela privada, {year}",
       "facts": "Datos del directorio",
       "nearby": "Alternativas cercanas",
-      "nearbyNote": "Distancias desde esta escuela"
+      "nearbyNote": "Escuelas que atienden los mismos grados · distancias desde esta escuela"
     },
     "dashboard": {
       "columns": {
@@ -246,7 +246,7 @@
     },
     "nearby": {
       "compare": "Comparar con las {count, number} más cercanas",
-      "empty": "Ninguna otra escuela en los datos tiene coordenadas cerca de esta."
+      "empty": "No se encontraron escuelas cercanas que atiendan los mismos grados."
     },
     "links": {
       "dashboard": "CA School Dashboard",

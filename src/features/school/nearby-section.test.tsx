@@ -28,9 +28,12 @@ describe("NearbySection", () => {
     if (!list) throw new Error("no ordered list");
     const items = Array.from(list.children) as HTMLElement[];
     expect(items).toHaveLength(5);
-    expect(items[0]).toHaveTextContent("Miwok Middle");
-    expect(items[0]).toHaveTextContent(/0\.7 mi/);
-    expect(within(items[0]).getByRole("link", { name: "Miwok Middle" })).toHaveAttribute(
+    // Nearest first, and every one serves elementary grades like the school on the page:
+    // the middle school half a mile away is no longer listed.
+    expect(items[0]).toHaveTextContent(nearby[0].school.name);
+    expect(items[0]).toHaveTextContent(/\d\.\d mi/);
+    expect(screen.queryByText("Miwok Middle")).toBeNull();
+    expect(within(items[0]).getByRole("link", { name: nearby[0].school.name })).toHaveAttribute(
       "href",
       `/en/school/${nearby[0].school.cds}?lat=38.5&lng=-121.4`,
     );
@@ -51,7 +54,7 @@ describe("NearbySection", () => {
     expect(buttons).toHaveLength(1);
     expect(buttons[0]).toHaveTextContent("In compare list");
     // Detail links carry the current compare list.
-    expect(screen.getByRole("link", { name: "Miwok Middle" })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: nearby[0].school.name })).toHaveAttribute(
       "href",
       `/en/school/${nearby[0].school.cds}?compare=${nearby[1].school.cds}`,
     );
@@ -59,6 +62,8 @@ describe("NearbySection", () => {
 
   it("says when nothing is nearby", () => {
     renderWithIntl(<NearbySection cds={CDS.judah} nearby={[]} query={{}} />);
-    expect(screen.getByText(/No other schools in the data/)).toBeInTheDocument();
+    expect(
+      screen.getByText("No nearby schools serving the same grades were found."),
+    ).toBeInTheDocument();
   });
 });

@@ -5,6 +5,7 @@ import {
   sortRows,
 } from "@/lib/domain/filters";
 import { milesToMeters } from "@/lib/domain/geo";
+import { isAlternativeTo } from "@/lib/domain/nearby";
 import { rankByName } from "@/lib/domain/names";
 import { summaryOf, toDetail, toSummary } from "@/lib/domain/records";
 import { fixtures } from "@/fixtures";
@@ -78,7 +79,7 @@ export const fixturesDataSource: SchoolDataSource = {
     const center = record?.school.coordinates;
     if (!record || !center) return [];
     return fixtures.schools
-      .filter((r) => r.school.cds !== args.cds && !isSpecializedPlacement(r.school))
+      .filter((r) => isAlternativeTo(record.school, r.school))
       .map((r) => toSummary(r, center))
       .sort((a, b) => a.distanceMeters - b.distanceMeters)
       .slice(0, args.limit);

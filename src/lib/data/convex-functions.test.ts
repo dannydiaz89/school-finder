@@ -162,13 +162,36 @@ describe("Convex queries match the fixtures adapter", () => {
     expect(await t.query(api.schools.get, { cds: "99999999999999" as CdsCode })).toBeNull();
   });
 
-  it("nearby returns the same nearest schools, starting from a small circle", async () => {
+  it("nearby returns the same nearest schools, widening ring by ring", async () => {
     for (const record of records) {
       const args = { cds: record.school.cds, limit: 5 };
       expect((await t.query(api.schools.nearby, args)).map(round)).toEqual(
         (await fixturesDataSource.getNearby(args)).map(round),
       );
     }
+  });
+
+  it("nearby lists schools serving the same grades, not merely the closest ones", async () => {
+    // Regression: a high school's page listed the five nearest schools, which were
+    // elementary and middle schools.
+    const mcclatchy = records.find((r) => r.school.name === "C. K. McClatchy High")!.school;
+    const rows = await t.query(api.schools.nearby, { cds: mcclatchy.cds, limit: 5 });
+    expect(rows.length).toBeGreaterThan(0);
+    for (const row of rows) {
+      const span = row.school.gradesServed ?? row.school.gradesOffered;
+      // Every one of them teaches grade 12.
+      expect(span?.high, row.school.name).toBe("12");
+    }
+    // Closer schools exist that are not alternatives to a high school.
+    const farthest = Math.max(...rows.map((r) => r.distanceMeters));
+    const all = await fixturesDataSource.getSchoolsInRadius({
+      center: mcclatchy.coordinates!,
+      radiusMiles: 25,
+    });
+    const skipped = all.rows.filter(
+      (r) => r.distanceMeters < farthest && !rows.some((x) => x.school.cds === r.school.cds),
+    );
+    expect(skipped.length).toBeGreaterThan(5);
   });
 
   it("byCds and briefs keep the requested order and drop unknown codes", async () => {

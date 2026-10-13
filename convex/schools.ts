@@ -14,11 +14,11 @@ import {
   type SchoolDetail,
   type SchoolSummary,
 } from "../src/lib/schemas";
-import { isSpecializedPlacement } from "../src/lib/domain/filters";
 import { milesToMeters } from "../src/lib/domain/geo";
-import { rowRanges } from "../src/lib/domain/grid";
+import { ringRanges, rowRanges, type RowRange } from "../src/lib/domain/grid";
 import { latestCaasppYear } from "../src/lib/domain/history";
 import { normalizeName, rankByName } from "../src/lib/domain/names";
+import { NEARBY_MAX_EXAMINED, NEARBY_RADII_MILES, isAlternativeTo } from "../src/lib/domain/nearby";
 import { rowFromSummary, summaryOf, toDetail } from "../src/lib/domain/records";
 import { assembleSearchResult } from "../src/lib/domain/search";
 import {
@@ -57,8 +57,18 @@ async function rowsWithin(
   center: { latitude: number; longitude: number },
   radiusMeters: number,
 ): Promise<SchoolSummary[]> {
+  const rows = await rowsInRanges(ctx, rowRanges(center, radiusMeters), center);
+  return rows.filter((row) => row.distanceMeters <= radiusMeters);
+}
+
+/** Every school filed under the grid cells given, as search rows measured from `center`. */
+async function rowsInRanges(
+  ctx: QueryCtx,
+  ranges: RowRange[],
+  center: { latitude: number; longitude: number },
+): Promise<SchoolSummary[]> {
   const pages = await Promise.all(
-    rowRanges(center, radiusMeters).map((range) =>
+    ranges.map((range) =>
       ctx.db
         .query("schools")
         .withIndex("by_geo", (q) =>
@@ -74,7 +84,7 @@ async function rowsWithin(
       return rowFromSummary(toSchool(doc), summary, center);
     }),
   );
-  return rows.filter((row) => row.distanceMeters <= radiusMeters);
+  return rows;
 }
 
 async function detail(
@@ -182,28 +192,43 @@ export const get = zQuery({
 });
 
 /**
- * Radii tried in turn when looking for a school's neighbors, in miles. The
- * first circles are small on purpose: a city school finds its five neighbors
- * within half a mile, and reading a two-mile circle there means a hundred or
- * more documents to show five rows.
+ * The nearest schools that are alternatives to this one: ordinary choices
+ * serving the same grades (see `isAlternativeTo`).
+ *
+ * The circle widens step by step until it holds enough of them. Each step
+ * reads only the ring of grid cells the last step did not, so a school is
+ * read once however far the search goes. An elementary school in a city is
+ * done in the first step; a high school has to look farther, because high
+ * schools are farther apart.
  */
-const NEARBY_RADII = [0.5, 1, 2, 6, 20, 60];
-
 export const nearby = zQuery({
   args: NearbyArgs.shape,
   handler: async (ctx, args) => {
-    const school = await schoolByCds(ctx, args.cds);
-    const center = school?.coordinates;
-    if (!school || !center) return [];
-    // Widen the circle until it holds enough ordinary schools; cities stop at the first try.
-    // The nearest `limit` schools all lie inside the first circle that holds `limit` of them.
-    let kept: SchoolSummary[] = [];
-    for (const miles of NEARBY_RADII) {
-      const rows = await rowsWithin(ctx, center, milesToMeters(miles));
-      kept = rows.filter((r) => r.school.cds !== args.cds && !isSpecializedPlacement(r.school));
-      if (kept.length >= args.limit) break;
+    const doc = await schoolByCds(ctx, args.cds);
+    const center = doc?.coordinates;
+    if (!doc || !center) return [];
+    const school = toSchool(doc);
+    const nearest = (rows: SchoolSummary[]) =>
+      rows.sort((a, b) => a.distanceMeters - b.distanceMeters).slice(0, args.limit);
+
+    const found: SchoolSummary[] = [];
+    let examined = 0;
+    let reached = 0;
+    for (const miles of NEARBY_RADII_MILES) {
+      const radius = milesToMeters(miles);
+      const ranges =
+        reached === 0 ? rowRanges(center, radius) : ringRanges(center, reached, radius);
+      const rows = await rowsInRanges(ctx, ranges, center);
+      examined += rows.length;
+      reached = radius;
+      found.push(...rows.filter((row) => isAlternativeTo(school, row.school)));
+      // Cells are read whole, so some schools found lie outside the circle. The nearest
+      // `limit` are certain only once that many lie inside it.
+      const inside = found.filter((row) => row.distanceMeters <= radius);
+      if (inside.length >= args.limit) return nearest(inside);
+      if (examined >= NEARBY_MAX_EXAMINED) break;
     }
-    return kept.sort((a, b) => a.distanceMeters - b.distanceMeters).slice(0, args.limit);
+    return nearest(found.filter((row) => row.distanceMeters <= reached));
   },
 });
 
