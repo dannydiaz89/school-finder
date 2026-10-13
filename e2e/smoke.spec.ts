@@ -215,13 +215,32 @@ test("searching by school name lists matching schools and opens one", async ({ p
   await page.getByRole("button", { name: "Find schools" }).click();
   const main = page.getByRole("main");
   await expect(main.getByText(/1 school matching/)).toBeVisible();
-  // No location was given, so there is no map and no distance.
-  await expect(page.locator(".maplibregl-map")).toHaveCount(0);
+  // No location was given, so there is no distance. The map frames the matches themselves:
+  // one pin here, and no home marker or search circle.
+  const map = page.getByRole("region", { name: "Map of results" });
+  await expect(map.locator(".maplibregl-map")).toBeVisible();
+  await expect(map.locator(".maplibregl-marker")).toHaveCount(1);
+  await expect(map.getByText(/Dashed ring/)).toHaveCount(0);
+  await expect(main.locator("ol > li").first()).not.toContainText(/\d mi\b/);
   await main.getByRole("link", { name: "Theodore Judah Elementary" }).click();
   await expect(page).toHaveURL(/\/en\/school\/34674396034292/);
   await expect(
     page.getByRole("heading", { level: 1, name: "Theodore Judah Elementary" }),
   ).toBeVisible();
+});
+
+test("a name shared by several schools puts each of them on the map", async ({ page }) => {
+  await page.goto("/en?address=elementary");
+  const map = page.getByRole("region", { name: "Map of results" });
+  const rows = page.getByRole("main").locator("ol > li");
+  await expect(rows.first()).toBeVisible();
+  const count = await rows.count();
+  expect(count).toBeGreaterThan(5);
+  // Every match has coordinates in the fixtures, so there is a pin per row.
+  await expect(map.locator(".maplibregl-marker")).toHaveCount(count);
+  // A pin opens its school, as on any results map.
+  await map.locator(".maplibregl-marker").first().click();
+  await expect(page).toHaveURL(/\/en\/school\/\d{14}/);
 });
 
 test("a school name can be narrowed with its city", async ({ page }) => {

@@ -13,6 +13,7 @@ import { useTheme } from "next-themes";
 import { useEffect, useRef, useState } from "react";
 import { boundingBox, milesToMeters } from "@/lib/domain/geo";
 import type { CdsCode, Coordinates, SchoolSummary, SchoolType } from "@/lib/schemas";
+import { boundsOf } from "./pin-bounds";
 import { circlePolygon } from "./radius-circle";
 
 /*
@@ -24,8 +25,14 @@ import { circlePolygon } from "./radius-circle";
 setWorkerUrl(new URL("maplibre-gl/dist/maplibre-gl-worker.mjs", import.meta.url).href);
 
 export interface SearchMapProps {
-  center: Coordinates;
-  radiusMiles: number;
+  /**
+   * Where the search is centered, and how far it reaches. Both are given for a
+   * search around a place: the map shows that circle. Both are left out for
+   * results with no center, such as schools found by name, and the map frames
+   * the pins instead.
+   */
+  center?: Coordinates;
+  radiusMiles?: number;
   /** Rows in list order; the pin number is the index plus one. Rows without coordinates get no pin. */
   schools: SchoolSummary[];
   hoveredCds: CdsCode | null;
@@ -34,7 +41,8 @@ export interface SearchMapProps {
   onSelect: (cds: CdsCode) => void;
   /** Tooltip for a pin: "Result 3: Name". */
   pinTitle: (number: number, name: string) => string;
-  homeTitle: string;
+  /** Tooltip of the center marker. Only used with `center`. */
+  homeTitle?: string;
   /** Link to a school's page, used by the card a tap opens on a touch screen. */
   detailsHref?: (cds: CdsCode) => string;
   className?: string;
@@ -86,8 +94,18 @@ function prefersReducedMotion() {
   return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 }
 
-function ringBounds(center: Coordinates, radiusMiles: number): LngLatBoundsLike {
-  const box = boundingBox(center, milesToMeters(radiusMiles));
+/** The view to show: the search circle when there is one, otherwise the pins themselves. */
+function viewBounds(
+  center: Coordinates | undefined,
+  radiusMiles: number | undefined,
+  schools: readonly SchoolSummary[],
+): LngLatBoundsLike {
+  const box =
+    center && radiusMiles !== undefined
+      ? boundingBox(center, milesToMeters(radiusMiles))
+      : boundsOf(
+          schools.flatMap((row) => (row.school.coordinates ? [row.school.coordinates] : [])),
+        );
   return [
     [box.west, box.south],
     [box.east, box.north],
@@ -144,7 +162,7 @@ export default function SearchMap({
     const map = new MapLibreMap({
       container,
       style: dark ? STYLE_DARK : STYLE_LIGHT,
-      bounds: ringBounds(center, radiusMiles),
+      bounds: viewBounds(center, radiusMiles, schools),
       fitBoundsOptions: { padding: FIT_PADDING },
       // Default: full text on wide maps, a toggle on narrow ones so it does not cover the pins.
       attributionControl: {},
@@ -206,6 +224,12 @@ export default function SearchMap({
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !styleLoadedRef.current) return;
+    if (!center || radiusMiles === undefined) {
+      // No search circle to draw.
+      if (map.getLayer(RING_LAYER)) map.removeLayer(RING_LAYER);
+      if (map.getSource(RING_SOURCE)) map.removeSource(RING_SOURCE);
+      return;
+    }
     const data = circlePolygon(center, milesToMeters(radiusMiles));
     const color = tokenColor("--accent");
     const source = map.getSource(RING_SOURCE) as GeoJSONSource | undefined;
@@ -227,10 +251,15 @@ export default function SearchMap({
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
+    if (!center || radiusMiles === undefined) {
+      homeRef.current?.remove();
+      homeRef.current = null;
+      return;
+    }
     if (!homeRef.current) {
       const el = document.createElement("div");
       el.setAttribute("aria-hidden", "true");
-      el.title = homeTitle;
+      el.title = homeTitle ?? "";
       el.innerHTML =
         '<span class="block size-3.5 rounded-full border-2 border-bg bg-fg shadow-popover"></span>';
       homeRef.current = new Marker({ element: el })
@@ -239,11 +268,22 @@ export default function SearchMap({
     } else {
       homeRef.current.setLngLat([center.longitude, center.latitude]);
     }
-    map.fitBounds(ringBounds(center, radiusMiles), {
+    map.fitBounds(viewBounds(center, radiusMiles, []), {
       padding: FIT_PADDING,
       animate: !prefersReducedMotion(),
     });
   }, [center, radiusMiles, homeTitle]);
+
+  // With no search circle the view follows the pins: frame whatever schools are listed.
+  const centered = center !== undefined && radiusMiles !== undefined;
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || centered) return;
+    map.fitBounds(viewBounds(undefined, undefined, schools), {
+      padding: FIT_PADDING * 2,
+      animate: !prefersReducedMotion(),
+    });
+  }, [centered, schools]);
 
   // Pins follow the rows.
   useEffect(() => {

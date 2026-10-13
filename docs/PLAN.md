@@ -206,7 +206,7 @@ Rules:
 
 - The search box accepts a street address, a California city, or a ZIP code. Cities and ZIP codes resolve to their center from a bundled Census Gazetteer table; street addresses still go to the Census geocoder. The URL carries `loc=city|zip` so pages say "Search center" and "From Sacramento" rather than "home".
 
-- The search box also accepts a school's name. Every word typed must begin a word of the school's name, city, or district, so "washington elementary sacramento" narrows 40 namesakes to one. Results are statewide, need no location, and show no map or distance. Text is interpreted in this order: city or ZIP code, street address (starts with a number), school name, then address without a number. `by=name` forces the name search, and a city search links to it when the city is also a school name.
+- The search box also accepts a school's name. Every word typed must begin a word of the school's name, city, or district, so "washington elementary sacramento" narrows 40 namesakes to one. Results are statewide, need no location, and show no distance. Their map frames the matching schools wherever they are, with no home marker or search circle (`MapPanel` without a center). Text is interpreted in this order: city or ZIP code, street address (starts with a number), school name, then address without a number. `by=name` forces the name search, and a city search links to it when the city is also a school name.
 
 - Hovering a map pin shows a preview card with the school's basic facts; tapping one on a touch screen pins the card open with a Details link. A mouse click on a pin opens that school's page. A hover card takes no pointer events and is never docked, so it cannot cover the pin under the pointer.
 
