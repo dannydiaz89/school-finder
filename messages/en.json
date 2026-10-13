@@ -131,6 +131,12 @@
       "limit": "There are more. Add another word, such as the city or “High”, to narrow it down.",
       "alsoNamed": "Schools with “{query}” in the name",
       "summaryCapped": "The first {count, number} schools matching “{query}”"
+    },
+    "home": {
+      "lastSearch": "Last search",
+      "place": "{place} · {radius}",
+      "try": "Try <city>Sacramento</city>, <zip>95816</zip>, or <school>Lincoln High</school>",
+      "label": "Ways to start"
     }
   },
   "school": {

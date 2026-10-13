@@ -2,6 +2,7 @@ import type { Route } from "next";
 import { getTranslations } from "next-intl/server";
 import Form from "next/form";
 import { Button } from "@/components/ui/button";
+import { cx } from "@/components/ui/cx";
 import { Select } from "@/components/ui/select";
 import { TextField } from "@/components/ui/text-field";
 import { getPathname } from "@/i18n/navigation";
@@ -18,7 +19,16 @@ const RADIUS_OPTIONS = [1, 2, 3, 5, 10, 25];
  * as hidden inputs so changing the address keeps them; lat/lng and page do
  * not, because a new address is geocoded again and starts at page one.
  */
-export async function AddressForm({ locale, params }: { locale: Locale; params: SearchParams }) {
+export async function AddressForm({
+  locale,
+  params,
+  className,
+}: {
+  locale: Locale;
+  params: SearchParams;
+  /** Placement only, e.g. centering on the home screen. */
+  className?: string;
+}) {
   const t = await getTranslations({ locale, namespace: "search" });
   const radii = RADIUS_OPTIONS.includes(params.radius)
     ? RADIUS_OPTIONS
@@ -41,7 +51,10 @@ export async function AddressForm({ locale, params }: { locale: Locale; params: 
       // Navigates on the client when JavaScript is available and is an ordinary GET form when not.
       // The locale home ("/en", "/es") is a known route; getPathname returns a plain string.
       action={getPathname({ locale, href: "/" }) as Route}
-      className="flex max-w-[690px] flex-wrap items-center gap-2 sm:flex-nowrap sm:rounded-full sm:border sm:border-border sm:bg-bg sm:py-[2px] sm:pl-4 sm:pr-[6px] sm:hover:border-border-strong"
+      className={cx(
+        "flex max-w-[690px] flex-wrap items-center gap-2 sm:flex-nowrap sm:rounded-full sm:border sm:border-border sm:bg-bg sm:py-[2px] sm:pl-4 sm:pr-[6px] sm:hover:border-border-strong",
+        className,
+      )}
     >
       <TextField
         label={t("addressLabel")}

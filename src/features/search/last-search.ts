@@ -55,24 +55,65 @@ export function subscribeToLastSearch(listener: () => void): () => void {
 /** Record what the search page is showing now. An empty string means a blank search. */
 export function writeLastSearch(query: string): void {
   const next = clean(query);
-  if (loaded && next === value) return;
-  loaded = true;
-  value = next;
+  // One notification however many of the two values moved.
+  const recentChanged = new URLSearchParams(next).has("address") && writeRecentSearch(next);
+  const lastChanged = !(loaded && next === value);
+  if (lastChanged) {
+    loaded = true;
+    value = next;
+    try {
+      if (next) window.sessionStorage.setItem(KEY, next);
+      else window.sessionStorage.removeItem(KEY);
+    } catch {
+      // Storage unavailable: the value above still serves this page's lifetime.
+    }
+  }
+  if (lastChanged || recentChanged) for (const listener of [...listeners]) listener();
+}
+
+/**
+ * The most recent search that actually searched for something. Unlike the
+ * value above it is not cleared by returning to the blank home screen, and it
+ * is kept in local storage, so the home screen can offer it on the next visit.
+ */
+const RECENT_KEY = "school-finder:recent-search:v1";
+let recent = "";
+let recentLoaded = false;
+
+export function getRecentSearchSnapshot(): string {
+  if (typeof window === "undefined") return "";
+  if (!recentLoaded) {
+    recentLoaded = true;
+    try {
+      recent = clean(window.localStorage.getItem(RECENT_KEY));
+    } catch {
+      // Storage unavailable: remember in memory only.
+    }
+  }
+  return recent;
+}
+
+/** Returns true when the value changed. The caller notifies subscribers. */
+function writeRecentSearch(query: string): boolean {
+  if (getRecentSearchSnapshot() === query) return false;
+  recent = query;
   try {
-    if (next) window.sessionStorage.setItem(KEY, next);
-    else window.sessionStorage.removeItem(KEY);
+    window.localStorage.setItem(RECENT_KEY, query);
   } catch {
     // Storage unavailable: the value above still serves this page's lifetime.
   }
-  for (const listener of [...listeners]) listener();
+  return true;
 }
 
 /** Test helper: forget everything. */
 export function resetLastSearchForTests(): void {
   value = "";
   loaded = false;
+  recent = "";
+  recentLoaded = false;
   listeners.clear();
   try {
+    window.localStorage.removeItem(RECENT_KEY);
     window.sessionStorage.removeItem(KEY);
   } catch {
     // Storage unavailable; nothing to clear.

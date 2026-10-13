@@ -75,6 +75,8 @@
   --text-3xl: 22px;
   --text-4xl: 26px;
   --text-5xl: 30px;
+  /* The home page wordmark only. */
+  --text-display: 52px;
 
   --leading-tight: 1.2;
   --leading-normal: 1.45;

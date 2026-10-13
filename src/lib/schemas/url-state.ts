@@ -114,6 +114,14 @@ export function parseSearchParams(raw: RawParams): SearchParams {
   return SearchParams.parse(picked);
 }
 
+/**
+ * True when the address carries no search at all: nothing typed and no
+ * location. The search page shows its home screen then, not results.
+ */
+export function isBlankSearch(p: Pick<SearchParams, "address" | "lat" | "lng">): boolean {
+  return !p.address && (p.lat === undefined || p.lng === undefined);
+}
+
 export function parseCompareParams(raw: RawParams): CompareParams {
   const picked = pick(raw, ["compare", "address", "loc", "lat", "lng"]);
   const result = CompareParams.safeParse(picked);

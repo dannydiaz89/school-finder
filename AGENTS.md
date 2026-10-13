@@ -51,7 +51,7 @@ A list of up to 50 schools a visitor keeps to follow, shown at `/my-schools` as 
 
 ## Search state
 
-A search is its page address: location, radius, filters, sort and page are all query parameters, so results can be bookmarked and shared. The header's Search link (`SearchNavLink` in `src/features/search/`) remembers the last address the search page showed, in session storage, and leads back to it from any other page. On the search page itself the link is plain and starts a new search. Do not add a second copy of the search state anywhere else.
+A search is its page address: location, radius, filters, sort and page are all query parameters, so results can be bookmarked and shared. The header's Search link (`SearchNavLink` in `src/features/search/`) remembers the last address the search page showed, in session storage, and leads back to it from any other page. On the search page itself the link is plain and starts a new search. Do not add a second copy of the search state anywhere else. The same store also keeps the most recent real search in local storage, which the home screen offers as "Last search". With no search in the address the page renders the home screen (`HomeHero`), which must stay free of backend reads.
 
 ## Design system
 

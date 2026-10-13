@@ -3,7 +3,7 @@ import { Suspense } from "react";
 import { CompareNavLink } from "@/features/compare";
 import { MySchoolsNavLink } from "@/features/my-schools";
 import { SearchNavLink } from "@/features/search/search-nav-link";
-import { Link } from "@/i18n/navigation";
+import { HeaderWordmark, WordmarkLink } from "./header-wordmark";
 import { LocaleSwitch } from "./locale-switch";
 import { ThemeToggle } from "./theme-toggle";
 import { TextLink } from "./ui/text-link";
@@ -15,21 +15,27 @@ import { TextLink } from "./ui/text-link";
  */
 export function SiteHeader() {
   const t = useTranslations("common");
+  const wordmark = (
+    <>
+      <span className="text-2xl font-medium leading-none tracking-[-0.3px]">
+        <span className="text-accent">{t("appNameAccent")}</span>
+        {t("appNameRest")}
+      </span>
+      <span className="text-xs leading-none tracking-[0.6px] text-fg-muted">
+        {t("appNameRegion")}
+      </span>
+    </>
+  );
   return (
     <header className="flex flex-wrap items-center gap-x-7 gap-y-3 px-7 pt-4">
-      <Link
-        href="/"
-        className="flex flex-col gap-1 whitespace-nowrap text-fg no-underline hover:no-underline"
+      {/* Steps aside on the home screen, which shows the name large. Reads the URL (runtime data). */}
+      <Suspense fallback={<WordmarkLink>{wordmark}</WordmarkLink>}>
+        <HeaderWordmark>{wordmark}</HeaderWordmark>
+      </Suspense>
+      <nav
+        aria-label={t("appName")}
+        className="flex flex-wrap items-center gap-x-5 gap-y-1 whitespace-nowrap text-sm"
       >
-        <span className="text-2xl font-medium leading-none tracking-[-0.3px]">
-          <span className="text-accent">{t("appNameAccent")}</span>
-          {t("appNameRest")}
-        </span>
-        <span className="text-xs leading-none tracking-[0.6px] text-fg-muted">
-          {t("appNameRegion")}
-        </span>
-      </Link>
-      <nav aria-label={t("appName")} className="flex items-center gap-5 text-sm">
         {/* Leads back to the last search (browser state plus the query string, both runtime data). */}
         <Suspense fallback={<TextLink href="/">{t("nav.search")}</TextLink>}>
           <SearchNavLink />

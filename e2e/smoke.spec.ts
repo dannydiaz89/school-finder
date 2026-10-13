@@ -45,11 +45,32 @@ async function expectNoSeriousAxeViolations(page: Page) {
   ).toEqual([]);
 }
 
+test("home screen shows the name, the search form, and ways to start", async ({ page }) => {
+  await page.goto("/en");
+  const header = page.getByRole("banner");
+  const main = page.getByRole("main");
+  // The name is the page's heading, shown large; screen readers hear what the page is for.
+  await expect(page.getByRole("heading", { level: 1, name: "Find a school" })).toBeVisible();
+  await expect(main.getByText("SchoolFinder")).toBeVisible();
+  // So the small wordmark in the header steps aside here.
+  await expect(header.getByRole("link", { name: /SchoolFinder/ })).toHaveCount(0);
+  await expect(header.getByRole("navigation", { name: "California School Finder" })).toBeVisible();
+  // A first visit has nothing to pick up, only the examples.
+  await expect(main.getByRole("link", { name: /My schools|Compare/ })).toHaveCount(0);
+  await main.getByRole("link", { name: "95816" }).click();
+  await expect(page).toHaveURL(/loc=zip/);
+  await expect(main.locator("ol > li").first()).toBeVisible();
+  // With results showing, the header wordmark is back and leads home.
+  await expect(header.getByRole("link", { name: /SchoolFinder\s*California/ })).toBeVisible();
+  // Home again: the search just run is offered.
+  await header.getByRole("link", { name: /SchoolFinder\s*California/ }).click();
+  await expect(page).toHaveURL(/\/en$/);
+  await expect(main.getByRole("link", { name: /95816 · within 3 mi/ })).toBeVisible();
+});
+
 test("search page renders the header and the search form", async ({ page }) => {
   await page.goto("/en");
   const header = page.getByRole("banner");
-  // The wordmark: "SchoolFinder" with the state under it.
-  await expect(header.getByRole("link", { name: /SchoolFinder\s*California/ })).toBeVisible();
   await expect(header.getByRole("navigation", { name: "California School Finder" })).toBeVisible();
   await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
   await expect(page.getByLabel("Address, city, ZIP code, or school")).toBeVisible();

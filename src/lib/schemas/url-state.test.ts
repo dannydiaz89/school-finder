@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  isBlankSearch,
   parseCompareParams,
   parseMySchoolsParams,
   parseSearchParams,
@@ -84,6 +85,21 @@ describe("search location kind", () => {
     const out = serializeSearchParams({ address: "95816", loc: "zip", lat: 38.5, lng: -121.4 });
     expect(out.get("loc")).toBe("zip");
     expect(parseCompareParams({ loc: "zip", address: "95816" })).toMatchObject({ loc: "zip" });
+  });
+});
+
+describe("isBlankSearch", () => {
+  const parse = (query: string) => parseSearchParams(new URLSearchParams(query));
+
+  it("is true with nothing typed and no location, whatever else the address carries", () => {
+    expect(isBlankSearch(parse(""))).toBe(true);
+    expect(isBlankSearch(parse("radius=5&sort=ela"))).toBe(true);
+    expect(isBlankSearch(parse("lat=38.5"))).toBe(true);
+  });
+
+  it("is false once there is text to search or a place to search around", () => {
+    expect(isBlankSearch(parse("address=Sacramento"))).toBe(false);
+    expect(isBlankSearch(parse("lat=38.5&lng=-121.4"))).toBe(false);
   });
 });
 

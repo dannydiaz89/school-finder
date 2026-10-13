@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   LAST_SEARCH_STORAGE_KEY,
   getLastSearchSnapshot,
+  getRecentSearchSnapshot,
   resetLastSearchForTests,
   subscribeToLastSearch,
   writeLastSearch,
@@ -57,5 +58,23 @@ describe("last search store", () => {
     writeLastSearch("address=95816");
     expect(getLastSearchSnapshot()).toBe("address=95816");
     setItem.mockRestore();
+  });
+
+  it("keeps the most recent real search after the search page goes blank", () => {
+    // The home screen offers it; returning to a blank search must not erase it.
+    writeLastSearch("address=Downey%2C+CA&loc=city&lat=33.94&lng=-118.13");
+    writeLastSearch("");
+    expect(getLastSearchSnapshot()).toBe("");
+    expect(getRecentSearchSnapshot()).toBe("address=Downey%2C+CA&loc=city&lat=33.94&lng=-118.13");
+    // A query with nothing searched (filters only) does not replace it.
+    writeLastSearch("radius=5");
+    expect(getRecentSearchSnapshot()).toBe("address=Downey%2C+CA&loc=city&lat=33.94&lng=-118.13");
+    writeLastSearch("address=95816");
+    expect(getRecentSearchSnapshot()).toBe("address=95816");
+  });
+
+  it("reads the recent search left by an earlier visit", () => {
+    window.localStorage.setItem("school-finder:recent-search:v1", "address=Lincoln+High");
+    expect(getRecentSearchSnapshot()).toBe("address=Lincoln+High");
   });
 });

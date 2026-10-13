@@ -131,6 +131,12 @@
       "limit": "Hay más. Agrega otra palabra, como la ciudad o «High», para reducir la lista.",
       "alsoNamed": "Escuelas con «{query}» en el nombre",
       "summaryCapped": "Las primeras {count, number} escuelas que coinciden con «{query}»"
+    },
+    "home": {
+      "lastSearch": "Última búsqueda",
+      "place": "{place} · {radius}",
+      "try": "Prueba con <city>Sacramento</city>, <zip>95816</zip> o <school>Lincoln High</school>",
+      "label": "Formas de empezar"
     }
   },
   "school": {
