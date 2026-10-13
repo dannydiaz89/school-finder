@@ -1,6 +1,14 @@
-# School Finder
+# California School Finder
 
-A California school finder. Type a home address, pick a radius, and see every school nearby: district, charter, and private. Filter by type, grades, programs, and California School Dashboard level; open a school's detail page; compare up to five side by side. Everything shown comes from public files published by the California Department of Education and federal agencies. Nothing is estimated or editorialized.
+Find, compare, and follow California schools: district, charter, and private. Everything shown comes from public files published by the California Department of Education and federal agencies. Nothing is estimated or editorialized.
+
+What it does:
+
+- **Search** by street address, city, ZIP code, or school name. A place lists the schools within a radius on a map and in a list, with filters for type, grades, programs, and California School Dashboard level. A name lists matching schools statewide.
+- **School pages** with Dashboard ratings and test scores for three years (2023 to 2025), enrollment, directory facts, and nearby schools that serve the same grades.
+- **Compare** up to five schools side by side. A value is highlighted only when it leads its row by a clear margin.
+- **My schools**: a list of up to 50 schools to follow, with each indicator's level, result, and change from the year before. It is kept in the browser; there are no accounts.
+- English and Spanish, light and dark themes, keyboard and screen-reader accessible (WCAG 2.2 AA).
 
 - Game plan and workstreams: [docs/PLAN.md](docs/PLAN.md)
 - Rules for contributors and agents: [AGENTS.md](AGENTS.md)
@@ -9,17 +17,17 @@ A California school finder. Type a home address, pick a radius, and see every sc
 
 ## Stack
 
-| Layer     | Choice                                                                           |
-| --------- | -------------------------------------------------------------------------------- |
-| App       | Next.js 16 (App Router, Cache Components, TypeScript strict), React 19           |
-| Styling   | Tailwind v4 over design tokens in `src/styles/tokens.css`; light and dark themes |
-| i18n      | `next-intl`, locale in the path (`/en`, `/es`)                                   |
-| Backend   | Convex (storage, geospatial radius queries) behind a data-access boundary        |
-| Contracts | Zod schemas in `src/lib/schemas/`; every type is `z.infer`                       |
-| Tests     | Vitest + Testing Library + axe for units and components, Playwright for e2e      |
-| Hosting   | Vercel (app) and Convex cloud (backend)                                          |
+| Layer     | Choice                                                                               |
+| --------- | ------------------------------------------------------------------------------------ |
+| App       | Next.js 16 (App Router, Cache Components, TypeScript strict), React 19               |
+| Styling   | Tailwind v4 over design tokens in `src/styles/tokens.css`; light and dark themes     |
+| i18n      | `next-intl`, locale in the path (`/en`, `/es`)                                       |
+| Backend   | Convex (storage, a plain grid index for radius search) behind a data-access boundary |
+| Contracts | Zod schemas in `src/lib/schemas/`; every type is `z.infer`                           |
+| Tests     | Vitest + Testing Library + axe for units and components, Playwright for e2e          |
+| Hosting   | Vercel (app) and Convex cloud (backend); a Docker image for self-hosting             |
 
-Pages are server components that fetch through the four functions in `src/lib/data/index.ts` and render. Business rules are pure functions in `src/lib/domain/`. Convex functions in `convex/` are thin. Imports run as scripts, never during a request.
+Pages are server components that fetch through the seven functions in `src/lib/data/index.ts`, by way of the cached wrappers in `src/lib/data/cached.ts`, and render. Business rules are pure functions in `src/lib/domain/`. Convex functions in `convex/` are thin. Imports run as scripts, never during a request.
 
 ## Setup
 
@@ -58,44 +66,52 @@ pnpm e2e:report       # open the last HTML report
 pnpm format           # Prettier, writes
 pnpm convex           # Convex dev loop
 pnpm convex:codegen   # regenerate convex/_generated without the dev loop
-pnpm import <source>  # data import, see below
+pnpm run import <source>   # data import, see below (`pnpm import` is a different, built-in pnpm command)
 npx next typegen      # regenerate route types after adding or moving a route
+node scripts/make-icons.mjs   # rebuild favicon.ico and apple-icon.png from src/app/icon.svg
 ```
 
 `pnpm check` needs the generated route types. If `tsc` cannot find `PageProps`, run `npx next typegen` first (`pnpm build` and `pnpm dev` also generate them).
 
 ## Importing data
 
-Source files are downloaded by scripts on a developer machine or in CI, cached under `.cache/` (gitignored), validated row by row with the schemas in `src/lib/schemas/imports/`, and upserted through the Convex adapter. CDE's site is never fetched during a request.
+Source files are downloaded by scripts on a developer machine, cached under `.cache/` (gitignored), validated row by row with the schemas in `src/lib/schemas/imports/`, and written to Convex in batches. CDE's site is never fetched during a request.
 
 ```bash
-pnpm import directory
-pnpm import dashboard --year 2025
-pnpm import all
+pnpm run import all                               # every source, statewide
+pnpm run import history --years 2026 --dry-run    # check a new year's files without writing
+pnpm run import history --years 2026              # Dashboard ratings and test scores for that year
+pnpm run import dashboard --year 2025             # one source, one year
 ```
 
-The entry point is `scripts/import.ts`. Every source, its URL, layout, refresh cadence, and the gotchas found while parsing it are in [docs/data-sources.md](docs/data-sources.md). Read it before touching an importer. Note the access warning at the top: `www.cde.ca.gov` rate-limits and CAPTCHAs automated downloads, so the directory file is fetched by hand and cached.
+Always `pnpm run import`: plain `pnpm import` is pnpm's own lockfile command.
 
-`scripts/build-fixtures.ts` builds `src/fixtures/schools.json` from the same files; its header comment lists the arguments. The fixture file is the reference data for adapter contract tests and what the UI is developed against.
+The entry point is `scripts/import.ts`. Every source, its URL, layout, refresh cadence, and the gotchas found while parsing it are in [docs/data-sources.md](docs/data-sources.md). Read it before touching an importer. Two things from it matter most:
 
-The app lists every source and the date it was last retrieved at `/en/about/data`.
+- **`www.cde.ca.gov` rate-limits and CAPTCHAs automated downloads**, so the school directory file is fetched by hand and cached.
+- **Convex bills every byte read and written**, with a monthly allowance (1 GB on the free plan). Imports are written to spend little: rows already stored are not rewritten, and only the schools a run changed are refreshed. See "What an import costs" in that document before running a statewide import.
+
+`scripts/build-fixtures.ts` builds `src/fixtures/schools.json` from the same files; its header comment lists the arguments. That file is the sample data the app serves without a backend, what the UI is developed against, and the reference for the adapter tests.
+
+The app lists every source at `/en/about/data`.
 
 ## Tests
 
 ```bash
-pnpm test             # unit and component tests
+pnpm test             # unit, component, and Convex function tests
 pnpm e2e              # end-to-end smoke suite
 ```
 
 - Pure logic has a `*.test.ts` next to the module. Components have `*.test.tsx` with Testing Library, `user-event`, and `runAxe` from `src/test/a11y.ts`.
+- Convex queries and import mutations run in memory with `convex-test` (`src/lib/data/convex-functions.test.ts`). Every query is checked against the sample-data adapter for every sample school, and imports are checked for writing and refreshing only what changed.
 - `src/i18n/messages.test.ts` fails if `messages/es.json` and `messages/en.json` drift in keys or ICU arguments.
-- Tests are deterministic: no network, fixtures only.
+- Tests are deterministic and never reach a backend: no network, sample data only. Do not verify changes by running imports or repeated searches against a live Convex deployment; that spends its usage allowance.
 
 ### End-to-end
 
-`e2e/smoke.spec.ts` loads each page over the fixtures backend in both themes, checks the header, language and theme controls, a fixture school's detail page, the compare page, and the data sources page, and runs axe (WCAG 2.2 AA, serious and critical impact) on every page in light and dark.
+`e2e/smoke.spec.ts` walks the main flows in a real browser on the sample data: the home screen, searching by address, city, ZIP code and name, the map and its pins, filters, a school page with its by-year tables, compare, My schools, the language and theme controls, and phone-width layout. It also runs axe (WCAG 2.2 AA, serious and critical impact) on every page in light and dark.
 
-`pnpm e2e` builds the app and starts it on port 3103 on the sample data (it blanks the Convex address); `playwright.config.ts` is the single place that configures this. To run against a server you already started, set `PLAYWRIGHT_BASE_URL`:
+`pnpm e2e` builds the app and starts it on port 3103 on the sample data (it blanks the Convex address); `playwright.config.ts` is the single place that configures this, and the first test fails if the suite can see a school that is not in the sample. To run against a server you already started, set `PLAYWRIGHT_BASE_URL`:
 
 ```bash
 PLAYWRIGHT_BASE_URL=http://localhost:3103 pnpm e2e
@@ -142,7 +158,7 @@ docker run -p 3000:3000 \
   school-finder
 ```
 
-Or with Compose: `docker compose up --build`, with the same three values in a `.env` file beside `compose.yaml`.
+Or with Compose: `docker compose up --build`, with the same two values in a `.env` file beside `compose.yaml`. Compose starts the web app only; it does not create or run a Convex backend.
 
 | Setting             | When     | Meaning                                                                                     |
 | ------------------- | -------- | ------------------------------------------------------------------------------------------- |
@@ -162,17 +178,19 @@ Things to know:
 ## Project layout
 
 ```
-convex/              Convex schema, thin queries, geospatial index
+convex/              Convex schema, thin queries, import mutations
 docs/                PLAN.md, data-sources.md, design-system.md
 e2e/                 Playwright smoke suite
 messages/            en.json and es.json
-scripts/             import.ts, build-fixtures.ts, parsing helpers
-src/app/[locale]/    routes: /, /school/[cds], /compare, /about/data, /styleguide
+scripts/             import.ts and its sources, build-fixtures.ts, make-icons.mjs
+src/app/[locale]/    routes: /, /school/[cds], /compare, /my-schools, /about/data, /styleguide
 src/components/      header, theme and locale controls, ui primitives
+src/features/        search, school, compare, my-schools: each feature's components and logic
 src/fixtures/        sample schools from real files, validated in a test
 src/i18n/            next-intl routing and helpers
-src/lib/data/        data-access boundary and its adapters
+src/lib/data/        data-access boundary, its two adapters, and the cached wrappers
 src/lib/domain/      pure business rules with unit tests
 src/lib/schemas/     Zod contracts
 src/styles/          design tokens
+Dockerfile           self-hosted image; compose.yaml runs it
 ```
