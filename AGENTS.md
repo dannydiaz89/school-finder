@@ -25,7 +25,7 @@ pnpm convex:codegen   # regenerate convex/_generated without a dev loop
 npx next typegen      # regenerate .next/types after adding or moving a route
 ```
 
-Node 22 or newer, pnpm. `.env.local` holds the Convex deployment and `DATA_SOURCE`. Default is `DATA_SOURCE=fixtures`, which needs no backend.
+Node 22 or newer, pnpm. `.env.local` holds the Convex deployment and `DATA_SOURCE`. Server code reads the Convex address through `convexUrl()` in `src/lib/schemas/env.ts`, never from `process.env` directly: a container supplies it at start as `CONVEX_URL`. Default is `DATA_SOURCE=fixtures`, which needs no backend.
 
 ## Architecture in one paragraph
 

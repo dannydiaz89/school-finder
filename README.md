@@ -117,10 +117,48 @@ Both jobs use Node 22 and the pnpm version pinned in `package.json`.
 
 ## Deployment
 
-- **App**: Vercel, importing this repository. Build command `pnpm build`. Set `DATA_SOURCE=convex`, `NEXT_PUBLIC_CONVEX_URL`, and `CONVEX_DEPLOYMENT` to the production deployment's values.
-- **Backend**: Convex cloud. `npx convex deploy` pushes `convex/` to the production deployment. Run the imports against it once, then on a schedule when new annual files post.
+- **App**: Vercel, importing this repository. Build command `pnpm build`. Set `DATA_SOURCE=convex` and `NEXT_PUBLIC_CONVEX_URL` (or `CONVEX_URL`) to the Convex deployment's address, and `REVALIDATE_SECRET` so imports can clear cached pages.
+- **Backend**: Convex cloud. `npx convex deploy` pushes `convex/` to a production deployment. A site can also point at the dev deployment, which avoids loading the data twice; then anything pushed with `pnpm convex` is live at once.
+- **Imports** run from a developer machine against whichever deployment the env file names: `pnpm run import history --years 2026 --env .env.production.local`. See [docs/data-sources.md](docs/data-sources.md).
 
 See the Hosting and Imports rows in [docs/PLAN.md](docs/PLAN.md) for the decisions behind this.
+
+### Self-hosting with Docker
+
+The image holds the web app only. School data lives in Convex, or in the sample data bundled with the app, so there is no database in the container.
+
+```bash
+docker build -t school-finder .
+docker run -p 3000:3000 school-finder
+```
+
+That serves the 40 sample schools at <http://localhost:3000> with no backend and no secrets, which is enough to try the app. For real data, name the Convex deployment when the container starts:
+
+```bash
+docker run -p 3000:3000 \
+  -e DATA_SOURCE=convex \
+  -e CONVEX_URL=https://<deployment>.convex.cloud \
+  -e REVALIDATE_SECRET=<random string, 16+ characters> \
+  school-finder
+```
+
+Or with Compose: `docker compose up --build`, with the same three values in a `.env` file beside `compose.yaml`.
+
+| Setting             | When     | Meaning                                                                             |
+| ------------------- | -------- | ----------------------------------------------------------------------------------- |
+| `DATA_SOURCE`       | at start | `fixtures` (default, sample data) or `convex`.                                      |
+| `CONVEX_URL`        | at start | The Convex deployment's address. Required with `DATA_SOURCE=convex`.                |
+| `REVALIDATE_SECRET` | at start | Lets `pnpm run import` clear cached pages through `POST /api/revalidate`. Optional. |
+| `PORT`              | at start | Port the server listens on inside the container. Default 3000.                      |
+
+Things to know:
+
+- One image works with any deployment, because `CONVEX_URL` is read when the server starts. (`NEXT_PUBLIC_CONVEX_URL` also works but is fixed when the image is built.)
+- The build downloads the font from Google, so it needs network access. Running the container does not, apart from Convex, the map tiles, and the address lookup.
+- Cached pages live in the container's memory. With more than one container each has its own cache, and an import's cache clear reaches only the container that receives it; the others catch up within a few hours.
+- The container runs as a non-root user and reports its health on `/en`.
+- The image is about 300 MB. With `DATA_SOURCE=convex` and no address, the server starts but data pages fail, and the log says `CONVEX_URL ... is required when DATA_SOURCE=convex`.
+- Imports are not part of the image. Run them from a checkout of this repository, with `APP_URL` set to where the container is reachable.
 
 ## Project layout
 

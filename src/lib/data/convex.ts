@@ -1,7 +1,7 @@
 import { ConvexHttpClient } from "convex/browser";
 import { z } from "zod";
 import { api } from "../../../convex/_generated/api";
-import { getEnv } from "@/lib/schemas/env";
+import { convexUrl } from "@/lib/schemas/env";
 import {
   NameMatch,
   RadiusRows,
@@ -33,8 +33,8 @@ let client: ConvexHttpClient | undefined;
 
 function getClient(): ConvexHttpClient {
   if (client) return client;
-  const url = getEnv().NEXT_PUBLIC_CONVEX_URL;
-  if (!url) throw new Error("NEXT_PUBLIC_CONVEX_URL is not set");
+  const url = convexUrl();
+  if (!url) throw new Error("CONVEX_URL is not set");
   client = new ConvexHttpClient(url, { logger: false });
   return client;
 }

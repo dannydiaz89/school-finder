@@ -1,0 +1,21 @@
+# Run California School Finder with Docker Compose.
+#
+#   docker compose up --build            # sample data, http://localhost:3000
+#
+# For real data, put these in a file named .env beside this one (it is not
+# committed) and run the same command:
+#
+#   DATA_SOURCE=convex
+#   CONVEX_URL=https://<deployment>.convex.cloud
+#   REVALIDATE_SECRET=<any random string of 16 or more characters>
+services:
+  web:
+    build: .
+    image: school-finder
+    ports:
+      - "${PORT:-3000}:3000"
+    environment:
+      DATA_SOURCE: ${DATA_SOURCE:-fixtures}
+      CONVEX_URL: ${CONVEX_URL:-}
+      REVALIDATE_SECRET: ${REVALIDATE_SECRET:-}
+    restart: unless-stopped
