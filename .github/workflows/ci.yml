@@ -10,8 +10,8 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  # Fixtures need no Convex deployment, so CI never touches a backend.
-  DATA_SOURCE: fixtures
+  # No Convex address is set here, so the app runs on its bundled sample data and CI never
+  # touches a backend.
   NEXT_TELEMETRY_DISABLED: 1
 
 jobs:

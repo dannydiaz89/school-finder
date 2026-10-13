@@ -45,6 +45,19 @@ async function expectNoSeriousAxeViolations(page: Page) {
   ).toEqual([]);
 }
 
+test("the suite runs on the bundled sample data, never a real backend", async ({ page }) => {
+  // The app reads Convex whenever it is given an address, and a developer's .env.local usually
+  // has one. playwright.config.ts blanks it. If that ever stops working this suite would spend
+  // a real deployment's usage allowance, so check with a school that exists in California's
+  // data but not in the 40 sample schools: here it must be unknown.
+  await page.goto("/en/school/19644856013080");
+  await expect(page.getByRole("heading", { level: 1 })).not.toHaveText(/Murphy Ranch/);
+  await expect(page.getByRole("main")).not.toContainText("East Whittier City Elementary");
+  // And a sample school is known.
+  await page.goto(`/en/school/${SCHOOL_CDS}`);
+  await expect(page.getByRole("heading", { level: 1, name: SCHOOL_NAME })).toBeVisible();
+});
+
 test("home screen shows the name, the search form, and ways to start", async ({ page }) => {
   await page.goto("/en");
   const header = page.getByRole("banner");

@@ -7,7 +7,6 @@ afterEach(() => {
 });
 
 const set = (values: Record<string, string>) => {
-  vi.stubEnv("DATA_SOURCE", "");
   vi.stubEnv("CONVEX_URL", "");
   vi.stubEnv("NEXT_PUBLIC_CONVEX_URL", "");
   for (const [name, value] of Object.entries(values)) vi.stubEnv(name, value);
@@ -15,36 +14,42 @@ const set = (values: Record<string, string>) => {
 };
 
 describe("server environment", () => {
-  it("defaults to the bundled sample data, which needs no backend", () => {
+  it("has no Convex address by default, which means the bundled sample data", () => {
     set({});
-    expect(getEnv().DATA_SOURCE).toBe("fixtures");
     expect(convexUrl()).toBeUndefined();
   });
 
-  it("takes the Convex address read at startup, as a container passes it", () => {
-    set({ DATA_SOURCE: "convex", CONVEX_URL: "https://example-123.convex.cloud" });
+  it("takes the address read at startup, as a container passes it", () => {
+    set({ CONVEX_URL: "https://example-123.convex.cloud" });
     expect(convexUrl()).toBe("https://example-123.convex.cloud");
   });
 
   it("falls back to the address fixed at build time, and prefers the startup one", () => {
-    set({ DATA_SOURCE: "convex", NEXT_PUBLIC_CONVEX_URL: "https://built-in.convex.cloud" });
+    set({ NEXT_PUBLIC_CONVEX_URL: "https://built-in.convex.cloud" });
     expect(convexUrl()).toBe("https://built-in.convex.cloud");
     set({
-      DATA_SOURCE: "convex",
       NEXT_PUBLIC_CONVEX_URL: "https://built-in.convex.cloud",
       CONVEX_URL: "https://at-startup.convex.cloud",
     });
     expect(convexUrl()).toBe("https://at-startup.convex.cloud");
   });
 
-  it("refuses to start on Convex without an address, and says which setting is missing", () => {
-    set({ DATA_SOURCE: "convex" });
+  it("treats an empty value as not set", () => {
+    // Compose passes an empty string for an unset variable, and the browser tests blank
+    // the address to run on sample data on a machine whose .env.local names a deployment.
+    set({ CONVEX_URL: "", NEXT_PUBLIC_CONVEX_URL: "", REVALIDATE_SECRET: "" });
+    expect(convexUrl()).toBeUndefined();
+    expect(getEnv().REVALIDATE_SECRET).toBeUndefined();
+  });
+
+  it("rejects an address that is not a URL, naming the setting", () => {
+    set({ CONVEX_URL: "the-dev-deployment" });
     expect(() => getEnv()).toThrow(/CONVEX_URL/);
   });
 
-  it("treats an empty value as not set, as Compose passes for an unset variable", () => {
-    set({ DATA_SOURCE: "fixtures", CONVEX_URL: "", REVALIDATE_SECRET: "" });
-    expect(getEnv().CONVEX_URL).toBeUndefined();
-    expect(getEnv().REVALIDATE_SECRET).toBeUndefined();
+  it("ignores a leftover DATA_SOURCE, which is no longer a setting", () => {
+    set({ DATA_SOURCE: "fixtures", CONVEX_URL: "https://example-123.convex.cloud" });
+    expect(convexUrl()).toBe("https://example-123.convex.cloud");
+    expect(getEnv()).not.toHaveProperty("DATA_SOURCE");
   });
 });

@@ -31,6 +31,9 @@ export default defineConfig({
         url: `${baseURL}/en`,
         reuseExistingServer: !isCI,
         timeout: 240_000,
-        env: { ...process.env, DATA_SOURCE: "fixtures" },
+        // Run on the bundled sample data. The app reads Convex whenever it is given an
+        // address, and a developer's .env.local usually has one, so blank both names here:
+        // a value already in the environment wins over the file, and empty means "not set".
+        env: { ...process.env, CONVEX_URL: "", NEXT_PUBLIC_CONVEX_URL: "" },
       },
 });

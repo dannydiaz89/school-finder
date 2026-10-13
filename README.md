@@ -31,14 +31,15 @@ cp .env.example .env.local
 pnpm dev            # http://localhost:3000, redirects to /en
 ```
 
-`.env.local` has one switch that matters:
+One setting in `.env.local` decides where school data comes from: the Convex address.
 
-| Variable                 | Values               | Notes                                                                   |
-| ------------------------ | -------------------- | ----------------------------------------------------------------------- |
-| `DATA_SOURCE`            | `fixtures` (default) | In-memory sample of 39 real Sacramento-area schools. No backend needed. |
-|                          | `convex`             | Reads the Convex deployment. Requires the two variables below.          |
-| `NEXT_PUBLIC_CONVEX_URL` | URL                  | Filled in by `pnpm convex` the first time it runs.                      |
-| `CONVEX_DEPLOYMENT`      | name                 | Same.                                                                   |
+| Variable                 | Value | Notes                                                                                                 |
+| ------------------------ | ----- | ----------------------------------------------------------------------------------------------------- |
+| `NEXT_PUBLIC_CONVEX_URL` | empty | The app serves an in-memory sample of 40 real Sacramento-area schools. No backend needed.             |
+|                          | URL   | The app reads that Convex deployment. Filled in by `pnpm convex` the first time it runs.              |
+| `CONVEX_DEPLOYMENT`      | name  | The deployment's name, also filled in by `pnpm convex`. Used by the Convex CLI and the import script. |
+
+To go back to the sample data, blank `NEXT_PUBLIC_CONVEX_URL` and restart the dev server.
 
 To work against Convex, run `pnpm convex` in a second terminal; it pushes `convex/` to your dev deployment and regenerates `convex/_generated`.
 
@@ -94,7 +95,7 @@ pnpm e2e              # end-to-end smoke suite
 
 `e2e/smoke.spec.ts` loads each page over the fixtures backend in both themes, checks the header, language and theme controls, a fixture school's detail page, the compare page, and the data sources page, and runs axe (WCAG 2.2 AA, serious and critical impact) on every page in light and dark.
 
-`pnpm e2e` builds the app and starts it on port 3103 with `DATA_SOURCE=fixtures`; `playwright.config.ts` is the single place that configures this. To run against a server you already started, set `PLAYWRIGHT_BASE_URL`:
+`pnpm e2e` builds the app and starts it on port 3103 on the sample data (it blanks the Convex address); `playwright.config.ts` is the single place that configures this. To run against a server you already started, set `PLAYWRIGHT_BASE_URL`:
 
 ```bash
 PLAYWRIGHT_BASE_URL=http://localhost:3103 pnpm e2e
@@ -111,13 +112,13 @@ pnpm exec playwright install chromium
 `.github/workflows/ci.yml` runs on every pull request and on pushes to `main`:
 
 1. **check**: `next typegen`, `pnpm check`, `pnpm build`.
-2. **e2e**: `pnpm build`, then the Playwright smoke suite against `pnpm start` with `DATA_SOURCE=fixtures`. Chromium and the Next.js build cache are cached between runs; the HTML report is uploaded on failure.
+2. **e2e**: `pnpm build`, then the Playwright smoke suite against `pnpm start` on the sample data. Chromium and the Next.js build cache are cached between runs; the HTML report is uploaded on failure.
 
 Both jobs use Node 22 and the pnpm version pinned in `package.json`.
 
 ## Deployment
 
-- **App**: Vercel, importing this repository. Build command `pnpm build`. Set `DATA_SOURCE=convex` and `NEXT_PUBLIC_CONVEX_URL` (or `CONVEX_URL`) to the Convex deployment's address, and `REVALIDATE_SECRET` so imports can clear cached pages.
+- **App**: Vercel, importing this repository. Build command `pnpm build`. Set `NEXT_PUBLIC_CONVEX_URL` (or `CONVEX_URL`) to the Convex deployment's address, and `REVALIDATE_SECRET` so imports can clear cached pages.
 - **Backend**: Convex cloud. `npx convex deploy` pushes `convex/` to a production deployment. A site can also point at the dev deployment, which avoids loading the data twice; then anything pushed with `pnpm convex` is live at once.
 - **Imports** run from a developer machine against whichever deployment the env file names: `pnpm run import history --years 2026 --env .env.production.local`. See [docs/data-sources.md](docs/data-sources.md).
 
@@ -136,7 +137,6 @@ That serves the 40 sample schools at <http://localhost:3000> with no backend and
 
 ```bash
 docker run -p 3000:3000 \
-  -e DATA_SOURCE=convex \
   -e CONVEX_URL=https://<deployment>.convex.cloud \
   -e REVALIDATE_SECRET=<random string, 16+ characters> \
   school-finder
@@ -144,12 +144,11 @@ docker run -p 3000:3000 \
 
 Or with Compose: `docker compose up --build`, with the same three values in a `.env` file beside `compose.yaml`.
 
-| Setting             | When     | Meaning                                                                             |
-| ------------------- | -------- | ----------------------------------------------------------------------------------- |
-| `DATA_SOURCE`       | at start | `fixtures` (default, sample data) or `convex`.                                      |
-| `CONVEX_URL`        | at start | The Convex deployment's address. Required with `DATA_SOURCE=convex`.                |
-| `REVALIDATE_SECRET` | at start | Lets `pnpm run import` clear cached pages through `POST /api/revalidate`. Optional. |
-| `PORT`              | at start | Port the server listens on inside the container. Default 3000.                      |
+| Setting             | When     | Meaning                                                                                     |
+| ------------------- | -------- | ------------------------------------------------------------------------------------------- |
+| `CONVEX_URL`        | at start | The Convex deployment's address. With it the app reads Convex; without it, the sample data. |
+| `REVALIDATE_SECRET` | at start | Lets `pnpm run import` clear cached pages through `POST /api/revalidate`. Optional.         |
+| `PORT`              | at start | Port the server listens on inside the container. Default 3000.                              |
 
 Things to know:
 
@@ -157,7 +156,7 @@ Things to know:
 - The build downloads the font from Google, so it needs network access. Running the container does not, apart from Convex, the map tiles, and the address lookup.
 - Cached pages live in the container's memory. With more than one container each has its own cache, and an import's cache clear reaches only the container that receives it; the others catch up within a few hours.
 - The container runs as a non-root user and reports its health on `/en`.
-- The image is about 300 MB. With `DATA_SOURCE=convex` and no address, the server starts but data pages fail, and the log says `CONVEX_URL ... is required when DATA_SOURCE=convex`.
+- The image is about 300 MB. There is no separate setting for where data comes from: the address is the switch.
 - Imports are not part of the image. Run them from a checkout of this repository, with `APP_URL` set to where the container is reachable.
 
 ## Project layout

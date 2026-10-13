@@ -112,7 +112,6 @@ describe.skipIf(!enabled)("Convex adapter matches the fixtures adapter", () => {
   beforeAll(async () => {
     const env = readEnvFile(".env.local");
     process.env.NEXT_PUBLIC_CONVEX_URL = env.NEXT_PUBLIC_CONVEX_URL;
-    process.env.DATA_SOURCE = "convex";
     resetEnvForTests();
     const { client, target } = await adminClient(".env.local");
     console.log(`Loading fixtures into ${target.name}`);

@@ -4,13 +4,13 @@
 #
 # The image holds the web app only. School data lives in Convex, or in the
 # sample data bundled with the app, so there is no database in here and
-# nothing to migrate. Which data it serves is chosen when the container
-# starts (see "Self-hosting with Docker" in README.md):
+# nothing to migrate. It serves the sample data unless a Convex address is
+# given when the container starts (see "Self-hosting with Docker" in README.md):
 #
 #   docker build -t school-finder .
 #   docker run -p 3000:3000 school-finder                      # sample data
-#   docker run -p 3000:3000 -e DATA_SOURCE=convex \
-#     -e CONVEX_URL=https://<deployment>.convex.cloud school-finder
+#   docker run -p 3000:3000 \
+#     -e CONVEX_URL=https://<deployment>.convex.cloud school-finder    # real data
 #
 # The build needs network access once: it downloads the font from Google.
 
@@ -44,8 +44,7 @@ WORKDIR /app
 ENV NODE_ENV=production \
     NEXT_TELEMETRY_DISABLED=1 \
     PORT=3000 \
-    HOSTNAME=0.0.0.0 \
-    DATA_SOURCE=fixtures
+    HOSTNAME=0.0.0.0
 RUN addgroup -S app && adduser -S app -G app
 COPY --from=build --chown=app:app /app/.next/standalone ./
 COPY --from=build --chown=app:app /app/.next/static ./.next/static

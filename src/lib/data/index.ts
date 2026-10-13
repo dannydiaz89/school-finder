@@ -14,7 +14,7 @@ import {
   SearchArgs,
   SearchResult,
 } from "@/lib/schemas";
-import { getEnv } from "@/lib/schemas/env";
+import { convexUrl } from "@/lib/schemas/env";
 import { z } from "zod";
 
 /**
@@ -24,7 +24,8 @@ import { z } from "zod";
  * readable error instead of as a broken page.
  *
  * Backends implement `SchoolDataSource`. The fixtures adapter is the default
- * and needs no network. Set DATA_SOURCE=convex to use the Convex adapter.
+ * and needs no network. Giving a Convex address (see `src/lib/schemas/env.ts`)
+ * switches to the Convex adapter.
  */
 
 export interface SchoolDataSource {
@@ -41,8 +42,8 @@ let source: SchoolDataSource | undefined;
 
 async function resolveSource(): Promise<SchoolDataSource> {
   if (source) return source;
-  const env = getEnv();
-  if (env.DATA_SOURCE === "convex") {
+  // A Convex address is the switch: with one, read Convex; without, the bundled sample data.
+  if (convexUrl()) {
     const { convexDataSource } = await import("./convex");
     source = convexDataSource;
   } else {
