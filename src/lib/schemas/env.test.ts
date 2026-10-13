@@ -43,7 +43,8 @@ describe("server environment", () => {
   });
 
   it("rejects an address that is not a URL, naming the setting", () => {
-    set({ CONVEX_URL: "the-dev-deployment" });
+    // A deployment's name alone is not its address.
+    set({ CONVEX_URL: "example-deployment-123" });
     expect(() => getEnv()).toThrow(/CONVEX_URL/);
   });
 

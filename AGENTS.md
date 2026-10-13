@@ -97,6 +97,8 @@ Both themes are complete sets of the same tokens. `next-themes` sets `data-theme
 
 ## Git workflow
 
+- The repository is public. Never commit a Convex deployment name or address, anything from `.env.local`, or screenshots and other tool output. The app uses the Convex address on the server only, so the repository is the one place it could leak.
+
 - One branch per workstream, in its own worktree, named `ws/<stream>` (`ws/search`, `ws/data`). Rebase on `main` before opening a PR.
 - Small PRs, merged often. `pnpm check` green is the bar. The PR description says what changed, what was tested, and lists any file touched outside the stream's ownership.
 - Update your workstream's checkboxes in `docs/PLAN.md` in the same PR as the work.

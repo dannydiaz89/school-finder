@@ -97,7 +97,7 @@ pnpm run import all --county Sacramento                          # put real data
 
 ## Verification
 
-Dev deployment `the-dev-deployment`, 2026-10-11, after `pnpm run import all --county Sacramento` and `--county Yolo`.
+Dev deployment, 2026-10-11, after `pnpm run import all --county Sacramento` and `--county Yolo`.
 
 Rows written (Sacramento + Yolo): 468 public schools, 2,799 Dashboard rows (eight indicators), 4,366 CAASPP rows (school, district and state), 467 enrollment, 467 FRPM, 465 staff ratios, 103 private affidavit details, 52 private schools placed via PSS. Zero rows rejected by any row schema across 1.3 million rows read.
 
